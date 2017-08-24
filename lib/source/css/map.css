@@ -1,0 +1,882 @@
+.marker
+{
+    background-image:url(../images/marker/marker.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/marker.gif);
+    width:21px;
+    height:35px;
+}
+.markerDefault
+{
+	background-image:url(../images/marker/default.png);
+    background-repeat:no-repeat;
+    width:25px;
+    height:37px;
+    background-position:4px 6px;
+}
+.markerTransparent
+{
+    background-color:transparent;
+    width:50px;
+    height:35px;
+}
+.markerText
+{
+    background-color:transparent;
+    width:300px;
+    height:30px;
+    color:#000000;
+    font-weight:bold;
+    font-size:8px;
+}
+.markerFlashPoint
+{
+    background-image:url(../images/point/flashpoint_green.gif);
+    background-repeat:no-repeat;
+    width:24px;
+    height:24px;
+}
+.markerArrows
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -250px;
+}
+.markerRed
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -275px;
+}
+.markerSmallRed{
+	background-image:url(../images/marker/markerSmallRed.png);
+    background-repeat:no-repeat;
+    
+    width:21px;
+    height:25px;
+    
+}
+.markerDotGrean
+{
+    background-image:url(../images/marker/pldot.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/pldot.gif);
+    width:12px;
+    height:12px;
+    background-position:0px 0px;
+}
+.markerDotRed
+{
+    background-image:url(../images/marker/pldot.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/pldot.gif);
+    width:12px;
+    height:12px;
+    background-position:-12px 0px;
+}
+.markerDotWhite
+{
+    background-image:url(../images/marker/pldot.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/pldot.gif);
+    width:12px;
+    height:12px;
+    background-position:-24px 0px;
+}
+.markerHouseA
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:-21px 0px;
+}
+.markerHouseB
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:-21px -25px;
+}
+.markerHouseC
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:-21px -50px;
+}
+.markerHouseD
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:-21px -75px;
+}
+.markerA
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+}
+.markerB
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -25px;
+}
+.markerC
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -50px;
+}
+.markerD
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -75px;
+}
+.markerE
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -100px;
+}
+.markerF
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -125px;
+}
+.markerG
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -150px;
+}
+.markerH
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -175px;
+}
+.markerI
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -200px;
+}
+.markerJ
+{
+    background-image:url(../images/marker/markers.png);
+    background-repeat:no-repeat;
+    _background:url(../images/marker/markers.gif);
+    width:21px;
+    height:25px;
+    background-position:0px -225px;
+}
+
+.markerYiYuan
+{
+    background-image:url(../images/marker/yiyuan_3.gif);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+}
+.markerBJ1
+{
+    background-image:url(../images/marker/bj1.gif);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+}
+.markerXueXiao
+{
+    background-image:url(../images/marker/xuexiao.png);
+    background-repeat:no-repeat;
+    width:25px;
+    height:25px;
+}
+.markerJiaoYu
+{
+    background-image:url(../images/marker/jiaoyu.gif);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+}
+.marker101
+{
+    background-image:url(../images/marker/101.png);
+    background-repeat:no-repeat;
+    width:20px;
+    height:25px;
+}
+.marker102
+{
+    background-image:url(../images/marker/102.png);
+    background-repeat:no-repeat;
+    width:20px;
+    height:25px;
+}
+.marker103
+{
+    background-image:url(../images/marker/103.png);
+    background-repeat:no-repeat;
+    width:20px;
+    height:25px;
+}
+.marker104
+{
+    background-image:url(../images/marker/104.png);
+    background-repeat:no-repeat;
+    width:20px;
+    height:25px;
+}
+.marker201
+{
+    background-image:url(../images/marker/201.png);
+    background-repeat:no-repeat;
+    width:25px;
+    height:25px;
+}
+.marker202
+{
+    background-image:url(../images/marker/202.png);
+    background-repeat:no-repeat;
+    width:25px;
+    height:25px;
+}
+.marker203
+{
+    background-image:url(../images/marker/203.png);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+}
+.marker301
+{
+    background-image:url(../images/marker/301.gif);
+    background-repeat:no-repeat;
+    width:15px;
+    height:19px;
+}
+.marker302
+{
+    background-image:url(../images/marker/302.gif);
+    background-repeat:no-repeat;
+    width:20px;
+    height:32px;
+    background-position:4px -2px;
+}
+.marker303
+{
+    background-image:url(../images/marker/303.gif);
+    background-repeat:no-repeat;
+    width:20px;
+    height:32px;
+    background-position:4px -2px;
+}
+.marker304
+{
+    background-image:url(../images/marker/304.gif);
+    background-repeat:no-repeat;
+    width:20px;
+    height:32px;
+    background-position:4px -2px;
+}
+.marker305
+{
+    background-image:url(../images/marker/305.gif);
+    background-repeat:no-repeat;
+    width:20px;
+    height:32px;
+    background-position:4px -2px;
+}
+.marker306
+{
+    background-image:url(../images/marker/306.gif);
+    background-repeat:no-repeat;
+    width:20px;
+    height:32px;
+    background-position:4px -2px;
+}
+.marker401
+{
+    background-image:url(../images/marker/401.png);
+    background-repeat:no-repeat;
+    width:15px;
+    height:15px;
+}
+
+.markerDang
+{
+    background-image:url(../images/marker/dang.gif);
+    background-repeat:no-repeat;
+    width:25px;
+    height:25px;
+}
+.markerBJ31{
+	background-image:url(../images/marker/bj31.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+/*中学*/
+.markerBJ32{
+	background-image:url(../images/marker/bj32.png);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+/*小学*/
+.markerBJ33{
+	background-image:url(../images/marker/bj33.png);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ34{
+	background-image:url(../images/marker/bj34.png);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+
+.markerBJ301{
+	background-image:url(../images/marker/bj301.jpg);
+    background-repeat:no-repeat;
+    width:14px;
+    height:14px;
+}
+/* 宣传栏*/
+.markerBJ501{
+	background-image:url(../images/marker/bj501.jpg);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+	}
+.markerBJ405{
+	background-image:url(../images/marker/bj405.jpg);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+	}
+.markerBJ135{
+	background-image:url(../images/marker/bj135.jpg);
+    background-repeat:no-repeat;
+    width:12px;
+    height:12px;
+}
+.markerBJ126{
+	background-image:url(../images/marker/bj126.jpg);
+    background-repeat:no-repeat;
+    width:13px;
+    height:14px;
+}
+.markerBJ113{
+	background-image:url(../images/marker/bj113.png);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.markerBJ2{
+	background-image:url(../images/marker/bj2.jpg);
+    background-repeat:no-repeat;
+    width:13px;
+    height:14px;
+}
+.markerBJ3{
+	background-image:url(../images/marker/bj3.gif);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.markerBJ51{
+	background-image:url(../images/marker/bj51.gif);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.markerBJ601{
+	background-image:url(../images/marker/bj601.gif);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.markerBJ5{
+	background-image:url(../images/marker/bj5.jpg);
+    background-repeat:no-repeat;
+    width:15px;
+    height:16px;
+}
+.markerBJ4{
+	background-image:url(../images/marker/bj4.gif);
+    background-repeat:no-repeat;
+    width:14px;
+    height:12px;
+}
+.markerBJ6{
+	background-image:url(../images/marker/bj6.png);
+    background-repeat:no-repeat;
+    width:16px;
+    height:16px;
+}
+.markerPoint{
+	background-image:url(../images/marker/point.jpg);
+    background-repeat:no-repeat;
+    width:8px;
+    height:8px;
+}
+.markerPersonA{
+	background-image:url(../images/point/flashpoint_green.gif);
+    background-repeat:no-repeat;
+    width:24px;
+    height:48px;
+    background-position:-2px 23px;
+}
+.markerEntdataA{
+	background-image:url(../images/point/flashpoint_green.gif);
+    background-repeat:no-repeat;
+    width:24px;
+    height:48px;
+    background-position:-2px 23px;
+}
+.markerOrgan{
+	background-image:url(../images/marker/organMakers.gif);
+    background-repeat:no-repeat;
+    width:24px;
+    height:48px;
+    background-position:2px 20px;
+}
+.markerBJ7{
+	background-image:url(../images/marker/bj7.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ8{
+	background-image:url(../images/marker/bj7.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ102{
+	background-image:url(../images/marker/bj102.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ118{
+	background-image:url(../images/marker/bj118.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ122{
+	background-image:url(../images/marker/bj122.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ201{
+	background-image:url(../images/marker/bj201.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+
+ 
+.markerBJ203{
+	background-image:url(../images/marker/bj203.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ205{
+	background-image:url(../images/marker/bj205.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ207{
+	background-image:url(../images/marker/bj207.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ304{
+	background-image:url(../images/marker/bj304.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ401{
+	background-image:url(../images/marker/bj401.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerBJ502{
+	background-image:url(../images/marker/bj502.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+ 
+/*坪山系统企业图层样式*/
+.markerEJ14{
+	background-image:url('../images/icons/industryImg_14.gif');
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ17{
+	background-image:url(../images/icons/industryImg_17.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ18{
+	background-image:url(../images/icons/industryImg_18.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ19{
+	background-image:url(../images/icons/industryImg_19.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ20{
+	background-image:url(../images/icons/industryImg_20.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ21{
+	background-image:url(../images/icons/industryImg_21.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ22{
+	background-image:url(../images/icons/industryImg_22.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ23{
+	background-image:url(../images/icons/industryImg_23.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ24{
+	background-image:url(../images/icons/industryImg_24.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ26{
+	background-image:url(../images/icons/industryImg_26.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ27{
+	background-image:url(../images/icons/industryImg_27.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ28{
+	background-image:url(../images/icons/industryImg_28.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ29{
+	background-image:url(../images/icons/industryImg_29.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ30{
+	background-image:url(../images/icons/industryImg_30.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ31{
+	background-image:url(../images/icons/industryImg_31.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ32{
+	background-image:url(../images/icons/industryImg_32.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ33{
+	background-image:url(../images/icons/industryImg_33.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ34{
+	background-image:url(../images/icons/industryImg_34.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ35{
+	background-image:url(../images/icons/industryImg_35.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ36{
+	background-image:url(../images/icons/industryImg_36.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ37{
+	background-image:url(../images/icons/industryImg_37.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ38{
+	background-image:url(../images/icons/industryImg_38.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ39{
+	background-image:url(../images/icons/industryImg_39.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ40{
+	background-image:url(../images/icons/industryImg_40.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ41{
+	background-image:url(../images/icons/industryImg_41.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ46{
+	background-image:url(../images/icons/industryImg_46.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+}
+.markerEJ47{
+	background-image:url(../images/icons/industryImg_47.gif);
+    background-repeat:no-repeat;
+    width:18px;
+    height:18px;
+} 
+/*页面样式*/
+.boxdiv{
+   	border-top-left-radius:8px;
+   	border-top-right-radius:8px;
+   	border-bottom-right-radius:8px;
+   	border-bottom-left-radius:8px;
+   	box-shadow:0px 1px 3px rgba(0,0,0,0.3);
+   	border:3px solid #2567b1;
+   	}
+.mapgridbg{
+  		 background-image: url(../images/grid.jpg);
+  		 background-position: 34px 10px;
+  		 background-color: #f3f3f3;
+  		 border:1px solid #d9d9d9;
+  		  
+   	}
+   	
+   	
+   	
+div.mapcontrol{
+	width:40px;
+	height:40px;
+	position: absolute;
+	left:0px;
+	top:0px;
+	display: block;
+}
+div.mapcontrol a{
+	display: block;
+	width:40px;
+	height:40px;
+	text-decoration: none;
+	-webkit-appearance: none; 
+	cursor: pointer;
+	text-align:left;
+	outline: none; 
+	outline-color:invert;
+	outline-width:medium; 
+background-image: url("../images/trans_0065.png");
+	 
+}
+
+div.mapcontrol span.layericon{
+	display: inline-block;
+	background-image:url(../images/tool/tools.png);
+	 background-position: -100px 0;
+	width:20px;
+	height:20px;
+/* 	text-indent: -9999px; */
+	overflow: hidden;
+	vertical-align:top;
+	margin:10px;
+}
+div.mapcontrol_content{
+/* 	background-color: rgba(255,255,255, 0.7); */
+	background-image: url("../images/trans_ff65.png");
+	position: absolute;
+	left:40px;
+	top:0px;
+	padding-left:20px;
+}
+div.mapcontrol_content ul,div.mapcontrol_content ul ul{
+	margin: 0px 0px 0px 0px;
+	padding: 0px; 
+}
+div.mapcontrol_content   ul li{
+	margin: 0px 0px 0px 0px;
+	padding: 2px 0px 2px 0px; 
+}
+li.maptoolslayer
+{
+	list-style:none;
+	width:150px;
+	height:40px;
+	display: block;
+	cursor: pointer;
+	padding:0px;
+	margin:5px 10px 5px 0px;
+}
+li.maptoolslayer a{
+	display: inline-block;
+	text-decoration: none;
+	-webkit-appearance: none; 
+	font-size: 12px;
+	border:2px solid #c3c6be;
+	width:150px;
+	height:26px;
+	margin:5px 10px 5px 0px;
+}
+li.maptoolslayer a:active{
+	border-color:#9ED485;
+}
+li.maptoolslayer a:hover{
+	border-color:#9ED485; 
+}
+li.selectedlayer a{
+	border:2px solid #9ED485;
+}
+li.maptoolslayer a span{
+	display: inline-block;
+	width:130px;
+	height:26px;
+	background-repeat: no-repeat;
+	background-position: -27px 0px;
+}
+li.selectedlayer a span{ 
+	background-image:url(../images/tag/icon-warning.png); 
+	background-position: -44px -20px;
+}
+ 
+li.maptoolslayer a.avi{
+
+	background-image:url(../images/tag/avi.png);
+}
+li.maptoolslayer a.defmap{
+	 
+	background-image:url(../images/tag/def.png);
+}
+li.maptoolslayer a.czwbuilding{
+ 
+	background-image:url(../images/tag/czwb.png);
+}
+li.maptoolslayer a.ghjbuilding{
+ 
+	background-image:url(../images/tag/ghjb.png);
+}
+li.maptoolslayer a.ghjcontr{
+ 
+	background-image:url(../images/tag/ghjcontr.png);
+}
+div.mapcontrol_content ul.mapcontrol_ul{
+	list-style:square;
+	font-size:12px;
+	margin-left: 0px;
+}
+div.mapcontrol_content ul li.lititle{
+	list-style:none;
+	font-size:14px;
+	font-weight: bold;
+	text-align: center;
+	padding-bottom: 20px;
+	padding-top:10px;
+	
+}
+
+li.maptoolslayer a.masklayer{
+	background-image:url(../images/tag/mask-1.png);
+}
+li.maptoolslayer a.parklayer{
+	background-image:url(../images/tag/park-1.png);
+}
+li.maptoolslayer a.piecelayer{
+	background-image:url(../images/tag/piece-1.png);
+}
+

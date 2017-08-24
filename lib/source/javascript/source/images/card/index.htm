@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="../../../mootools-core.js" type="text/javascript"></script>
+    <script src="../../../mootools-more.js" type="text/javascript"></script>
+</head>
+<body style="background:white">
+<div id="cardDiv" style=" "></div>
+<!--<div style="position:absolute; left:300px; top:300px; width:300px; height:200px; border:1px solid black;">
+<div style="width:250px; height:150px; border:1px solid green; position:absolute; top:0px;"> sdf</div>
+ <img src="iws3.png" style="position:absolute; bottom:30px;" />
+</div>-->
+
+<script type="text/javascript">
+    function cardWin() {
+        var W = 300, H = 200;
+        var L = 300, T = 300;
+        var container ="cardDiv";
+
+        var div = new Element("div", {styles:{ position: "absolute", width: W + "px", height: H + "px", left: L + "px", top: T + "px", border: "1px solid red" }});
+        div.inject($(container));
+
+        var bgLeft = new Element("div", { styles: { position: "absolute", width: 250, height: 100, left: 0, bottom: 0, background: "url(iws3.png)",border: "1px solid blue" ,
+           backgroundPosition:"left bottom", backgroundRepeat:"no-repeat",overflow: "hidden"} });
+            bgLeft.inject(div);
+
+       var img = new Element("img", { src: "iws3.png", styles: { position: "absolute", left: "0px", bottom: "0px"} });
+           img.inject(bgLeft);
+
+    }
+    cardWin();
+</script>
+</body>
+</html>
