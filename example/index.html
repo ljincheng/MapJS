@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>index.html</title>
+	
+    <meta http-equiv="keywords" content="keyword1,keyword2,keyword3">
+    <meta http-equiv="description" content="this is my page">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="../lib/source/css/map.css" type="text/css"></link>
+        <script type="text/javascript" src="../lib/Release/mootools.js"></script>
+        <script type="text/javascript" src="../lib/Release/mootools-art-0.87.js"></script>
+        <script type="text/javascript">
+            var MapGISConfig = {registerSourcePath:"../lib/source/"};
+            var MapConfig={gisserver:"http://192.168.1.32/"};
+            </script>
+        <script src="../lib/source/javascript/MapGIS.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Model.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Model/OpenstreetModel.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Graphics/Geometry.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Graphics/Palette.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Window/InfoWindowBase.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Tools/MapContentMenu.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Tools/MapNavigation.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Point.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Map.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Layer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/TileLayer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Layer/MarkerLayer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Layer/ImgLayer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Layer/PaletteLayer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Layer/OpenstreetLayer.js" type="text/javascript"> </script>
+        <script src="../lib/source/javascript/Map/OpenstreetMap.js" type="text/javascript"> </script>
+  	<script src="index.js" type="text/javascript"> </script>
+  
+  </head>
+  
+  <body>
+  <div id="mapContainer" style="position: absolute;  left:200px; top:100px; width:800px; height:500px; border:1px solid red;">
+	</div>
+<div>
+
+
+<input type="button" value="坐标" onclick="testBtnClickEvent()"/>
+<input type="button" value="坐标范围" onclick="testBtnEvent()"/>
+<input type="button" value="刷新" onclick="map.refresh()"/> 
+<input type="button" value="toPoint(113.203125,11.953125)" onclick="map.setCenter([113.203125,11.953125])"/> 
+<input type="button" value="拖拽" onclick="map.setActiveTool('$')"/> 
+<input type="button" value="放大" onclick="map.setActiveTool('+')"/> 
+<input type="button" value="缩小" onclick="map.setActiveTool('-')"/> 
+<input type="button" value="画矩形" onclick="drawGeom(1)"/> 
+<input type="button" value="画多边形" onclick="drawGeom(5)"/> 
+<input type="button" value="画圆形" onclick="drawGeom(3)"/> 
+<input type="button" value="画线" onclick="drawGeom(2)"/> 
+
+<a id="testA"></a>
+[B]<a id="testB" style="position: relative;"></a>
+[C]<a id="testC"></a>
+</div>
+  </body>
+</html>
