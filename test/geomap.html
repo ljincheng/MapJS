@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type="text/javascript" src="../src/HEADER.js"></script>
+        <script type="text/javascript" src="../src/globalGeomap.js"></script>
+        <script type="text/javascript" src="../src/lib/event.js"></script>
+        <script type="text/javascript" src="../src/lib/Observable.js"></script>
+        <script type="text/javascript" src="../src/core/util.js"></script>
+        <script type="text/javascript" src="../src/core/lang_common.js"></script>
+        <script type="text/javascript" src="../src/core/lang_object.js"></script>
+        <script type="text/javascript" src="../src/core/util_element.js"></script>
+        <script type="text/javascript" src="../src/core/lang_class.js"></script>
+        <script type="text/javascript" src="../src/core/class_map.js"></script>
+        <script type="text/javascript" src="../src/core/geomap_image.js"></script>
+    </head>
+<body onload="winLoad()">
+<div id="mapDiv"></div>
+    <canvas id="plan" style="border: 1px red solid; position: absolute; left:10px ;top:10px;"></canvas>
+ 
+ <div id="imagePlan"></div>
+ <script type="text/javascript">
+function winLoad(){
+alert("load ok");
+var url="http://fabricjs.com/article_assets/9.png";
+
+geomap.Image.fromURL(url,function(img) {
+    var div=new geomap.Div(document.getElementById("imagePlan"),{width:200,height:200});
+    div.getElement().appendChild(img.getElement());
+    console.log(div.getOptions());
+   // alert(div.getOptions().height);
+    //  document.getElementById("imagePlan").appendChild(img.getElement());
+    });
+
+// geomap.util.loadImage(url, function(img, isError) {
+//      document.getElementById("imagePlan").appendChild(img);
+//     }, null, null);
+
+var map=new geomap.Map(document.getElementById("mapDiv"),{width:600,height:400});
+
+
+ }
+
+
+</script>   
+</body>
+</html>

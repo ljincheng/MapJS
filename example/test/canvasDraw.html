@@ -1,0 +1,171 @@
+
+<html>
+    <head>
+        <script type="text/javascript" src="Core.js" ></script>
+    </head>
+    <body onload="windowLoadFn()">
+
+        <canvas id="plan" style="border: 1px red solid; position: absolute; left:10px ;top:10px;"></canvas>
+        <div id="detailPlan" style="border: 1px black solid; position: absolute; left:10px ;top:10px;">
+<div ><br>
+    <span ><b>Event: </b><a id="eventInfo"></a></span>
+</div>
+        </div>
+        <script type="text/javascript">
+        var planObj=null;
+        var detailObj=null;
+        var eventInfoObj=null;
+        var winSize=[0,0];
+        var planSize=[0,0];
+        var maxWidth=0;
+        var maxHight=0;
+        var mapClass=null;
+
+        var mEventLastpoint=[0,0];
+        var mEventNowpoint=[0,0];
+        var mEventtype=-1;
+        var mEventType_Drag=1;
+        var mEventType_Nothing=-1;
+        var mEventSmooth=[];
+        var mEventSpeed=[0,0];
+        var mSpeed=0;
+        var mDragClientXY=[0,0];
+
+        function init(){
+            planObj=document.getElementById("plan");
+            detailObj=document.getElementById("detailPlan");
+            eventInfoObj=document.getElementById("eventInfo");
+            winSize[0]=document.body.clientWidth ;
+            winSize[1]=document.body.clientHeight;
+            maxWidth=Math.round( winSize[0]/2);
+            maxHight=Math.round( winSize[1])-20;
+            planSize=[maxWidth,maxHight];
+            planObj.style.width= maxWidth;
+            planObj.style.height=  maxHight;
+            planObj.width=maxWidth;
+            planObj.height=maxHight;
+
+            detailObj.style.left=planObj.width+20;
+            detailObj.style.width=(winSize[0]-planObj.width-40)+"px";
+            detailObj.style.height=maxHight+"px";
+            
+        }
+
+        function matrixAdd(v1,v2){
+            return [v1[0]+v2[0],v1[1]+v2[1]];
+        }
+        function matrixMinus(v1,v2){
+            return [v1[0]-v2[0],v1[1]-v2[1]];
+        }
+        function matrixMultiply(v1,v2){
+            return [v1[0]*v2[0],v1[1]*v2[1]];
+        }
+
+        function dragingFn(){
+            
+            if(mEventtype==mEventType_Drag){
+                var  mouseSpeed =matrixMinus(mEventNowpoint,mEventLastpoint);
+                //加速度
+                mEventSmooth.push(mouseSpeed);
+                mEventSmooth.shift();
+                var mouseSpeed2=[0,0];
+                var s=mEventSmooth;
+                var k=s.length;
+                for(var i=0;i<k;i++){
+                    mouseSpeed2=matrixAdd(mouseSpeed2,s[i]);
+                }
+                mouseSpeed2[0]=mouseSpeed2[0]/k;
+                mouseSpeed2[1]=mouseSpeed2[1]/k;
+                mEventSpeed[0]=Math.round(mouseSpeed2[0]);
+                mEventSpeed[1]=Math.round(mouseSpeed2[1]);
+                mEventLastpoint=mEventNowpoint;
+             }else{
+                var s=mEventSpeed;
+                if(Math.abs(s[0])<0 )
+                	{
+                        mEventSpeed[0]=0;
+		                 
+                	}
+                if(Math.abs(s[1])<0)
+                	{
+                	  
+		                mEventSpeed[1]=0;
+                	}
+                    mEventSpeed[0]=s[0]*0.97;
+                    mEventSpeed[1]=s[1]*0.97;
+                 
+             }
+             console.log("Drag:mEventSpeed="+mEventSpeed[0]+","+mEventSpeed[1]);
+             mDragClientXY=matrixAdd(mDragClientXY,mEventSpeed);
+             console.log("Drag:clientXY="+mDragClientXY[0]+","+mDragClientXY[1]);
+             drawTime(mDragClientXY);
+           
+            
+        }
+
+        function initEvent(){
+
+            setInterval(dragingFn,20);
+            mapClass=new MapClass ({});
+         
+            mapClass.addEvent(planObj,"mousedown",function(event){
+                var x= event.offsetX;
+                 var y= event.offsetY;
+                mEventtype=mEventType_Drag;
+                mEventSpeed=[0,0];
+                
+                mEventLastpoint=mEventNowpoint;
+                var p0= [0,0];
+                mEventSmooth=[p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0,p0];
+                
+            });
+            mapClass.addEvent(planObj,"mousemove",function(event){
+                    var x= event.offsetX;
+                    var y= event.offsetY;
+                    mEventNowpoint=[x,y];
+            });
+            mapClass.addEvent(planObj,"mouseup",function(event){
+                var x= event.offsetX;
+                var y= event.offsetY;
+                if(mEventtype!=mEventType_Nothing){ 
+                    mEventtype=mEventType_Nothing;
+                  
+                }
+            });
+        }
+        function drawTime(startXY){
+            var ctx=planObj.getContext("2d");
+            ctx.clearRect(0,0,maxWidth,maxHight);
+            ctx.shadowBlur=0;
+            ctx.shadowOffsetX=0;
+            ctx.shadowOffsetY=0;
+            ctx.strokeStyle="#e4e4e4";
+            // ctx.fillStyle="#FF0000";
+           // ctx.fillRect(0,0,150,75);
+           for(var i=0;i<maxHight;i+=50){
+            ctx.moveTo(0,i);
+            ctx.lineTo(maxWidth,i);
+           }
+           for(var i=0;i<maxWidth;i+=50){
+            ctx.moveTo(i,0);
+            ctx.lineTo(i,maxHight);
+           }
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.fillStyle="#0000ff";
+            ctx.fillRect(startXY[0],startXY[1],150,100);
+            ctx.stroke();
+
+        }
+        function drawOnPlan(){
+            drawTime([20,20]);
+        }
+        function windowLoadFn(){
+            init();
+            initEvent();
+            drawOnPlan();
+            alert(typeof exports);
+        }
+        </script>
+    </body>
+</html>
