@@ -1,9 +1,11 @@
 (function() {
     
-    function create(tag,options) {
+    function create(tag,options,styles) {
         options || (options = { });
+        styles || (styles={});
       var el= geomap.document.createElement(tag);
-      setOptions(tag,options);
+      setOptions(el,options);
+      setStyle(el,styles);
       return el;
     }
 

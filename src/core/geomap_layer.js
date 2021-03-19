@@ -1,21 +1,17 @@
-const { geomap } = require("../HEADER");
 
 (function(global) {
-
     'use strict';
-  
     var extend = geomap.util.object.extend;
-  
     if (!global.geomap) {
       global.geomap = { };
     }
   
-    if (global.geomap.Map) {
+    if (global.geomap.Layer) {
       geomap.warn('geomap.Map is already defined.');
       return;
     }
    
-    geomap.Map = geomap.util.createClass(geomap.CommonMethods,  {
+    geomap.Layer = geomap.util.createClass(geomap.CommonMethods,  {
       type: 'object',
       width:100,
       height:100,
@@ -29,7 +25,7 @@ const { geomap } = require("../HEADER");
         this._initElement();
       },
       _initElement:function(){ 
-        this.rootEl=geomap.util.element.createElement("div",{style:{border:"1px solid red",position:"absolute",width:this.width+"px",height:this.height+"px"}});
+        this.rootEl=geomap.util.element.create("div",null,{border:"1px solid red",position:"absolute",width:this.width+"px",height:this.height+"px"});
         this._element.appendChild( this.rootEl);
       }
      

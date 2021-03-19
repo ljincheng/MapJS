@@ -7,37 +7,75 @@
         <script type="text/javascript" src="../src/lib/Observable.js"></script>
         <script type="text/javascript" src="../src/core/util.js"></script>
         <script type="text/javascript" src="../src/core/lang_common.js"></script>
-        <script type="text/javascript" src="../src/core/lang_object.js"></script>
+        <script type="text/javascript" src="../src/core/util_object.js"></script>
         <script type="text/javascript" src="../src/core/util_element.js"></script>
+        <script type="text/javascript" src="../src/core/util_event.js"></script>
         <script type="text/javascript" src="../src/core/lang_class.js"></script>
-        <script type="text/javascript" src="../src/core/class_map.js"></script>
-        <script type="text/javascript" src="../src/core/geomap_image.js"></script>
+        <script type="text/javascript" src="../src/geo/geomap_map.js"></script>
+        
     </head>
 <body onload="winLoad()">
 <div id="mapDiv"></div>
-    <canvas id="plan" style="border: 1px red solid; position: absolute; left:10px ;top:10px;"></canvas>
- 
+     
  <div id="imagePlan"></div>
  <script type="text/javascript">
-function winLoad(){
-alert("load ok");
-var url="http://fabricjs.com/article_assets/9.png";
+     var rootDiv=null;
+     var startXY=[0,0];
+     var myOP=0;
+        function drawTime(startXY){
 
-geomap.Image.fromURL(url,function(img) {
-    var div=new geomap.Div(document.getElementById("imagePlan"),{width:200,height:200});
-    div.getElement().appendChild(img.getElement());
-    console.log(div.getOptions());
-   // alert(div.getOptions().height);
-    //  document.getElementById("imagePlan").appendChild(img.getElement());
+        }
+
+        function dragingFn(){
+            
+            var speed=geomap.util.event.speeding();
+            console.log("speed="+speed[0]+","+speed[1]+",startXY="+startXY[0]+","+startXY[1]);
+            var pos=geomap.util.matrixAdd(speed,startXY);
+            console.log("pos="+pos[0]+","+pos[1]+",startXY="+startXY[0]+","+startXY[1]);
+            rootDiv.style.left=Math.round(pos[0]-50)+"px";
+            rootDiv.style.top=Math.round(pos[1]-50)+"px";
+        }
+
+    function winLoad(){
+    var url="http://fabricjs.com/article_assets/9.png";
+
+    
+
+    // geomap.util.loadImage(url, function(img, isError) {
+    //      document.getElementById("imagePlan").appendChild(img);
+    //     }, null, null);
+
+    var map=new geomap.Map(document.getElementById("mapDiv"),{width:600,height:400});
+
+    var eventEl=document.getElementById("_map_root");
+    rootDiv=document.getElementById("_map_layer");
+    eventjs.add(eventEl,"click",function(event,self){
+        console.log("CLICK=",self.gesture,self.x,self.y);
     });
+    eventjs.add(eventEl,"drag",function(event,self){
+        console.log("drag=",self.gesture,self.x,self.y, "fingers=",self.fingers,"state=",self.state,"start=",self.start,self.bbox);
+        
+     geomap.util.event.moving(self.x,self.y);
+     
+        if(self.state=="down"){
+            myOP=1;
+            startXY=[self.x,self.y];
+            geomap.util.event.speedStart(self.x,self.y);
+        }else if(self.state =="up"){
+            myOP=0;
+            startXY=[self.x,self.y];
+            geomap.util.event.speedEnd();
+        }else if(self.state =="move"){
+            geomap.util.event.moving(self.x,self.y);
+            if(myOP==1){
+                startXY=[self.x,self.y];
+            }
 
-// geomap.util.loadImage(url, function(img, isError) {
-//      document.getElementById("imagePlan").appendChild(img);
-//     }, null, null);
-
-var map=new geomap.Map(document.getElementById("mapDiv"),{width:600,height:400});
-
-
+        }
+       
+    });
+    console.log("hello !");
+    setInterval(dragingFn,100);
  }
 
 

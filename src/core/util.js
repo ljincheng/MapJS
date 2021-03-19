@@ -1,4 +1,3 @@
-const { geomap } = require("../HEADER");
 
 (function(global) {
 
@@ -37,7 +36,18 @@ const { geomap } = require("../HEADER");
           case 3: return -sign;
         }
         return Math.sin(angle);
+      },
+      matrixAdd: function(m1,m2){
+        return [m1[0]+m2[0],m1[1]+m2[1]];
+      },
+      matrixSubtract: function(m1,m2){
+        return [m1[0]-m2[0],m1[1]-m2[1]];
+
+      },
+      matrixMultiply:function(m1,m2){
+        return [m1[0]*m2[0],m1[1]*m2[1]];
       }
+
     };
   })(typeof exports !== 'undefined' ? exports : this);
   
