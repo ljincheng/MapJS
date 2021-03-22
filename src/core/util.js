@@ -46,7 +46,13 @@
       },
       matrixMultiply:function(m1,m2){
         return [m1[0]*m2[0],m1[1]*m2[1]];
+      },
+      posFloor:function(p){
+          p[0]=p[0]>0?Math.floor(p[0]):Math.ceil(p[0]);
+          p[1]=p[1]>0?Math.floor(p[1]):Math.ceil(p[1]);
+        return p;
       }
+    
 
     };
   })(typeof exports !== 'undefined' ? exports : this);

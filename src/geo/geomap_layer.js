@@ -19,22 +19,16 @@
       width:100,
       height:100,
       originX:0,
-      originY:0,
-      rootEl:null,
-      initialize: function(element, options) {
+      originY:0, 
+      _canvas:null,
+      initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options);
-        this._element = element;
-        this._initElement();
+      }, 
+      initLayer:function(canvas){
+        this._canvas=canvas;
       },
-      _initElement:function(){ 
-        this.rootEl=geomap.util.element.create("div",null,{border:"1px solid red",position:"absolute",width:this.width+"px",height:this.height+"px"});
-        this._element.appendChild( this.rootEl);
-      },
-      initLayer:function(){
-
-      },
-      draw:function(){
+      draw:function(envelope){
           
       }
      
