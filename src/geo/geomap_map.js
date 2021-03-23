@@ -51,9 +51,9 @@
       },
       _initElement:function(){ 
         var el_canvas=geomap.util.element.create("canvas",{id:"_map_canvas",width:this.width,height:this.height},{zIndex:2,border:"1px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px"});
-        var el_offscreen_canvas=geomap.util.element.create("canvas",{id:"_map_canvas2",width:this.width,height:this.height},{zIndex:2,border:"1px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px"});
+        var el_offscreen_canvas=geomap.util.element.create("canvas",{id:"_map_canvas2",width:this.width,height:this.height},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px",top:"0px"});
 
-        var el_offscreen_div=geomap.util.element.create("div",{width:this.width,height:this.height},{zIndex:1,border:"1px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px",display:"hiddent"});
+        var el_offscreen_div=geomap.util.element.create("div",{width:this.width,height:this.height},{zIndex:1,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px",top:this.height+"px"});
         this._element.appendChild(el_canvas);
         this._element.appendChild(el_offscreen_div);
         el_offscreen_div.appendChild(el_offscreen_canvas);
