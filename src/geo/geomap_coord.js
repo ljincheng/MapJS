@@ -10,6 +10,11 @@
           var w=endP.x - startP.x;
           var h=endP.y - startP.y;
           return [w,h];
+      },
+      minus:function(startP,p){
+        startP.x=startP.x-p.x;
+        startP.y=startP.y-p.y;
+        return startP;
       }
     };
   })(typeof exports !== 'undefined' ? exports : this);

@@ -13,6 +13,7 @@
         <script type="text/javascript" src="../src/core/lang_class.js"></script>
         <script type="text/javascript" src="../src/geo/geomap_coord.js"></script>
         <script type="text/javascript" src="../src/geo/geomap_map.js"></script>
+        <script type="text/javascript" src="../src/geo/geomap_layer.js"></script>
         
     </head>
 <body onload="winLoad()">
@@ -45,7 +46,12 @@
     //      document.getElementById("imagePlan").appendChild(img);
     //     }, null, null);
 
-    var map=new geomap.Map(document.getElementById("mapDiv"),{width:600,height:400});
+    var map=new geomap.Map(document.getElementById("mapDiv"),{width:600,height:400,_maxz:17});
+    var tileLayer=new geomap.Layer({});
+    map.addLayer(tileLayer);
+    map.on("wheel",function(opt){
+        geomap.log("wheel ON="+opt.self.wheelDelta);
+    });
 
     // var eventEl=document.getElementById("_map_root");
     // rootDiv=document.getElementById("_map_layer");

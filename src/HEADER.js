@@ -16,6 +16,8 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
     geomap.document = document.implementation.createHTMLDocument('');
   }
   geomap.window = window;
+  geomap.log = console.log;
+  geomap.warn = console.warn;
 }
 else {
   // assume we're running under node.js when document/window are not present
