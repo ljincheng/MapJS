@@ -4,6 +4,8 @@
     'use strict';
   
     var extend = geomap.util.object.extend;
+    var Point=geomap.Point;
+    var Model=geomap.Model;
   
     if (!global.geomap) {
       global.geomap = { };
@@ -21,21 +23,28 @@
       origin:{x:-180,y:90},
       viewOrigin:{x:0,y:0},
       tileSize:256,
-      center:{x:0,y:0},
-      canvas:null,
-      canvasCtx:null,
-      _z:2,
-      _maxz:11,
-      _minz:0,
-      _layers:[],
+      center:undefined,
+      canvas:undefined,
+      canvasCtx:undefined,
+      zoom:2,
+      maxZoom:11,
+      minZoom:0,
+      layers:[],
       _move_start:null,
       _pos:null,
       _move_type:-1,
       _global_interval:null,
       _canrender:true,
+      _container:undefined,
+      model:undefined,
       initialize: function(element, options) {
-        options || (options = { }); 
+        options || (options = { });  
         this._setOptions(options);  
+        if(this.center === undefined){
+          this.center=new Point(0,0);
+        }else{
+          this.center=geomap.util.toPoint(this.center);
+        }
         this._element = element;
         this._pos={x:0,y:0};
         this._move_start={x:0,y:0};
@@ -59,6 +68,7 @@
         this.canvas=el_canvas;
         const ctx=el_canvas.getContext("2d");
         this.canvasCtx=ctx;
+        this._container=el_canvas;
       },
       _initEvent:function(){
         eventjs.add(this.canvas,"click",function(event,self){ 
@@ -97,8 +107,11 @@
       _handleEvent:function(opts){
         if(opts.gesture =="wheel"){
           if(opts.wheelDelta>0){
-           if(this._maxz>this._z){
-             var z=this._z+1;
+           if(this.maxZoom>this.zoom){
+             var z=this.zoom+1;
+             
+             this.model.setZoomScreen(new Point(opts.left,opts.top),z);
+
              var scaleOpts={left:opts.left,top:opts.top,z:z};
              var coord=this.getCoord(scaleOpts);
              scaleOpts.x=coord.x;
@@ -108,8 +121,11 @@
            }
            
           }else if(opts.wheelDelta<0){
-            if(this._minz<this._z){
-              var z=this._z-1;
+            if(this.minZoom<this.zoom){
+              var z=this.zoom-1;
+              
+              this.model.setZoomScreen(new Point(opts.left,opts.top),z);
+
               var scaleOpts={left:opts.left,top:opts.top,z:z};
               var coord=this.getCoord(scaleOpts);
               scaleOpts.x=coord.x;
@@ -121,7 +137,7 @@
           }
           
         }else if(opts.gesture=="drag"){
-              var z=this._z;
+              var z=this.zoom;
               // var speed=geomap.util.event.speeding();
               // var scaleOpts={left:Math.floor(opts.left+speed[0]-this._move_start.x),top:Math.floor(opts.top+speed[1]-this._move_start.y),z:z};
               var scaleOpts={left:Math.floor(opts.left-this._move_start.x),top:Math.floor(opts.top-this._move_start.y),z:z};
@@ -133,13 +149,23 @@
       },
       _initModel:function(){
         extend(this.origin,{x:-180.00,y:90.00});
+        if(this.model=== undefined){
+          this.model=new Model(this,{center:this.center});
+        }
       },
       time_event:function(){
-        for(var i=0,k=this._layers.length;i<k;i++){
-          var layer=this._layers[i];
+        for(var i=0,k=this.layers.length;i<k;i++){
+          var layer=this.layers[i];
               layer.time_event();
         }
         this._draw.call(this);
+      },
+      getSize:function(){
+        if(!this._size || this._sizeChanged){
+          this._size=new Point(this._container.clientWidth||this.width,this._container.clientHeight || this.height);
+          this._sizeChanged=false;
+        }
+        return this._size.clone();
       },
       _draw:function(){
         if(this._canrender==true || this._move_type==1){
@@ -148,10 +174,10 @@
           var wh=geomap.coord.size(this._move_start,this._pos);
          // console.log("drawMap:x="+this._move_start.x+",y="+this._move_start.y+",w="+wh[0]+",h="+wh[1]+",pos="+this._pos.x+","+this._pos.y);
           this._clearCanvas();
-          var z=this._z;
+          var z=this.zoom;
           var opt={z:z,viewOrigin:this.viewOrigin};
-            for(var i=0,k=this._layers.length;i<k;i++){
-                  var layer=this._layers[i];
+            for(var i=0,k=this.layers.length;i<k;i++){
+                  var layer=this.layers[i];
                   layer.draw(ctx,opt);
             }
             ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
@@ -160,7 +186,7 @@
       },
       getCoord:function(opts){
         var left=opts.left,top=opts.top;
-        var z=this._z;
+        var z=this.zoom;
         var vx=this.viewOrigin.x,vy=this.viewOrigin.y;
         var res=this.resolution(z);
         var p={x:res.x*left+vx,y:vy-res.y*top};
@@ -171,28 +197,30 @@
         var res=this.resolution(z);
         this.viewOrigin.x=x-res.x*left;
         this.viewOrigin.y=y+res.y*top;
-        this._z=z;
+        this.zoom=z;
       },
       translation:function(opts){
         var left=opts.left,top=opts.top;
-        var res=this.resolution(this._z);
+        var res=this.resolution(this.zoom);
         this.viewOrigin.x -=res.x*left;
         this.viewOrigin.y +=res.y*top;
       },
       setCenterCoord:function(cxy){
         geomap.coord.setPoint(this.center,cxy);
-        var z=this._z;
+        var z=this.zoom;
         var res=this.resolution(z);
         var cx= this.center.x- Math.floor((this.width * res.x)/2);
         var cy=this.center.y + Math.floor((this.height * res.y)/2);
         geomap.coord.setPoint(this.viewOrigin,{x:cx,y:cy});
       },
       _drawlayer:function(){
-            var z=this._z;
+            var z=this.zoom;
             var res=this.resolution(z);
-            var startPos=[this.viewOrigin.x,this.viewOrigin.y];
-           for(var i=0,k=this._layers.length;i<k;i++){
-            var layer=this._layers[i];
+            var startPos0=[this.viewOrigin.x,this.viewOrigin.y];
+            var min=this.model.getBounds().min;
+            var startPos=[min.x,min.y];
+           for(var i=0,k=this.layers.length;i<k;i++){
+            var layer=this.layers[i];
             layer.drawlayer(z,res,startPos);
           }
          
@@ -207,7 +235,7 @@
          return { x: x, y: y };
       },
       addLayer:function(layer){
-        this._layers.push(layer);
+        this.layers.push(layer);
         this._loadLayer(layer);
       },
       _loadLayer:function(layer){

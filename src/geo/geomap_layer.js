@@ -22,10 +22,11 @@
       originY:0, 
       tileSize:256,
       cache:true,
-      origin:{x:-180,y:90},
+      origin:{x:-180,y:-90},
       _canvas:null,
       _layerCanvas:null,
       _layerCtx:null,
+      _drawLock:1,
       initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options);
@@ -51,6 +52,19 @@
         var o=this.origin;
         var tsize=this.tileSize;
         var cell=Math.floor((x-o.x)/res.x/tsize);
+        var row=Math.floor((y-o.y)/res.y/tsize);
+        var left=-(x-o.x)/res.x +tsize*cell;
+        var top = -(y-o.y)/res.y +tsize*row;
+        var minx=x+ left*res.x;
+        var miny=y+ top*res.y;
+        return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
+      },
+      getTileInfo2:function(res,pos){
+        // var res=this.resolution(level);
+        var x=pos[0],y=pos[1];
+        var o=this.origin;
+        var tsize=this.tileSize;
+        var cell=Math.floor((x-o.x)/res.x/tsize);
         var row=Math.floor((o.y-y)/res.y/tsize);
         var left=-(x-o.x)/res.x +tsize*cell;
         var top= -(o.y-y)/res.y +tsize*row;
@@ -59,6 +73,8 @@
         return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
       },
       drawlayer:function(z,res,startPos){
+        var lock=this._drawLock+1;
+        this._drawLock=lock;
         this._layerCtx.clearRect(0,0,this.width,this.height);
         //TODO draw Tile
         var tsize=this.tileSize;
@@ -84,10 +100,11 @@
          var l=Math.floor(left+tsize*c);
          var t=Math.floor(top+tsize*r);
          if( x>=0 && y>=0 ){
-            var imgUrl="http://mt1.google.cn/vt/x="+x+"&y="+y+"&z="+z;
+            // var imgUrl="http://mt1.google.cn/vt/x="+x+"&y="+y+"&z="+z;
+            var imgUrl="https://c.tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png";
             // var imgUrl="https://maponline0.bdimg.com/tile/?qt=vtile&x="+x+"&y="+y+"&z="+z+"&styles=pl&udt=20210318&scaler=1&showtext=1";
             // var imgUrl="https://maponline3.bdimg.com/tile/?qt=vtile&x="+x+"&y="+y+"&z="+z+"&styles=pl&udt=20210318&scaler=1&showtext=1";
-            this.fromURL(imgUrl,{left:l,top:t});  
+            this.fromURL(imgUrl,{left:l,top:t,lock:lock});  
          }
        }
      }
@@ -118,8 +135,10 @@
         if(cacheImg==null){
           doDraw=true;
         }else{
-          this._layerCtx.drawImage(cacheImg,opts.left,opts.top);
-          this.fire("draw");
+          if(opts.lock == this._drawLock){
+            this._layerCtx.drawImage(cacheImg,opts.left,opts.top);
+            this.fire("draw");
+          }
         } 
         if(!this.cache || doDraw){
           this.loadImage(url,function(img,isError){
@@ -128,9 +147,11 @@
               return ;
             }
             console.log("load img:"+url+",left="+this.opts.left+",top="+this.opts.top);
-            this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
+            if(this.opts.lock == this.obj._drawLock){
+              this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
             
               this.obj.fire("draw");
+            }
         
 
               var cacheImg=this.obj.getCacheImage.call(this.obj,url);

@@ -2,8 +2,10 @@
 (function(global) {
     geomap.coord = {
       setPoint: function(objcoord,p){
-        objcoord["x"]=p.x;
-        objcoord["y"]=p.y;
+        if(typeof objcoord === 'object' && 'x' in objcoord && 'y' in objcoord){
+          objcoord.x=p.x;
+          objcoord.y=p.y;
+        }
         return objcoord;
       },
       size:function(startP,endP){
