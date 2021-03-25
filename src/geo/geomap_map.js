@@ -74,12 +74,29 @@
       _initEvent:function(){
         //调试
         eventjs.add(this.canvas,"mousemove",function(event,self){ 
+          
           var coord=this.getCoord(new Point(event.offsetY,event.offsetY));
           var bounds=this.model.getBounds();
           geomap.log("point coord:"+coord.x+","+coord.y+",bounds:"+bounds.toString());
         }.bind(this));
+        
+        eventjs.add(this.canvas,"gesture",function(event,self){ 
+          
+          if(self.fingers>1){
+            var opts={left:event.offsetX,top:event.offsetY,gesture:self.gesture,state:self.state};
+            if(self.scale>0){
+              var z=this.zoom+1;
+              this.zoom=z;
+              this.fire("zoom",{z:z,x:opts.left,y:opts.top});
+              this.fire("drawmap");
+            }
+          }
+          
+        }.bind(this));
+
 
           eventjs.add(this.canvas,"drag",function(event,self){ 
+            // event.preventDefault();
             geomap.coord.setPoint(this._pos,self);
             geomap.util.event.moving(self.x,self.y); 
             if(self.state=="down"){

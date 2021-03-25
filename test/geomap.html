@@ -92,6 +92,15 @@
     // });
     console.log("hello !");
     // setInterval(dragingFn,20);
+
+    /// Prevent native scrolling in iOS.
+eventjs.add(document.body, 'touchmove', eventjs.prevent);
+
+/// Prevent right-click on desktops.
+eventjs.add(document.body, 'contextmenu', eventjs.prevent);
+
+/// Prevent elastic scrolling.
+eventjs.add(document, 'touchstart', eventjs.prevent);
  }
 
 
