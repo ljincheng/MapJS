@@ -9,7 +9,7 @@
 
     Bounds.prototype={
         clone:function(){
-            return new Bounds(this.min,this.max);
+            return new Bounds(this.min.clone(),this.max.clone());
         },
         getCenter:function(){
             return new Point((this.min.x+this.max.x)/2,(this.min.y+this.max.y)/2);
@@ -43,6 +43,9 @@
             xOverlaps=(max2.x> min.x) && (min2.x < max.y),
             yOverlaps=(max2.y> min.y) && (min2.y < max.y);
             return xOverlaps && yOverlaps;
+        },
+        toString:function(){
+            return "Bounds("+this.min.x+","+this.min.y+","+this.max.x+","+this.max.y+")";
         }
 
 

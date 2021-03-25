@@ -5,7 +5,7 @@
     var toPoint=geomap.util.toPoint;
     geomap.Model = geomap.util.createClass(geomap.CommonMethods, geomap.Observable, {
         type: 'object',
-        origin:new Point(-180,90),
+        origin:new Point(-180,-90),
         tileSize:256,
         res:undefined,
         bounds:undefined,
@@ -20,6 +20,8 @@
             if(this.center === undefined){
                 this.center=new Point(0,0);
             }
+            this.map.on("zoom",this.setZoomScreen.bind(this));
+            this.map.on("move",this.panScreen.bind(this));
         },
         resolution:function(zoom)
         {
@@ -41,6 +43,7 @@
                 max=cp1.add(p1);
                 this._bounds= new Bounds(min,max);
                 this._boundsChanged=false;
+               
             }
             return this._bounds;
         },
@@ -72,18 +75,23 @@
             this._boundsChanged=true;
             return this;
         },
-        setZoomScreen:function(p1,zoom){ 
-            if(this.zoom==zoom){
-                return this;
-            }
-            var coord=this.screenToCoord(p1);
-            // var sc1=this.coordToScreen(p0);
+        setZoomScreen:function(opts){ 
+            var p1=new Point(opts.x,opts.y);
+            var zoom=opts.z;
+            var coord=this.screenToCoord(p1); 
             var  r1=this.resolution(zoom);
             var min= coord._subtract(p1.scaleBy(r1));
-            this.center=this.map.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
+            this.center=this.map.getSize()._scaleBy(r1)._divideBy(2).add(min);
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;
+        },
+        panScreen:function(opts){
+            var p1=new Point(opts.x,opts.y);
+            var zoom=opts.z;
+            var  r1=this.resolution(zoom);
+            this.center._add(p1.scaleBy(r1));
+            this._boundsChanged=true;
         },
         screenToCoord:function(p0){
             var bounds=this.getBounds();

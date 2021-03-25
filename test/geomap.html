@@ -50,7 +50,7 @@
     //      document.getElementById("imagePlan").appendChild(img);
     //     }, null, null);
 
-    var map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:400,maxZoom:17,zoom:1});
+    var map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:400,maxZoom:17,zoom:2});
     var tileLayer=new geomap.Layer({});
     map.addLayer(tileLayer);
     map.on("wheel",function(opt){

@@ -57,8 +57,8 @@
             return this.clone()._unscaleBy(point);
         },
         _unscaleBy:function(point){
-            this.x=this.x/point.x;
-            this.y=this.y/point.y;
+            this.x=this.x / point.x;
+            this.y=this.y / point.y;
             return this;
         },
         floor:function(){

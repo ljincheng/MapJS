@@ -3,7 +3,9 @@
 
     'use strict';
   
-    var extend = geomap.util.object.extend;
+    
+    var Util=geomap.util;
+    var extend = Util.object.extend;
     var Point=geomap.Point;
     var Model=geomap.Model;
   
@@ -20,7 +22,7 @@
       type: 'object',
       width:100,
       height:100,
-      origin:{x:-180,y:90},
+      origin:{x:-180,y:-90},
       viewOrigin:{x:0,y:0},
       tileSize:256,
       center:undefined,
@@ -47,10 +49,9 @@
         }
         this._element = element;
         this._pos={x:0,y:0};
-        this._move_start={x:0,y:0};
-        this.setCenterCoord(this.center);
-        this._initModel();
+        this._move_start={x:0,y:0}; 
         this._initElement();
+        this._initModel();
         this._initEvent();
        // this._drawlayer();
         this.on("drawmap",this._drawlayer.bind(this));
@@ -71,10 +72,13 @@
         this._container=el_canvas;
       },
       _initEvent:function(){
-        eventjs.add(this.canvas,"click",function(event,self){ 
-          var coord=this.getCoord({left:self.x,top:self.y});
-          geomap.log("click coord:"+coord.x+","+coord.y);
+        //调试
+        eventjs.add(this.canvas,"mousemove",function(event,self){ 
+          var coord=this.getCoord(new Point(event.offsetY,event.offsetY));
+          var bounds=this.model.getBounds();
+          geomap.log("point coord:"+coord.x+","+coord.y+",bounds:"+bounds.toString());
         }.bind(this));
+
           eventjs.add(this.canvas,"drag",function(event,self){ 
             geomap.coord.setPoint(this._pos,self);
             geomap.util.event.moving(self.x,self.y); 
@@ -108,29 +112,18 @@
         if(opts.gesture =="wheel"){
           if(opts.wheelDelta>0){
            if(this.maxZoom>this.zoom){
-             var z=this.zoom+1;
-             
-             this.model.setZoomScreen(new Point(opts.left,opts.top),z);
 
-             var scaleOpts={left:opts.left,top:opts.top,z:z};
-             var coord=this.getCoord(scaleOpts);
-             scaleOpts.x=coord.x;
-             scaleOpts.y=coord.y;
-             this.scalePoint(scaleOpts);
+             var z=this.zoom+1;
+             this.zoom=z; 
+             this.fire("zoom",{z:z,x:opts.left,y:opts.top});
              this.fire("drawmap");
            }
            
           }else if(opts.wheelDelta<0){
             if(this.minZoom<this.zoom){
               var z=this.zoom-1;
-              
-              this.model.setZoomScreen(new Point(opts.left,opts.top),z);
-
-              var scaleOpts={left:opts.left,top:opts.top,z:z};
-              var coord=this.getCoord(scaleOpts);
-              scaleOpts.x=coord.x;
-              scaleOpts.y=coord.y;
-              this.scalePoint.call(this,scaleOpts);
+              this.zoom=z;
+              this.fire("zoom",{z:z,x:opts.left,y:opts.top});
               this.fire("drawmap");
             }
             
@@ -138,19 +131,18 @@
           
         }else if(opts.gesture=="drag"){
               var z=this.zoom;
-              // var speed=geomap.util.event.speeding();
-              // var scaleOpts={left:Math.floor(opts.left+speed[0]-this._move_start.x),top:Math.floor(opts.top+speed[1]-this._move_start.y),z:z};
               var scaleOpts={left:Math.floor(opts.left-this._move_start.x),top:Math.floor(opts.top-this._move_start.y),z:z};
+              if(Math.abs(scaleOpts.left)>2 && Math.abs(scaleOpts.top )>2 ){ 
+              this.fire("move",{z:z,x:-scaleOpts.left,y:-scaleOpts.top});
               this._move_start.x=opts.left;
               this._move_start.y=opts.top;
-              this.translation.call(this,scaleOpts);
               this.fire("drawmap");
+              }
         }
       },
       _initModel:function(){
-        extend(this.origin,{x:-180.00,y:90.00});
         if(this.model=== undefined){
-          this.model=new Model(this,{center:this.center});
+          this.model=new Model(this,{center:this.center,zoom:this.zoom});
         }
       },
       time_event:function(){
@@ -172,67 +164,19 @@
           this._canrender=false;
           const ctx=this.canvasCtx;
           var wh=geomap.coord.size(this._move_start,this._pos);
-         // console.log("drawMap:x="+this._move_start.x+",y="+this._move_start.y+",w="+wh[0]+",h="+wh[1]+",pos="+this._pos.x+","+this._pos.y);
-          this._clearCanvas();
-          var z=this.zoom;
-          var opt={z:z,viewOrigin:this.viewOrigin};
-            for(var i=0,k=this.layers.length;i<k;i++){
-                  var layer=this.layers[i];
-                  layer.draw(ctx,opt);
-            }
+          this.canvasCtx.clearRect(0,0,this.width,this.height);
+          for(var i=0,k=this.layers.length;i<k;i++){
+                var layer=this.layers[i];
+                layer.draw(ctx);
+          }
             ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
-           
         }
       },
-      getCoord:function(opts){
-        var left=opts.left,top=opts.top;
-        var z=this.zoom;
-        var vx=this.viewOrigin.x,vy=this.viewOrigin.y;
-        var res=this.resolution(z);
-        var p={x:res.x*left+vx,y:vy-res.y*top};
-        return p;
-      },
-      scalePoint:function(opts){
-        var left=opts.left,top=opts.top,x=opts.x,y=opts.y,z=opts.z;
-        var res=this.resolution(z);
-        this.viewOrigin.x=x-res.x*left;
-        this.viewOrigin.y=y+res.y*top;
-        this.zoom=z;
-      },
-      translation:function(opts){
-        var left=opts.left,top=opts.top;
-        var res=this.resolution(this.zoom);
-        this.viewOrigin.x -=res.x*left;
-        this.viewOrigin.y +=res.y*top;
-      },
-      setCenterCoord:function(cxy){
-        geomap.coord.setPoint(this.center,cxy);
-        var z=this.zoom;
-        var res=this.resolution(z);
-        var cx= this.center.x- Math.floor((this.width * res.x)/2);
-        var cy=this.center.y + Math.floor((this.height * res.y)/2);
-        geomap.coord.setPoint(this.viewOrigin,{x:cx,y:cy});
-      },
+      getCoord:function(p0){
+        return this.model.screenToCoord(Util.toPoint(p0));
+      }, 
       _drawlayer:function(){
-            var z=this.zoom;
-            var res=this.resolution(z);
-            var startPos0=[this.viewOrigin.x,this.viewOrigin.y];
-            var min=this.model.getBounds().min;
-            var startPos=[min.x,min.y];
-           for(var i=0,k=this.layers.length;i<k;i++){
-            var layer=this.layers[i];
-            layer.drawlayer(z,res,startPos);
-          }
-         
-      },
-      _clearCanvas:function(){
-        this.canvasCtx.clearRect(0,0,this.width,this.height);
-      },
-      resolution:function(level)
-      {
-          var x = (360 / (Math.pow(2, level)) / this.tileSize);
-          var y = (180 / (Math.pow(2, level)) / this.tileSize);
-         return { x: x, y: y };
+          this.fire("viewreset");
       },
       addLayer:function(layer){
         this.layers.push(layer);

@@ -27,6 +27,7 @@
       _layerCanvas:null,
       _layerCtx:null,
       _drawLock:1,
+      map:undefined,
       initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options);
@@ -35,10 +36,12 @@
         this._canvas=canvas;
         this.width=map.width;
         this.height=map.height;
+        this.map=map;
         var el_offscreen_canvas=geomap.util.element.create("canvas",{width:this.width,height:this.height},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px",top:"0px"});
         const offscreen_ctx=el_offscreen_canvas.getContext("2d");
         this._layerCanvas=el_offscreen_canvas;
         this._layerCtx=offscreen_ctx;
+        map.on("viewreset",this.viewReset.bind(this));
       },
       time_event:function(){
 
@@ -46,33 +49,37 @@
       draw:function(ctx,options){
         ctx.drawImage(this._layerCanvas,0,0);
       },
-      getTileInfo:function(res,pos){
+      viewReset:function(){
+
+        var z=this.map.zoom,bounds=this.map.model.getBounds(),res=this.map.model.resolution(z);
+        this.drawlayer(z,res,bounds.min);
+
+      },
+      getTileInfo:function(res,point){
         // var res=this.resolution(level);
-        var x=pos[0],y=pos[1];
+        var x=point.x,y=point.y;
         var o=this.origin;
         var tsize=this.tileSize;
         var cell=Math.floor((x-o.x)/res.x/tsize);
         var row=Math.floor((y-o.y)/res.y/tsize);
-        var left=-(x-o.x)/res.x +tsize*cell;
-        var top = -(y-o.y)/res.y +tsize*row;
-        var minx=x+ left*res.x;
-        var miny=y+ top*res.y;
-        return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
+        var left=-(x-o.x)/res.x + tsize*(cell);
+        var top = -(y-o.y)/res.y +tsize*(row);
+        return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
       },
-      getTileInfo2:function(res,pos){
-        // var res=this.resolution(level);
-        var x=pos[0],y=pos[1];
-        var o=this.origin;
-        var tsize=this.tileSize;
-        var cell=Math.floor((x-o.x)/res.x/tsize);
-        var row=Math.floor((o.y-y)/res.y/tsize);
-        var left=-(x-o.x)/res.x +tsize*cell;
-        var top= -(o.y-y)/res.y +tsize*row;
-        var minx=x+ left*res.x;
-        var miny=y+ top*res.y;
-        return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
-      },
-      drawlayer:function(z,res,startPos){
+      // getTileInfo:function(res,pos){
+      //   // var res=this.resolution(level);
+      //   var x=pos[0],y=pos[1];
+      //   var o=this.origin;
+      //   var tsize=this.tileSize;
+      //   var cell=Math.floor((x-o.x)/res.x/tsize);
+      //   var row=Math.floor((o.y-y)/res.y/tsize);
+      //   var left=-(x-o.x)/res.x +tsize*cell;
+      //   var top= -(o.y-y)/res.y +tsize*row;
+      //   var minx=x+ left*res.x;
+      //   var miny=y+ top*res.y;
+      //   return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
+      // },
+      drawlayer:function(z,res,point){
         var lock=this._drawLock+1;
         this._drawLock=lock;
         this._layerCtx.clearRect(0,0,this.width,this.height);
@@ -86,7 +93,7 @@
         // var cy=this.center.y + Math.floor((this.height * res.y)/2);
         // var startPos=[cx,cy];
 
-       var startTile=this.getTileInfo(res,startPos);
+       var startTile=this.getTileInfo(res,point);
        console.log("cells="+cells+",rows="+rows+",left="+startTile.left+",top="+startTile.top);
     //  var url="http://fabricjs.com/article_assets/9.png";
     var cell=startTile.cell;
@@ -123,9 +130,9 @@
         };
         img.onload=onLoadCallback;
         img.onerror=function(){
-          console.log("Error loading "+img.src);
+          //console.log("Error loading "+img.src);
           img = img.onload = img.onerror = null;
-          callback && callback.call(context,null,true);
+          //callback && callback.call(context,null,true);
         };
         img.src=url;
       },
