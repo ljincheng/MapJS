@@ -18,6 +18,7 @@ if (typeof document !== 'undefined' && typeof window !== 'undefined') {
   geomap.window = window;
   geomap.log = console.log;
   geomap.warn = console.warn;
+  geomap.debug= console.log;
 }
 else {
   // assume we're running under node.js when document/window are not present
@@ -37,6 +38,7 @@ else {
  
   geomap.log = console.log;
   geomap.warn = console.warn;
+  geomap.debug= console.log;
   
   DOMParser = geomap.window.DOMParser;
 }

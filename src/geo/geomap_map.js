@@ -1,3 +1,4 @@
+//const { geomap } = require("../HEADER");
 
 (function(global) {
 
@@ -42,6 +43,9 @@
       initialize: function(element, options) {
         options || (options = { });  
         this._setOptions(options);  
+        if(options.debug){
+          geomap.debug=options.debug;
+        }
         if(this.center === undefined){
           this.center=new Point(0,0);
         }else{
@@ -71,32 +75,55 @@
         this.canvasCtx=ctx;
         this._container=el_canvas;
       },
+    _touchZoomEvent:function(){
+
+    },
       _initEvent:function(){
         //调试
-        eventjs.add(this.canvas,"mousemove",function(event,self){ 
+        // eventjs.add(this.canvas,"mousemove",function(event,self){ 
           
-          var coord=this.getCoord(new Point(event.offsetY,event.offsetY));
-          var bounds=this.model.getBounds();
-          geomap.log("point coord:"+coord.x+","+coord.y+",bounds:"+bounds.toString());
-        }.bind(this));
+        //   var coord=this.getCoord(new Point(event.offsetY,event.offsetY));
+        //   var bounds=this.model.getBounds();
+        //   geomap.log("point coord:"+coord.x+","+coord.y+",bounds:"+bounds.toString());
+        // }.bind(this));
         
         eventjs.add(this.canvas,"gesture",function(event,self){ 
-          
-          if(self.fingers>1){
-            var opts={left:event.offsetX,top:event.offsetY,gesture:self.gesture,state:self.state};
-            if(self.scale>0){
-              var z=this.zoom+1;
-              this.zoom=z;
-              this.fire("zoom",{z:z,x:opts.left,y:opts.top});
+          //eventjs.prevent();
+          eventjs.cancel(event);
+         // if(self.fingers>1){
+            var rotation=self.rotation,scale=self.scale,state=self.state,fingers=self.fingers;
+            
+            if(self.state == "start"){
+              this._event_type=10;
+              this._zoomScaleV=scale;
+              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale);
+            }else if(self.state == "stop")
+            {
+              this._event_type=0;
+              this._zoomScaleV=1;
+              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers);
+            }else{
+              var touches=event.touches;
+              var move0=touches[0].clientX+","+touches[0].clientY;
+              var move1=touches[1].clientX+","+touches[1].clientY;
+
+              var left=Math.floor((touches[0].clientX + touches[1].clientX)/2);
+              var top=Math.floor((touches[0].clientY + touches[1].clientY)/2);
+              var _scaleV=Math.round(scale)-this._zoomScaleV;
+              var z=this.zoom+_scaleV;
+              this.fire("zoom",{z:z,x:left,y:top});
               this.fire("drawmap");
+
+             geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers+"m0="+move0+",m1="+move1);
             }
-          }
+            
+          //}
           
         }.bind(this));
 
 
           eventjs.add(this.canvas,"drag",function(event,self){ 
-            // event.preventDefault();
+            eventjs.cancel(event);
             geomap.coord.setPoint(this._pos,self);
             geomap.util.event.moving(self.x,self.y); 
             if(self.state=="down"){
@@ -114,13 +141,13 @@
             var left=self.x;
             var top=self.y;
             var opts={left:left,top:top,wheelDelta:0,gesture:self.gesture,state:self.state};
-            console.log("##testMove: left="+opts.left+",top="+opts.top);
+            geomap.debug("##testMove: left="+opts.left+",top="+opts.top);
             this._handleEvent.call(this,opts);
             }
           }.bind(this));
  
           eventjs.add(this.canvas,"wheel",function(event,self){ 
-            geomap.log("wheel Event:state="+self.state+",wheelDelta="+self.wheelDelta+",gesture="+self.gesture+",pos"+event.clientX+","+event.clientY);
+            geomap.debug("wheel Event:state="+self.state+",wheelDelta="+self.wheelDelta+",gesture="+self.gesture+",pos"+event.clientX+","+event.clientY);
             var opts={left:event.offsetX,top:event.offsetY,wheelDelta:self.wheelDelta,gesture:self.gesture,state:self.state};
             this._handleEvent.call(this,opts);
           }.bind(this));
