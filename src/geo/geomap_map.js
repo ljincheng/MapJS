@@ -79,6 +79,8 @@
 
     },
       _initEvent:function(){
+        this._eventDrag=new geomap.MapEvent.Drag(this);
+        this._eventTouchZoom=new geomap.MapEvent.TouchZoom(this);
         //调试
         // eventjs.add(this.canvas,"mousemove",function(event,self){ 
           
@@ -87,70 +89,88 @@
         //   geomap.log("point coord:"+coord.x+","+coord.y+",bounds:"+bounds.toString());
         // }.bind(this));
         
-        eventjs.add(this.canvas,"gesture",function(event,self){ 
-          //eventjs.prevent();
-          eventjs.cancel(event);
-         // if(self.fingers>1){
-            var rotation=self.rotation,scale=self.scale,state=self.state,fingers=self.fingers;
-            
-            if(self.state == "start"){
-              this._event_type=10;
-              this._zoomScaleV=scale;
-              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale);
-            }else if(self.state == "stop")
-            {
-              this._event_type=0;
-              this._zoomScaleV=1;
-              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers);
-            }else{
-              var touches=event.touches;
-              var move0=touches[0].clientX+","+touches[0].clientY;
-              var move1=touches[1].clientX+","+touches[1].clientY;
-
-              var left=Math.floor((touches[0].clientX + touches[1].clientX)/2);
-              var top=Math.floor((touches[0].clientY + touches[1].clientY)/2);
-              var _scaleV=Math.round(scale)-this._zoomScaleV;
-              var z=this.zoom+_scaleV;
-              this.fire("zoom",{z:z,x:left,y:top});
-              this.fire("drawmap");
-
-             geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers+"m0="+move0+",m1="+move1);
-            }
-            
-          //}
+//         eventjs.add(this.canvas,"gesture",function(event,self){ 
+//           //eventjs.prevent();
           
-        }.bind(this));
+//          // if(self.fingers>1){
+          
+//             var rotation=self.rotation,scale=self.scale,state=self.state,fingers=self.fingers;
+            
+//             if(self.state == "start"){
+              
+//               this._zooming=true;
+//               this._moved=false;
+//               this._startZoom=this.zoom;
+//               this._startZoomScaleV=scale;
+//               eventjs.remove(this.canvas,"drag");
+//               geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale);
+//             }else if(self.state == "stop")
+//             {
+//               if(!this._moved || !this._zooming){
+//                 this._zooming=false;
+//                 return ;
+//               }
+//               this._zooming=false; 
+//               eventjs.add(this.canvas,"drag");
+// //              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers);
+//             }else{
 
+//               if(!this._moved){
+//                 this._moveStart(true,false);
+//                 this._moved=true;
+//               }
+//               var touches=event.touches;
+//               var move0=touches[0].clientX+","+touches[0].clientY;
+//               var move1=touches[1].clientX+","+touches[1].clientY;
 
-          eventjs.add(this.canvas,"drag",function(event,self){ 
-            eventjs.cancel(event);
-            geomap.coord.setPoint(this._pos,self);
-            geomap.util.event.moving(self.x,self.y); 
-            if(self.state=="down"){
-                this._move_type=1;
-                geomap.coord.setPoint(this._move_start,self);
-                geomap.util.event.speedStart(self.x,self.y);
-            }else if(self.state =="move"){ 
+//               var left=Math.floor((touches[0].clientX + touches[1].clientX)/2);
+//               var top=Math.floor((touches[0].clientY + touches[1].clientY)/2);
+//               var _scaleV=Math.round(scale)-this._zoomScaleV;
+//               var z=this.zoom+_scaleV;
+//               this.fire("zoom",{z:z,x:left,y:top});
+//               this.fire("drawmap");
+
+//              geomap.debug("gesture:state="+state+",rotation="+rotation+",scale="+scale+",fingers="+fingers+"m0="+move0+",m1="+move1);
+//             }
+            
+//           //}
+//           eventjs.cancel(event);
+//         }.bind(this));
+
+        //
+         eventjs.add(this.canvas,"gesture",this._eventTouchZoom.handle.bind(this._eventTouchZoom));
+         eventjs.add(this.canvas,"drag",this._eventDrag.handle.bind(this._eventDrag));
+
+          // eventjs.add(this.canvas,"drag",function(event,self){ 
+          //   geomap.debug("##testMove2: state="+self.state);
+          //   geomap.coord.setPoint(this._pos,self);
+          //   geomap.util.event.moving(self.x,self.y); 
+          //   if(self.state=="down"){
+          //       this._move_type=1;
+          //       geomap.coord.setPoint(this._move_start,self);
+          //       geomap.util.event.speedStart(self.x,self.y);
+          //       eventjs.cancel(event);
+          //   }else if(self.state =="move"){ 
                 
-            }else{
-              this._move_type=-1; 
-              geomap.util.event.speedEnd();       
-            }
+          //   }else{
+          //     this._move_type=-1; 
+          //     geomap.util.event.speedEnd();       
+          //   }
 
-            if( this._move_type==1 && !event.ctrlKey){
-            var left=self.x;
-            var top=self.y;
-            var opts={left:left,top:top,wheelDelta:0,gesture:self.gesture,state:self.state};
-            geomap.debug("##testMove: left="+opts.left+",top="+opts.top);
-            this._handleEvent.call(this,opts);
-            }
-          }.bind(this));
+          //   if( this._move_type==1 && !event.ctrlKey){
+          //   var left=self.x;
+          //   var top=self.y;
+          //   var opts={left:left,top:top,wheelDelta:0,gesture:self.gesture,state:self.state};
+          //   geomap.debug("##testMove: left="+opts.left+",top="+opts.top+",state="+self.state);
+          //   this._handleEvent.call(this,opts);
+          //   }
+          // }.bind(this));
  
-          eventjs.add(this.canvas,"wheel",function(event,self){ 
-            geomap.debug("wheel Event:state="+self.state+",wheelDelta="+self.wheelDelta+",gesture="+self.gesture+",pos"+event.clientX+","+event.clientY);
-            var opts={left:event.offsetX,top:event.offsetY,wheelDelta:self.wheelDelta,gesture:self.gesture,state:self.state};
-            this._handleEvent.call(this,opts);
-          }.bind(this));
+          // eventjs.add(this.canvas,"wheel",function(event,self){ 
+          //   geomap.debug("wheel Event:state="+self.state+",wheelDelta="+self.wheelDelta+",gesture="+self.gesture+",pos"+event.clientX+","+event.clientY);
+          //   var opts={left:event.offsetX,top:event.offsetY,wheelDelta:self.wheelDelta,gesture:self.gesture,state:self.state};
+          //   this._handleEvent.call(this,opts);
+          // }.bind(this));
       },
       _handleEvent:function(opts){
         if(opts.gesture =="wheel"){
@@ -184,6 +204,40 @@
               }
         }
       },
+      _moveStart:function(zoomChanged,noMoveStart){
+        if(zoomChanged){
+          this.fire('zoomstart');
+        }
+        if(!noMoveStart){
+          this.fire('movestart');
+        }
+        return this;
+      },
+      _move:function(center,zoom,data){
+        if(zoom ===undefined){
+          zoom=this.zoom;
+        }
+        var zoomChanged= this.zoom !== zoom;
+        this.zoom=zoom;
+        this._lastCenter=center;
+        //this._pixelOrigin=this._getNewPixelOrigin(center,zoom);
+        if(zoomChanged || (data && data.pinch)){
+          this.fire('zoom',data);
+        }
+        this.fire('move',data);
+        return this;
+      },
+      _moveEnd:function(zoomChanged){
+        if(zoomChanged){
+          this.fire("zoomend");
+        }
+        this.fire('moveend');
+        return this;
+      },
+      _getNewPixelOrigin:function(center,zoom){
+        //TODO 转换获取origin
+        var viewHalf=this.getSize()._divideBy(2);
+      },
       _initModel:function(){
         if(this.model=== undefined){
           this.model=new Model(this,{center:this.center,zoom:this.zoom});
@@ -207,13 +261,13 @@
         if(this._canrender==true || this._move_type==1){
           this._canrender=false;
           const ctx=this.canvasCtx;
-          var wh=geomap.coord.size(this._move_start,this._pos);
+         // var wh=geomap.coord.size(this._move_start,this._pos);
           this.canvasCtx.clearRect(0,0,this.width,this.height);
           for(var i=0,k=this.layers.length;i<k;i++){
                 var layer=this.layers[i];
                 layer.draw(ctx);
-          }
-            ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
+          } 
+          //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
         }
       },
       getCoord:function(p0){

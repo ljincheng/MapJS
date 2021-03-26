@@ -13,6 +13,7 @@
         viewSize:undefined,
         zoom:0,
         map:undefined,
+        transformtion:undefined,
         initialize: function(map,options) {
             options || (options = { });  
             this._setOptions(options);
@@ -20,9 +21,23 @@
             if(this.center === undefined){
                 this.center=new Point(0,0);
             }
-            this.map.on("zoom",this.setZoomScreen.bind(this));
-            this.map.on("move",this.panScreen.bind(this));
+            this.transformtion=new geomap.Transformtion(1,0,1,0);
+            //this.map.on("zoom",this.setZoomScreen.bind(this));
+            // this.map.on("move",this.panScreen.bind(this));
+            // this.map.on("dragstart",this.dragStart.bind(this));
+            // this.map.on("drag",this.drag.bind(this));
         },
+        // dragStart:function(arg){
+        //     var event=arg.event,self=arg.self;
+        //     this._dragStartPos=new Point(self.x,self.y);
+        //   },
+        // drag:function(arg){
+        //     var event=arg.event,self=arg.self;
+        //     var pos=new Point(self.x,self.y);
+        //     var  r1=this.resolution(this.zoom);
+        //     this.center._add(this._dragStartPos.subtract(pos).scaleBy(r1));
+        //     this._boundsChanged=true;   
+        // },
         resolution:function(zoom)
         {
             var x = (360 / (Math.pow(2, zoom)) / this.tileSize);
@@ -76,6 +91,7 @@
             return this;
         },
         setZoomScreen:function(opts){ 
+           
             var p1=new Point(opts.x,opts.y);
             var zoom=opts.z;
             var coord=this.screenToCoord(p1); 
@@ -88,7 +104,7 @@
         },
         panScreen:function(opts){
             var p1=new Point(opts.x,opts.y);
-            var zoom=opts.z;
+            var zoom=opts.z || this.zoom;
             var  r1=this.resolution(zoom);
             this.center._add(p1.scaleBy(r1));
             this._boundsChanged=true;

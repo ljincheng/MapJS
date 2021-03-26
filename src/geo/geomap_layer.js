@@ -4,6 +4,7 @@
     'use strict';
   
     var extend = geomap.util.object.extend;
+    var Point =geomap.Point;
   
     if (!global.geomap) {
       global.geomap = { };
@@ -30,7 +31,7 @@
       map:undefined,
       initialize: function( options) {
         options || (options = { }); 
-        this._setOptions(options);
+        this._setOptions(options); 
       }, 
       initLayer:function(canvas,map){
         this._canvas=canvas;
@@ -42,12 +43,61 @@
         this._layerCanvas=el_offscreen_canvas;
         this._layerCtx=offscreen_ctx;
         map.on("viewreset",this.viewReset.bind(this));
+        map.on("dragstart",this.dragStart.bind(this));
+        map.on("drag",this.drag.bind(this));
+        map.on("dragend",this.dragEnd.bind(this));
+        map.on("zoomstart",this.touchZoomStart.bind(this));
+        map.on("zoom",this.touchZoom.bind(this));
+        map.on("zoomend",this.touchZoomEnd.bind(this));
+      },
+      touchZoomStart:function(arg){
+        var event=arg.event,self=arg.self;
+        var p0=new Point(self.touches[0].x,self.touches[0].y);
+        var p1=new Point(self.touches[1].x,self.touches[1].y);
+        var cpos=p0.add(p1)._divideBy(2);
+        this._drawStart=cpos;
+      },
+      touchZoom:function(arg){
+        var event=arg.event,scale=arg.scale;
+        this._canvasScale=geomap.util.formatNum(scale,4);
+        this.map._canrender=true;
+      }, 
+      touchZoomEnd:function(arg){
+        var event=arg.event,scale=arg.scale;
+        this._canvasScale=geomap.util.formatNum(scale,4);
+        this.map._canrender=true;
+        this._draw();
+      },
+      dragStart:function(arg){
+        var event=arg.event,self=arg.self;
+        this._dragStartPos=new Point(self.x,self.y);
+      },
+      drag:function(arg){
+        var event=arg.event,self=arg.self;
+        var pos=new Point(self.x,self.y);
+        this._drawStart=pos._subtract(this._dragStartPos);
+        this.map._canrender=true;
+      },
+      dragEnd:function(arg){
+        var event=arg.event,self=arg.self; 
+       this._draw();
+      },
+      _draw:function(){ 
+        this._drawStart && this._drawStart.zero();
+        this._canvasScale=1;
+        var z=this.map.model.zoom,bounds=this.map.model.getBounds(),res=this.map.model.resolution(z);
+        this.drawlayer(z,res,bounds.min);
       },
       time_event:function(){
 
       },
       draw:function(ctx,options){
-        ctx.drawImage(this._layerCanvas,0,0);
+        var p0 = (this._drawStart || new Point(0,0)).round();
+        var scale=this._canvasScale || 1;
+        var size=this.map.getSize();
+        var box=size._multiplyBy(scale).round();
+        var p1=this.map.model.transformtion.transform(p0,1-scale).round();//._subtract(p0);
+        ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
       },
       viewReset:function(){
 

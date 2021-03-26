@@ -13,6 +13,11 @@
         clone: function(){
             return new Point(this.x,this.y);
         },
+        zero:function(){
+            this.x=0;
+            this.y=0;
+            return this;
+        },
         add: function(point){
             return this.clone()._add(point);
         },
@@ -59,6 +64,14 @@
         _unscaleBy:function(point){
             this.x=this.x / point.x;
             this.y=this.y / point.y;
+            return this;
+        },
+        round:function(){
+            return this.clone()._round();
+        },
+        _round:function(){
+            this.x=Math.round(this.x);
+            this.y=Math.round(this.y);
             return this;
         },
         floor:function(){
@@ -115,6 +128,10 @@
         return false;
     }
 
+    function isZeroPoint(p0){
+        return (p0.x==0 && p0.y ==0);
+    }
+
     function hasXY(p0){
         if(!p0){
             return false;
@@ -132,5 +149,6 @@
     geomap.util.toPoint=toPoint;
     geomap.util.isPoint=isPoint;
     geomap.util.hasXY=hasXY;
+    geomap.util.isZeroPoint=isZeroPoint;
   })();
   
