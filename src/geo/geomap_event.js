@@ -9,7 +9,7 @@
     TouchZoom.prototype={
         handle:function(event,self){
             eventjs.cancel(event);
-            geomap.debug("======================touchzoom======"+self.state);
+            geomap.debug("======================touchzoom======"+self.gesture+":"+self.state);
             if(self.state == 'start'){
                 this.start(event,self);
             }else if(self.state == 'end'){
@@ -75,28 +75,36 @@
             return this;
         },
         change:function(event,self){
+            
             if(!this._zooming ){
                 this._zooming=false;
                 return this;
             }
+           
             if(!this._moved){ 
+               
                 if(self.gesture =="wheel"){
-                    this._centerPos=new Point(self.x,self.y); 
+                    
+                    this._centerPos=new Point(self.x,self.y);  
                 }else{
                     var p0=new Point(self.touches[0].x,self.touches[0].y);
                     var p1=new Point(self.touches[1].x,self.touches[1].y);
                     var cpos=p0.add(p1)._divideBy(2);
                     this._centerPos=cpos;
                 }
-                geomap.debug("START:_centerPos="+cpos.toString());  
+               // geomap.debug("START:_centerPos="+cpos.toString());  
                 // this._startCoord=this.map.model.screenToCoord(cpos);
                 this._zoom=this.map.zoom;
+               
                 this.map.fire("zoomstart",{event:event,self:self,center:this._centerPos});
                 this._moved=true;
+               
               }
-              if(self.gesture =="wheel"){ 
+             
+              if(self.gesture == "wheel"){ 
+                geomap.debug("wheel=====");
                     var scale= this._wheelScale || 1;
-                  scale += self.wheelDelta/60;
+                  scale += self.wheelDelta/160;
                 this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
               }else{
                 var scale=self.scale;
