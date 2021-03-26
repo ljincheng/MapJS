@@ -9,7 +9,7 @@
     TouchZoom.prototype={
         handle:function(event,self){
             eventjs.cancel(event);
-            geomap.debug("======================touchzoom==========");
+            geomap.debug("======================touchzoom======"+self.state);
             if(self.state == 'start'){
                 this.start(event,self);
             }else if(self.state == 'end'){
@@ -80,25 +80,34 @@
                 return this;
             }
             if(!this._moved){ 
-                var p0=new Point(self.touches[0].x,self.touches[0].y);
-                var p1=new Point(self.touches[1].x,self.touches[1].y);
-                var cpos=p0.add(p1)._divideBy(2);
-                this._centerPos=cpos;
+                if(self.gesture =="wheel"){
+                    this._centerPos=new Point(self.x,self.y); 
+                }else{
+                    var p0=new Point(self.touches[0].x,self.touches[0].y);
+                    var p1=new Point(self.touches[1].x,self.touches[1].y);
+                    var cpos=p0.add(p1)._divideBy(2);
+                    this._centerPos=cpos;
+                }
                 geomap.debug("START:_centerPos="+cpos.toString());  
                 // this._startCoord=this.map.model.screenToCoord(cpos);
                 this._zoom=this.map.zoom;
-                this.map.fire("zoomstart",{event:event,self:self});
+                this.map.fire("zoomstart",{event:event,self:self,center:this._centerPos});
                 this._moved=true;
               }
-              var scale=self.scale;;
-              var cpos=this._centerPos;
-              var z=Math.round(scale)-1+this._zoom;
-              var opts={x:cpos.x,y:cpos.y,z:z};
-              var cet=this.map.model.center;
-              this.map.model.setZoomScreen(opts);
-              this.map.zoom=z;
-              this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
-           
+              if(self.gesture =="wheel"){ 
+                    var scale= this._wheelScale || 1;
+                  scale += self.wheelDelta/60;
+                this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
+              }else{
+                var scale=self.scale;
+                var cpos=this._centerPos;
+                var z=Math.round(scale)-1+this._zoom;
+                var opts={x:cpos.x,y:cpos.y,z:z};
+                var cet=this.map.model.center;
+                this.map.model.setZoomScreen(opts);
+                this.map.zoom=z;
+                this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
+              }
             return this;
         }  
     };

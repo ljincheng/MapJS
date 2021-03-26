@@ -138,7 +138,7 @@
 //         }.bind(this));
 
         //
-         eventjs.add(this.canvas,"gesture",this._eventTouchZoom.handle.bind(this._eventTouchZoom));
+         eventjs.add(this.canvas,"gesture wheel",this._eventTouchZoom.handle.bind(this._eventTouchZoom));
          eventjs.add(this.canvas,"drag",this._eventDrag.handle.bind(this._eventDrag));
 
           // eventjs.add(this.canvas,"drag",function(event,self){ 

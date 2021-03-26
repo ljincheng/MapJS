@@ -51,10 +51,10 @@
         map.on("zoomend",this.touchZoomEnd.bind(this));
       },
       touchZoomStart:function(arg){
-        var event=arg.event,self=arg.self;
-        var p0=new Point(self.touches[0].x,self.touches[0].y);
-        var p1=new Point(self.touches[1].x,self.touches[1].y);
-        var cpos=p0.add(p1)._divideBy(2);
+        var event=arg.event,cpos=arg.center;
+        // var p0=new Point(self.touches[0].x,self.touches[0].y);
+        // var p1=new Point(self.touches[1].x,self.touches[1].y);
+        // var cpos=p0.add(p1)._divideBy(2);
         this._drawStart=cpos;
       },
       touchZoom:function(arg){
