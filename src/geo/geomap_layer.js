@@ -15,7 +15,7 @@
       return;
     }
    
-    geomap.Layer = geomap.util.createClass(geomap.CommonMethods, geomap.Observable,  {
+    geomap.Layer = geomap.Class(geomap.CommonMethods, geomap.Observable,  {
       type: 'object',
       width:100,
       height:100,
@@ -46,9 +46,10 @@
         map.on("dragstart",this.dragStart.bind(this));
         map.on("drag",this.drag.bind(this));
         map.on("dragend",this.dragEnd.bind(this));
-        map.on("zoomstart",this.touchZoomStart.bind(this));
-        map.on("zoom",this.touchZoom.bind(this));
-        map.on("zoomend",this.touchZoomEnd.bind(this));
+        map.on("touchzoomstart",this.touchZoomStart.bind(this));
+        map.on("touchzoom",this.touchZoom.bind(this));
+        map.on("touchzoomend",this.touchZoomEnd.bind(this));
+        map.on("zoom",this.scrollZoom.bind(this));
       },
       touchZoomStart:function(arg){
         var event=arg.event,cpos=arg.center;
@@ -68,18 +69,23 @@
         this.map._canrender=true;
         this._draw();
       },
+      scrollZoom:function(arg){
+       
+        this.map._canrender=true;
+        this._draw();
+      },
       dragStart:function(arg){
-        var event=arg.event,self=arg.self;
-        this._dragStartPos=new Point(self.x,self.y);
+      //  var event=arg.event,self=arg.self;
+        this._dragStartPos=arg.point;//new Point(self.x,self.y);
       },
       drag:function(arg){
-        var event=arg.event,self=arg.self;
-        var pos=new Point(self.x,self.y);
-        this._drawStart=pos._subtract(this._dragStartPos);
+        // var event=arg.event,self=arg.self;
+        // var pos=new Point(self.x,self.y);
+        this._drawStart=arg.point.subtract(this._dragStartPos);
         this.map._canrender=true;
       },
       dragEnd:function(arg){
-        var event=arg.event,self=arg.self; 
+        // var event=arg.event,self=arg.self; 
        this._draw();
       },
       _draw:function(){ 

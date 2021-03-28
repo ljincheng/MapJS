@@ -51,7 +51,7 @@
               var cet=this.map.model.center;
               this.map.model.setZoomScreen(opts);
               this.map.zoom=z;
-              this.map.fire("zoomend",{event:event,scale:toScale,center:this._centerPos.clone()})
+              this.map.fire("touchzoomend",{event:event,scale:toScale,center:this._centerPos.clone()})
             }
 
            
@@ -64,7 +64,7 @@
                     var scaleV=this.scale+this.r; 
                     this.scale=scaleV;
                     geomap.debug("scaleV="+scaleV);
-                   this.map.fire("zoom",{event:this.eventObj,scale:scaleV,center:this.center}) ;
+                   this.map.fire("touchzoom",{event:this.eventObj,scale:scaleV,center:this.center}) ;
                    if((this.r>0 && scaleV>=this.toScale) || (this.r<0 && scaleV <= this.toScale)){
                     this.endFn();
                     window.clearInterval(this.other.TIMEOUTTAG);
@@ -83,30 +83,22 @@
            
             if(!this._moved){ 
                
-                if(self.gesture =="wheel"){
-                    
-                    this._centerPos=new Point(self.x,self.y);  
-                }else{
-                    var p0=new Point(self.touches[0].x,self.touches[0].y);
-                    var p1=new Point(self.touches[1].x,self.touches[1].y);
-                    var cpos=p0.add(p1)._divideBy(2);
-                    this._centerPos=cpos;
-                }
+                
+                var p0=new Point(self.touches[0].x,self.touches[0].y);
+                var p1=new Point(self.touches[1].x,self.touches[1].y);
+                var cpos=p0.add(p1)._divideBy(2);
+                this._centerPos=cpos;
+                 
                // geomap.debug("START:_centerPos="+cpos.toString());  
                 // this._startCoord=this.map.model.screenToCoord(cpos);
                 this._zoom=this.map.zoom;
                
-                this.map.fire("zoomstart",{event:event,self:self,center:this._centerPos});
+                this.map.fire("touchzoomstart",{event:event,self:self,center:this._centerPos});
                 this._moved=true;
                
               }
              
-              if(self.gesture == "wheel"){ 
-                geomap.debug("wheel=====");
-                    var scale= this._wheelScale || 1;
-                  scale += self.wheelDelta/160;
-                this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
-              }else{
+              
                 var scale=self.scale;
                 var cpos=this._centerPos;
                 var z=Math.round(scale)-1+this._zoom;
@@ -114,8 +106,8 @@
                 var cet=this.map.model.center;
                 this.map.model.setZoomScreen(opts);
                 this.map.zoom=z;
-                this.map.fire("zoom",{event:event,scale:scale,center:this._centerPos.clone()})
-              }
+                this.map.fire("touchzoom",{event:event,scale:scale,center:this._centerPos.clone()})
+               
             return this;
         }  
     };
@@ -156,7 +148,7 @@
                 return this;
             }
             this._traging=false; 
-            this.map.fire("dragend",{event:event,self:self});
+            this.map.fire("dragend",{event:event,self:self,point:new Point(self.x,self.y)});
             eventjs.cancel(event);
             return this;
         },
@@ -168,7 +160,7 @@
  
             if(!this._moved ){
                 this._startPos=new Point(self.x,self.y);
-                this.map.fire("dragstart",{event:event,self:self});
+                this.map.fire("dragstart",{event:event,self:self,point:this._startPos});
                 this._moved=true;
             }
             if(this._inertia){
@@ -179,19 +171,53 @@
                 // this._times.push(time);
            }
            var pos=new Point(self.x,self.y)
-           pos.subtract(this._startPos);
+          // pos.subtract(this._startPos);
 
            this.map.model.panScreen(this._startPos.subtract(pos));
            this._startPos=pos;
-            this.map.fire("drag",{event:event,self:self})
+            this.map.fire("drag",{event:event,self:self,point:pos})
             geomap.debug("TEST:"+self.gesture+":state="+self.state);  
             return this;
         }
     };
 
+    function ScrollWheelZoom(map){
+        this._map=map;
+    };
+
+    ScrollWheelZoom.prototype={
+        handle:function(event,self){
+            eventjs.cancel(event);
+            
+            geomap.debug("===========ScrollWheelZoom======"+self.gesture+":"+self.state);
+            
+            
+            if(self.state == 'start'){
+                this._centerPoint=new Point(event.offsetX,event.offsetY);
+                if (!this._startTime) {
+                    this._startTime = +new Date();
+                } 
+                this._map.fire("zoomstart",{center:this._centerPoint,wheelDelta:self.wheelDelta});
+            }else if(self.state == 'end'){
+                this._map.fire("zoomend",{center:this._centerPoint,wheelDelta:self.wheelDelta});
+            }else{
+                var left = (+new Date() - this._startTime);
+                if(left >150){
+                var z=this._map._limitZoom(this._map.zoom+(self.wheelDelta>0?1:-1));
+                this._map.zoom=z;
+                this._map.model.setZoomScreen({z:z,x:this._centerPoint.x,y:this._centerPoint.y});
+                geomap.debug("==wheelZoom====z="+z+",center="+this._centerPoint.toString());
+                this._map.fire("zoom",{center:this._centerPoint,z:z});
+                this._startTime = +new Date();
+                }
+            }
+
+          
+        }
+    };
  
 
-    geomap.MapEvent={TouchZoom:TouchZoom,Drag:Drag};
+    geomap.MapEvent={TouchZoom:TouchZoom,Drag:Drag,ScrollWheelZoom:ScrollWheelZoom};
      
  
   })();

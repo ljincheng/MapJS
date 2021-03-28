@@ -111,6 +111,6 @@
       return klass;
     }
   
-    geomap.util.createClass = createClass;
+    geomap.Class = createClass;
   })();
   

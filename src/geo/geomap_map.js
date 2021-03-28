@@ -19,7 +19,7 @@
       return;
     }
    
-    geomap.Map = geomap.util.createClass(geomap.CommonMethods, geomap.Observable, {
+    geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, {
       type: 'object',
       width:100,
       height:100,
@@ -79,8 +79,12 @@
 
     },
       _initEvent:function(){
-        this._eventDrag=new geomap.MapEvent.Drag(this);
+
+        // var dragEvent=new geomap.MapEvent2.Drag(this);
+        // dragEvent.addEvent(this.canvas);
+       this._eventDrag=new geomap.MapEvent.Drag(this);
         this._eventTouchZoom=new geomap.MapEvent.TouchZoom(this);
+        this._eventWheelZoom=new geomap.MapEvent.ScrollWheelZoom(this);
         //调试
         // eventjs.add(this.canvas,"mousemove",function(event,self){ 
           
@@ -138,8 +142,9 @@
 //         }.bind(this));
 
         //
-         eventjs.add(this.canvas,"gesture wheel",this._eventTouchZoom.handle.bind(this._eventTouchZoom));
+         eventjs.add(this.canvas,"gesture",this._eventTouchZoom.handle.bind(this._eventTouchZoom));
          eventjs.add(this.canvas,"drag",this._eventDrag.handle.bind(this._eventDrag));
+         eventjs.add(this.canvas,"wheel",this._eventWheelZoom.handle.bind(this._eventWheelZoom));
 
           // eventjs.add(this.canvas,"drag",function(event,self){ 
           //   geomap.debug("##testMove2: state="+self.state);
@@ -203,6 +208,14 @@
               this.fire("drawmap");
               }
         }
+      },
+      _limitZoom:function(z){
+        if(this.maxZoom<z){
+          return this.maxZoom;
+        }else if (this.minZoom>z){
+          return this.minZoom;
+        }
+        return z;
       },
       _moveStart:function(zoomChanged,noMoveStart){
         if(zoomChanged){

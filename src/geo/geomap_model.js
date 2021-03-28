@@ -3,7 +3,7 @@
     var Point =geomap.Point;
     var Bounds =geomap.Bounds;
     var toPoint=geomap.util.toPoint;
-    geomap.Model = geomap.util.createClass(geomap.CommonMethods, geomap.Observable, {
+    geomap.Model = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         type: 'object',
         origin:new Point(-180,-90),
         tileSize:256,
@@ -13,7 +13,7 @@
         viewSize:undefined,
         zoom:0,
         map:undefined,
-        transformtion:undefined,
+        transformtion:new geomap.Transformtion(1,0,1,0),
         initialize: function(map,options) {
             options || (options = { });  
             this._setOptions(options);
@@ -21,7 +21,7 @@
             if(this.center === undefined){
                 this.center=new Point(0,0);
             }
-            this.transformtion=new geomap.Transformtion(1,0,1,0);
+           // this.transformtion=new geomap.Transformtion(1,0,1,0);
             //this.map.on("zoom",this.setZoomScreen.bind(this));
             // this.map.on("move",this.panScreen.bind(this));
             // this.map.on("dragstart",this.dragStart.bind(this));
@@ -91,13 +91,13 @@
             return this;
         },
         setZoomScreen:function(opts){ 
-           
-            var p1=new Point(opts.x,opts.y);
             var zoom=opts.z;
+            var p1=new Point(opts.x,opts.y);
             var coord=this.screenToCoord(p1); 
             var  r1=this.resolution(zoom);
             var min= coord._subtract(p1.scaleBy(r1));
             this.center=this.map.getSize()._scaleBy(r1)._divideBy(2).add(min);
+            
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;
