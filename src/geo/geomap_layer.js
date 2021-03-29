@@ -29,6 +29,7 @@
       _layerCtx:null,
       _drawLock:1,
       map:undefined,
+      url:null,
       initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options); 
@@ -158,7 +159,8 @@
          var t=Math.floor(top+tsize*r);
          if( x>=0 && y>=0 ){
             // var imgUrl="http://mt1.google.cn/vt/x="+x+"&y="+y+"&z="+z;
-            var imgUrl="https://c.tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png";
+            // var imgUrl="https://c.tile.openstreetmap.org/"+z+"/"+x+"/"+y+".png";
+            var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
             // var imgUrl="https://maponline0.bdimg.com/tile/?qt=vtile&x="+x+"&y="+y+"&z="+z+"&styles=pl&udt=20210318&scaler=1&showtext=1";
             // var imgUrl="https://maponline3.bdimg.com/tile/?qt=vtile&x="+x+"&y="+y+"&z="+z+"&styles=pl&udt=20210318&scaler=1&showtext=1";
             this.fromURL(imgUrl,{left:l,top:t,lock:lock});  

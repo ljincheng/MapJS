@@ -54,48 +54,11 @@ var winWidth,winHeight,mapHeight,map;
         
     };
     map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:mapHeight,maxZoom:17,zoom:2,debug:writeDebug});
-    var tileLayer=new geomap.Layer({});
+    var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     map.addLayer(tileLayer);
-    // map.on("wheel",function(opt){
-    //     geomap.log("wheel ON="+opt.self.wheelDelta);
-    // });
-    // console.log("MAP options(width="+map.width+")");
-
-    // var eventEl=document.getElementById("_map_root");
-    // rootDiv=document.getElementById("_map_layer");
-    // eventjs.add(eventEl,"click",function(event,self){
-    //     console.log("CLICK=",self.gesture,self.x,self.y);
-    // });
-    // eventjs.add(eventEl,"drag",function(event,self){
-    //     console.log("drag=",self.gesture,self.x,self.y, "fingers=",self.fingers,"state=",self.state,"start=",self.start,self.bbox);
-        
-    //  geomap.util.event.moving(self.x,self.y);
-     
-    //     if(self.state=="down"){
-    //         myOP=1;
-    //         startXY=[self.x,self.y];
-    //         geomap.util.event.speedStart(self.x,self.y);
-    //     }else if(self.state =="up"){
-    //         myOP=0;
-    //       //  startXY=[self.x,self.y];
-    //         geomap.util.event.speedEnd();       
-    //     }else if(self.state =="move"){
-    //         geomap.util.event.moving(self.x,self.y);
-    //         if(myOP==1){
-    //             startXY=[self.x,self.y];
-    //         }
-
-    //     }else{
-    //         myOP=0;
-    //       //  startXY=[self.x,self.y];
-    //         geomap.util.event.speedEnd();
-    //     }
-       
-    // });
-    console.log("hello !");
-    // setInterval(dragingFn,20);
-
-    /// Prevent native scrolling in iOS.
+    var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
+    map.addLayer(parkingLayer);
+   
 eventjs.add(document.body, 'touchmove', eventjs.prevent);
 
 /// Prevent right-click on desktops.
@@ -106,6 +69,7 @@ eventjs.add(document, 'touchstart', eventjs.prevent);
  }
 
  function winResize(){
+
      winWidth=window.innerWidth;
     winHeight=window.innerHeight;
     mapHeight=Math.floor( winHeight/2);

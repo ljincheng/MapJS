@@ -79,6 +79,14 @@
         this._eventDrag.addEvent(this._container);
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
+        eventjs.add(this._container,"mousemove",function(event,self){
+
+          if(event.ctrlKey){
+          var coord=this.screenToCoord(new Point(event.offsetX,event.offsetY));
+          geomap.debug("mousemove|coord="+coord.toString());
+          }
+
+        }.bind(this));
       }, 
       _limitZoom:function(z){
         if(this.maxZoom<z){

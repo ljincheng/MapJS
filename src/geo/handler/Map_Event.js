@@ -34,21 +34,6 @@
                     this.__touch_zoom=this.zoom;
                 this.fire("touchzoomstart",{event:e,point:p});
             },
-        //     touchZoom:function(e,p,scale){
-        //         var z=Math.round(scale)-1+this.__touch_zoom;
-        //         geomap.debug("touchZoom:p="+p.toString()+",z="+z+",scale="+scale);
-        //         this.setZoomScreen(this.__touch_point,z);
-        //         this.zoom=z;
-        //         this.fire("touchzoom",{event:e,scale:scale,point:this.__touch_point});
-
-        //     },
-        //     touchScaleRun:function(e,p,scale){
-        //             var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
-        //             geomap.debug("(Map_Event)touchZoomEnd:p="+",z="+z+"scale="+scale+",zoom="+this.__touch_zoom);
-        //             this.setZoomScreen(this.__touch_point,z);
-        //             this.zoom=z;
-        //             this.fire("touchzoomend",{event:e,scale:scale,point:this.__touch_point});
-        //     },
         touchZoom:function(e,p,scale){
                 geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
