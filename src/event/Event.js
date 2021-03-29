@@ -140,7 +140,7 @@
                       this._timer=null;
                   }
                   var point=new Point(event.offsetX,event.offsetY);
-                  this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),50);
+                  this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),20);
                   
               } 
           },
