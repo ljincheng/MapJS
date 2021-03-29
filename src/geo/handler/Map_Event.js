@@ -4,35 +4,79 @@
 
     var Point =geomap.Point;
  
-    var MapDrag = geomap.Class(geomap.CommonMethods,geomap.EventDrag,{
-        initialize: function(map, options) {
-            options || (options = { }); 
-            this._setOptions(options); 
-            this._map=map;
-          }, 
-          addEvent:function(element){
-            eventjs.add(element,"drag",this.dragEvent.bind(this));
-          },
-          start:function(event,point){
-            this._startPoint=point;
-            this._map.fire("dragstart",{event:event,point:point.clone()});
-          },
-          end:function(event,point){
-            geomap.debug("======drag end:point="+point.toString());
-            this._map.fire("dragend",{event:event,point:point});
-          },
-          change:function(event,point){
-            // this._startPos=pos;
-            var pos=this._startPoint.subtract(point);
-            geomap.debug("change:pos="+pos.toString());
-            this._map.model.panScreen(pos);
-            this._startPos=point;
-            this._map.fire("drag",{event:event,point:point});
-          }
-    });
+     geomap.MapEvent ={
+            wheelZoomStart:function(e,p,delta){
+                this.fire("zoomstart",{event:e,point:p,delta:delta,zoom:this.zoom});
+            },
+            wheelZoom:function(e,p,delta){
+                var z=this.zoom+(delta>0?1:-1);
+                var zoom=this._limitZoom(z);
+                this.setZoomScreen(p,zoom);
+                this.fire("zoom",{event:e,point:p,delta:delta,zoom:zoom});
+            },
+            wheelZoomEnd:function(e,p,delta){
+                this.fire("zoomend",{event:e,point:p,delta:delta});
+            },
+            dragStart:function(e,p){
+                this.__startPos=p;
+                this.fire("dragstart",{event:e,point:p});
+            },
+            dragChange:function(e,p){
+                this.panScreen(this.__startPos.subtract(p)); 
+                this.fire("drag",{event:e,point:p});
+                this.__startPos=p;
+            },
+            dragEnd:function(e,p){
+                this.fire("dragend",{event:e,point:p});
+            },
+            touchZoomStart:function(e,p){
+                    this.__touch_point=p;
+                    this.__touch_zoom=this.zoom;
+                this.fire("touchzoomstart",{event:e,point:p});
+            },
+        //     touchZoom:function(e,p,scale){
+        //         var z=Math.round(scale)-1+this.__touch_zoom;
+        //         geomap.debug("touchZoom:p="+p.toString()+",z="+z+",scale="+scale);
+        //         this.setZoomScreen(this.__touch_point,z);
+        //         this.zoom=z;
+        //         this.fire("touchzoom",{event:e,scale:scale,point:this.__touch_point});
+
+        //     },
+        //     touchScaleRun:function(e,p,scale){
+        //             var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
+        //             geomap.debug("(Map_Event)touchZoomEnd:p="+",z="+z+"scale="+scale+",zoom="+this.__touch_zoom);
+        //             this.setZoomScreen(this.__touch_point,z);
+        //             this.zoom=z;
+        //             this.fire("touchzoomend",{event:e,scale:scale,point:this.__touch_point});
+        //     },
+        touchZoom:function(e,p,scale){
+                geomap.debug("(Map_Event) scale="+scale);
+                    var r0=this.getScale(this.__touch_zoom);
+                    var s1=r0 * scale;
+                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                geomap.debug("(Map_Event) newZoom="+newZoom);
+                // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
+                var z=newZoom;
+                this.setZoomScreen(this.__touch_point,z);
+                this.zoom=z;
+                this.fire("touchzoom",{event:e,scale:scale,point:this.__touch_point});
+            },
+            touchZoomEnd:function(e,p,scale){
+                var r0=this.getScale(this.__touch_zoom);
+                var s1=r0 * scale;
+                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                var z=newZoom;
+                geomap.debug("(Map_Event) newZoom="+newZoom);
+                // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
+                this.setZoomScreen(this.__touch_point,z);
+                this.zoom=z;
+                this.fire("touchzoomend",{event:e,scale:scale,point:this.__touch_point});
+                }
+            
+        };
      
   
-    geomap.MapEvent2={Drag:MapDrag};
+   // geomap.MapEvent2=MapEvent;
      
  
   })();

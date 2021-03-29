@@ -35,13 +35,14 @@
       }, 
       initLayer:function(canvas,map){
         this._canvas=canvas;
-        this.width=map.width;
-        this.height=map.height;
+        
         this.map=map;
-        var el_offscreen_canvas=geomap.util.element.create("canvas",{width:this.width,height:this.height},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",width:this.width+"px",height:this.height+"px",top:"0px"});
+        var el_offscreen_canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
         const offscreen_ctx=el_offscreen_canvas.getContext("2d");
         this._layerCanvas=el_offscreen_canvas;
         this._layerCtx=offscreen_ctx;
+        this.resize();
+        map.on("resize",this.resize.bind(this));
         map.on("viewreset",this.viewReset.bind(this));
         map.on("dragstart",this.dragStart.bind(this));
         map.on("drag",this.drag.bind(this));
@@ -51,27 +52,33 @@
         map.on("touchzoomend",this.touchZoomEnd.bind(this));
         map.on("zoom",this.scrollZoom.bind(this));
       },
+      resize:function(){
+        var size=this.map.getSize();
+        this.width=size.x;
+        this.height=size.y;
+        this._layerCanvas.width=size.x;
+        this._layerCanvas.height=size.y;
+        this._layerCanvas.style.width=size.x+"px";
+        this._layerCanvas.style.height=size.y+"px";
+      },
       touchZoomStart:function(arg){
-        var event=arg.event,cpos=arg.center;
-        // var p0=new Point(self.touches[0].x,self.touches[0].y);
-        // var p1=new Point(self.touches[1].x,self.touches[1].y);
-        // var cpos=p0.add(p1)._divideBy(2);
+        var event=arg.event,cpos=arg.point;
         this._drawStart=cpos;
       },
       touchZoom:function(arg){
         var event=arg.event,scale=arg.scale;
         this._canvasScale=geomap.util.formatNum(scale,4);
-        this.map._canrender=true;
+        this.map._redrawing=true;
       }, 
       touchZoomEnd:function(arg){
         var event=arg.event,scale=arg.scale;
-        this._canvasScale=geomap.util.formatNum(scale,4);
-        this.map._canrender=true;
+        // this._canvasScale=geomap.util.formatNum(scale,4);
+        this.map._redrawing=true;
         this._draw();
       },
       scrollZoom:function(arg){
        
-        this.map._canrender=true;
+        this.map._redrawing=true;
         this._draw();
       },
       dragStart:function(arg){
@@ -82,7 +89,7 @@
         // var event=arg.event,self=arg.self;
         // var pos=new Point(self.x,self.y);
         this._drawStart=arg.point.subtract(this._dragStartPos);
-        this.map._canrender=true;
+        this.map._redrawing=true;
       },
       dragEnd:function(arg){
         // var event=arg.event,self=arg.self; 
@@ -91,7 +98,7 @@
       _draw:function(){ 
         this._drawStart && this._drawStart.zero();
         this._canvasScale=1;
-        var z=this.map.model.zoom,bounds=this.map.model.getBounds(),res=this.map.model.resolution(z);
+        var z=this.map.zoom,bounds=this.map.getBounds(),res=this.map.resolution(z);
         this.drawlayer(z,res,bounds.min);
       },
       time_event:function(){
@@ -102,12 +109,12 @@
         var scale=this._canvasScale || 1;
         var size=this.map.getSize();
         var box=size._multiplyBy(scale).round();
-        var p1=this.map.model.transformtion.transform(p0,1-scale).round();//._subtract(p0);
+        var p1=this.map.transformtion.transform(p0,1-scale).round();//._subtract(p0);
         ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
       },
       viewReset:function(){
 
-        var z=this.map.zoom,bounds=this.map.model.getBounds(),res=this.map.model.resolution(z);
+        var z=this.map.zoom,bounds=this.map.getBounds(),res=this.map.resolution(z);
         this.drawlayer(z,res,bounds.min);
 
       },
@@ -122,19 +129,6 @@
         var top = -(y-o.y)/res.y +tsize*(row);
         return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
       },
-      // getTileInfo:function(res,pos){
-      //   // var res=this.resolution(level);
-      //   var x=pos[0],y=pos[1];
-      //   var o=this.origin;
-      //   var tsize=this.tileSize;
-      //   var cell=Math.floor((x-o.x)/res.x/tsize);
-      //   var row=Math.floor((o.y-y)/res.y/tsize);
-      //   var left=-(x-o.x)/res.x +tsize*cell;
-      //   var top= -(o.y-y)/res.y +tsize*row;
-      //   var minx=x+ left*res.x;
-      //   var miny=y+ top*res.y;
-      //   return {cell:cell,row:row,left:left,top:top,res:res,minx:minx,miny:miny,tsize:tsize};
-      // },
       drawlayer:function(z,res,point){
         var lock=this._drawLock+1;
         this._drawLock=lock;

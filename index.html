@@ -15,49 +15,25 @@
         <script type="text/javascript" src="src/geo/geomap_point.js"></script>
         <script type="text/javascript" src="src/geo/geomap_transformation.js"></script>
         <script type="text/javascript" src="src/event/Event.js"></script>
-        <script type="text/javascript" src="src/event/Drag.js"></script>
-        
         <script type="text/javascript" src="src/geo/geomap_bounds.js"></script>
         <script type="text/javascript" src="src/geo/geomap_coord.js"></script>
         <script type="text/javascript" src="src/geo/geomap_model.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_event.js"></script>
         <script type="text/javascript" src="src/geo/handler/Map_Event.js"></script>
         <script type="text/javascript" src="src/geo/geomap_map.js"></script>
         <script type="text/javascript" src="src/geo/geomap_layer.js"></script>
-        
     </head>
-<body onload="winLoad()" style="margin: 0px; padding:0px;">
-<div id="mapDiv"></div>
+<body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
+<div id="mapDiv" style="border: 1px solid blue;"></div>
   <div id="debugDiv" style="position: absolute;left:0px;bottom: 0px; overflow-y: hidden;"></div>   
  <div id="imagePlan"></div>
  <script type="text/javascript">
-    //  var rootDiv=null;
-    //  var startXY=[0,0];
-    //  var myOP=0;
-       
-
-    //     function dragingFn(){
-            
-    //         var speed=geomap.util.event.speeding();
-    //       //  console.log("speed="+speed[0]+","+speed[1]+",startXY="+startXY[0]+","+startXY[1]);
-    //         var pos=geomap.util.matrixAdd(speed,startXY);
-    //         startXY=pos;
-    //      //   console.log("pos="+pos[0]+","+pos[1]+",startXY="+startXY[0]+","+startXY[1]);
-    //         rootDiv.style.left=(pos[0]-50)+"px";
-    //         rootDiv.style.top=(pos[1]-50)+"px";
-    //     }
+  
+var winWidth,winHeight,mapHeight,map;
 
     function winLoad(){
-        var winWidth=window.innerWidth;
-        var winHeight=window.innerHeight;
-    var url="http://fabricjs.com/article_assets/9.png";
-
-    
-
-    // geomap.util.loadImage(url, function(img, isError) {
-    //      document.getElementById("imagePlan").appendChild(img);
-    //     }, null, null);
-
+         winWidth=window.innerWidth;
+         winHeight=window.innerHeight;
+   
     var mapHeight=Math.floor( winHeight/2);
     var debugDiv=document.getElementById("debugDiv");
     debugDiv.style.top=mapHeight+"px";
@@ -77,7 +53,7 @@
         debugDiv.innerHTML=html;
         
     };
-    var map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:mapHeight,maxZoom:17,zoom:2,debug:writeDebug});
+    map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:mapHeight,maxZoom:17,zoom:2,debug:writeDebug});
     var tileLayer=new geomap.Layer({});
     map.addLayer(tileLayer);
     // map.on("wheel",function(opt){
@@ -127,6 +103,15 @@ eventjs.add(document.body, 'contextmenu', eventjs.prevent);
 
 /// Prevent elastic scrolling.
 eventjs.add(document, 'touchstart', eventjs.prevent);
+ }
+
+ function winResize(){
+     winWidth=window.innerWidth;
+    winHeight=window.innerHeight;
+    mapHeight=Math.floor( winHeight/2);
+   document.getElementById("mapDiv").style.width=winWidth+"px";
+   document.getElementById("mapDiv").style.height=mapHeight+"px";
+   map.resize();
  }
 
 
