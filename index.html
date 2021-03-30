@@ -13,6 +13,7 @@
         <script type="text/javascript" src="src/core/util_element.js"></script>
         <script type="text/javascript" src="src/core/util_event.js"></script>
         <script type="text/javascript" src="src/core/Class.js"></script>
+        <script type="text/javascript" src="src/core/Request.js"></script>
         <script type="text/javascript" src="src/geo/geomap_point.js"></script>
         <script type="text/javascript" src="src/geo/geomap_transformation.js"></script>
         <script type="text/javascript" src="src/event/Event.js"></script>
@@ -32,6 +33,8 @@
     <label>Y:</label><input type="text" id="coordY" value="0"/>
     <label>Z:</label><input type="text" id="coordZ" value="1"/>
     　<input type="button" value="跳转到设置点" onclick="moveToCoord()">
+    <input type="button" value="刷新地图配置" onclick="ReloadMapSetting()">
+    <input type="button" value="绘图" onclick="DrawGeom()">
 </div>
   <div id="debugDiv" style="z-index:2;position: absolute;left:0px;bottom: 0px; overflow-y: hidden; border:0px solid blue;"></div>   
  <div id="imagePlan"></div>
@@ -43,7 +46,7 @@ var winWidth,winHeight,mapHeight,map;
          winWidth=window.innerWidth;
          winHeight=window.innerHeight;
    
-    var mapHeight=Math.floor( winHeight/2);
+     mapHeight=Math.floor( winHeight *3/4);
     var debugDiv=document.getElementById("debugDiv");
     var toolDiv=document.getElementById("toolDiv");
     toolDiv.style.top=mapHeight+"px";
@@ -89,7 +92,8 @@ eventjs.add(document, 'touchstart', eventjs.prevent);
 
      winWidth=window.innerWidth;
     winHeight=window.innerHeight;
-    mapHeight=Math.floor( winHeight/2);
+      
+    mapHeight=Math.floor( winHeight *3/4);
    document.getElementById("mapDiv").style.width=winWidth+"px";
    document.getElementById("mapDiv").style.height=mapHeight+"px";
    map.resize();
@@ -102,6 +106,32 @@ eventjs.add(document, 'touchstart', eventjs.prevent);
      map.moveTo([coordX,coordY],coordZ);
  }
 
+function ReloadMapSetting(){
+    var url="../apps/geo/map/reload";
+    geomap.request(url,{method:"POST",body:{a:1,b:2},onComplete:function(data){
+        var res=data.response,status=data.status; 
+        geomap.debug("["+url+",status="+status+"]data:"+res);
+    }});
+}
+
+/*
+Filter result = CQL.toFilter( "CONTAINS(ATTR1, POINT(1 2))" );
+Filter result = CQL.toFilter( "BBOX(ATTR1, 10,20,30,40)" );
+Filter result = CQL.toFilter( "DWITHIN(ATTR1, POINT(1 2), 10, kilometers)" );
+Filter result = CQL.toFilter( "CROSS(ATTR1, LINESTRING(1 2, 10 15))" );
+Filter result = CQL.toFilter( "INTERSECT(ATTR1, GEOMETRYCOLLECTION (POINT (10 10),POINT (30 30),LINESTRING (15 15, 20 20)) )" );
+Filter result = CQL.toFilter( "CROSSES(ATTR1, LINESTRING(1 2, 10 15))" );
+Filter result = CQL.toFilter( "INTERSECTS(ATTR1, GEOMETRYCOLLECTION (POINT (10 10),POINT (30 30),LINESTRING (15 15, 20 20)) )" );
+*/
+function DrawGeom(){
+    var url="../apps/geo/map/fs";
+    var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
+    var bodyData="type=query&layerName=geo_parking_polygon&geometry="+geomtry+"&filter=CONTAINS(geom, POINT(-83.24153065681458 46.58482074737549))";
+    geomap.request(url,{method:"POST",body:bodyData,onComplete:function(data){
+        var res=data.response,status=data.status; 
+        geomap.debug("["+url+",status="+status+"]data:"+res);
+    }});
+}
 </script>   
 </body>
 </html>
