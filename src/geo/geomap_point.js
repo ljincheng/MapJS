@@ -1,6 +1,12 @@
 (function() {
 
     function Point(x,y){
+        if(typeof x == 'string'){
+            x=Number(x);
+        }
+        if(typeof y == 'string'){
+            y=Number(y);
+        }
         this.x=x;
         this.y=y;
     };
@@ -101,6 +107,10 @@
         distanceTo: function(point){
             var x=point.x-this.x,y=point.y-this.y;
             return Math.sqrt(x * x + y * y);
+        },
+        equals:function(p){
+            p=toPoint(p);
+            return p.x === this.x && p.y === this.y;
         },
         toString:function(){
             return "Point("+this.x+","+this.y+")";

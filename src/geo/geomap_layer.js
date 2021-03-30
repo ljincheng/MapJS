@@ -89,8 +89,11 @@
       drag:function(arg){
         // var event=arg.event,self=arg.self;
         // var pos=new Point(self.x,self.y);
-        this._drawStart=arg.point.subtract(this._dragStartPos);
-        this.map._redrawing=true;
+        //geomap.debug("changeMap:"+arg.changeMap);
+        if(arg.boundsChanged){
+          this._drawStart=arg.point.subtract(this._dragStartPos);
+          this.map._redrawing=true;
+        }
       },
       dragEnd:function(arg){
         // var event=arg.event,self=arg.self; 

@@ -53,8 +53,8 @@
             if(this.zoom==zoom){
                 return this;
             }
-            var sc1=this.coordToScreen(p0);
-            var  r1=this.resolution(zoom);
+            var sc1=this.coordToScreen(coord);
+            var r1=this.resolution(zoom);
             var min= coord.subtract(sc1._scaleBy(r1));
             this.center=this.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
             this.zoom=zoom;

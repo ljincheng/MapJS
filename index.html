@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="src/HEADER.js"></script>
         <script type="text/javascript" src="src/globalGeomap.js"></script>
@@ -21,10 +22,18 @@
         <script type="text/javascript" src="src/geo/handler/Map_Event.js"></script>
         <script type="text/javascript" src="src/geo/geomap_map.js"></script>
         <script type="text/javascript" src="src/geo/geomap_layer.js"></script>
+        <script type="text/javascript" src="src/geo/geomap_path.js"></script>
+        <script type="text/javascript" src="src/geo/geomap_palette.js"></script>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
-<div id="mapDiv" style="border: 1px solid blue;"></div>
-  <div id="debugDiv" style="position: absolute;left:0px;bottom: 0px; overflow-y: hidden;"></div>   
+<div id="mapDiv" style="z-index:1;border:0px solid blue;"></div>
+<div id="toolDiv" style="z-index: 999; position: absolute; left: 0px; top:0px;height: 30px; border-top: 1px solid #e4e4e4; border-bottom: 1px solid #e4e4e4; padding: 10px;">
+    <label>X:</label><input type="text" id="coordX" value="0" />
+    <label>Y:</label><input type="text" id="coordY" value="0"/>
+    <label>Z:</label><input type="text" id="coordZ" value="1"/>
+    　<input type="button" value="跳转到设置点" onclick="moveToCoord()">
+</div>
+  <div id="debugDiv" style="z-index:2;position: absolute;left:0px;bottom: 0px; overflow-y: hidden; border:0px solid blue;"></div>   
  <div id="imagePlan"></div>
  <script type="text/javascript">
   
@@ -36,8 +45,12 @@ var winWidth,winHeight,mapHeight,map;
    
     var mapHeight=Math.floor( winHeight/2);
     var debugDiv=document.getElementById("debugDiv");
-    debugDiv.style.top=mapHeight+"px";
-    debugDiv.style.height=mapHeight+"px";
+    var toolDiv=document.getElementById("toolDiv");
+    toolDiv.style.top=mapHeight+"px";
+    toolDiv.style.width=winWidth+"px";
+
+    debugDiv.style.top=(mapHeight+50)+"px";
+    debugDiv.style.height=(mapHeight-50)+"px";
     debugDiv.style.width=winWidth+"px";
     var debugTxtList=["","","","","","","","","","","","","","","","","","","","","","","","",""];
     function writeDebug(txt){
@@ -53,12 +66,16 @@ var winWidth,winHeight,mapHeight,map;
         debugDiv.innerHTML=html;
         
     };
-    map=new geomap.Map(document.getElementById("mapDiv"),{width:winWidth,height:mapHeight,maxZoom:17,zoom:2,debug:writeDebug});
+    document.getElementById("mapDiv").style.width=winWidth+"px";
+   document.getElementById("mapDiv").style.height=mapHeight+"px";
+    map=new geomap.Map(document.getElementById("mapDiv"),{center:[114.02262568473816,-11.574944257736206],maxZoom:17,zoom:15,debug:writeDebug});
     var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     map.addLayer(tileLayer);
     var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
     map.addLayer(parkingLayer);
-   
+    map.addLayer(new geomap.Palette({url:""}));
+    
+    // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
 eventjs.add(document.body, 'touchmove', eventjs.prevent);
 
 /// Prevent right-click on desktops.
@@ -78,6 +95,12 @@ eventjs.add(document, 'touchstart', eventjs.prevent);
    map.resize();
  }
 
+ function moveToCoord(){ 
+     var coordX=document.getElementById("coordX").value;//geomap.util.formatNum(document.getElementById("coordX").value,6);
+     var coordY=document.getElementById("coordY").value;//geomap.util.formatNum(document.getElementById("coordY").value,6);
+     var coordZ=document.getElementById("coordZ").value;
+     map.moveTo([coordX,coordY],coordZ);
+ }
 
 </script>   
 </body>

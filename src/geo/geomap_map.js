@@ -8,7 +8,7 @@
     var Util=geomap.util;
     var extend = Util.object.extend;
     var Point=geomap.Point;
-    var Model=geomap.Model;
+    var toPoint=geomap.util.toPoint;
   
     if (!global.geomap) {
       global.geomap = { };
@@ -47,7 +47,7 @@
         if(this.center === undefined){
           this.center=new Point(0,0);
         }else{
-          this.center=geomap.util.toPoint(this.center);
+          this.center=toPoint(this.center);
         }
         // this._element = element;
         this._container=container;
@@ -64,8 +64,8 @@
       },
       _initElement:function(){
         this._container.style.position="absolute";
-        this._container.style.width=this.width+"px";
-        this._container.style.height=this.height+"px";
+        // this._container.style.width=this.width+"px";
+        // this._container.style.height=this.height+"px";
         var size=this.getSize();
         var width=size.x,height=size.y;
         var el_canvas=geomap.util.element.create("canvas",{id:"_map_canvas",width:width,height:height},{zIndex:2,border:"0px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
@@ -79,13 +79,29 @@
         this._eventDrag.addEvent(this._container);
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
+        eventjs.add(this._container,"mousedown",function(event,self){
+
+          var point=new Point(event.offsetX,event.offsetY);
+          if(event.ctrlKey){
+            var coord=this.screenToCoord(point);
+            geomap.debug("mousedown|coord="+coord.toString());
+          }
+          this.fire("mousedown",{event:event,point:point});
+
+        }.bind(this));
         eventjs.add(this._container,"mousemove",function(event,self){
 
-          if(event.ctrlKey){
-          var coord=this.screenToCoord(new Point(event.offsetX,event.offsetY));
-          geomap.debug("mousemove|coord="+coord.toString());
-          }
+          var point=new Point(event.offsetX,event.offsetY);
+          // if(event.ctrlKey){
+          //   var coord=this.screenToCoord(point);
+          //   geomap.debug("mousemove|coord="+coord.toString());
+          // }
+          this.fire("mousemove",{event:event,point:point});
 
+        }.bind(this));
+        eventjs.add(this._container,"mouseup",function(event,self){
+          var point=new Point(event.offsetX,event.offsetY);
+          this.fire("mouseup",{event:event,point:point});
         }.bind(this));
       }, 
       _limitZoom:function(z){
@@ -96,39 +112,21 @@
         }
         return z;
       },
-      _moveStart:function(zoomChanged,noMoveStart){
-        if(zoomChanged){
-          this.fire('zoomstart');
+       setCenter:function(coord){
+        this.center=toPoint(coord);
+        this._boundsChanged=true;
+       },
+      moveTo:function(coord,zoom,data){
+        this.setCenter(toPoint(coord))
+        if(zoom === undefined){
+
+        }else{
+          if(typeof zoom =='string'){
+            zoom=Number(zoom);
+          }
+          this.setZoom(zoom);
         }
-        if(!noMoveStart){
-          this.fire('movestart');
-        }
-        return this;
-      },
-      _move:function(center,zoom,data){
-        if(zoom ===undefined){
-          zoom=this.zoom;
-        }
-        var zoomChanged= this.zoom !== zoom;
-        this.zoom=zoom;
-        this._lastCenter=center;
-        //this._pixelOrigin=this._getNewPixelOrigin(center,zoom);
-        if(zoomChanged || (data && data.pinch)){
-          this.fire('zoom',data);
-        }
-        this.fire('move',data);
-        return this;
-      },
-      _moveEnd:function(zoomChanged){
-        if(zoomChanged){
-          this.fire("zoomend");
-        }
-        this.fire('moveend');
-        return this;
-      },
-      _getNewPixelOrigin:function(center,zoom){
-        //TODO 转换获取origin
-        var viewHalf=this.getSize()._divideBy(2);
+         this.fire("drawmap");
       },
       time_event:function(){
         for(var i=0,k=this.layers.length;i<k;i++){
@@ -160,8 +158,9 @@
         if(this._redrawing==true || this._move_type==1){
           this._redrawing=false;
           const ctx=this.canvasCtx;
+          var size=this.getSize();
          // var wh=geomap.coord.size(this._move_start,this._pos);
-          this.canvasCtx.clearRect(0,0,this.width,this.height);
+          this.canvasCtx.clearRect(0,0,size.x,size.y);
           for(var i=0,k=this.layers.length;i<k;i++){
                 var layer=this.layers[i];
                 layer.draw(ctx);

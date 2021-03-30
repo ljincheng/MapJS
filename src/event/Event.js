@@ -58,7 +58,7 @@
               eventjs.add(element,"drag",this.handle.bind(this));
           },
           handle:function(event,self){ 
-              geomap.debug("dragInfo:fingers="+self.fingers);
+              geomap.debug("dragInfo:fingers="+self.fingers+",xy="+self.x+"|" +self.y);
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
               if(self.state == 'down'){
@@ -140,7 +140,7 @@
                       this._timer=null;
                   }
                   var point=new Point(event.offsetX,event.offsetY);
-                  this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),20);
+                  this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),10);
                   
               } 
           },

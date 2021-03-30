@@ -19,15 +19,23 @@
             },
             dragStart:function(e,p){
                 this.__startPos=p;
-                this.fire("dragstart",{event:e,point:p});
+                
+                this.__bounds_changed= !e.ctrlKey;
+                
+                this.fire("dragstart",{event:e,point:p,boundsChanged:this.__bounds_changed});
             },
             dragChange:function(e,p){
-                this.panScreen(this.__startPos.subtract(p)); 
-                this.fire("drag",{event:e,point:p});
+                this.__bounds_changed= !e.ctrlKey;
+                if(this.__bounds_changed){
+                    this.panScreen(this.__startPos.subtract(p)); 
+                }
+                this.fire("drag",{event:e,point:p,boundsChanged:this.__bounds_changed});
                 this.__startPos=p;
             },
             dragEnd:function(e,p){
-                this.fire("dragend",{event:e,point:p});
+                //this.__bounds_changed= !e.ctrlKey;
+                this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
+                this.__bounds_changed=true;
             },
             touchZoomStart:function(e,p){
                     this.__touch_point=p;
