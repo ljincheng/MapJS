@@ -31,6 +31,7 @@
       map:undefined,
       url:null,
       paths:[],
+      drawType:0,
       initialize: function(options) {
         options || (options = { }); 
         this._setOptions(options); 
