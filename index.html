@@ -71,12 +71,15 @@ var winWidth,winHeight,mapHeight,map;
     };
     document.getElementById("mapDiv").style.width=winWidth+"px";
    document.getElementById("mapDiv").style.height=mapHeight+"px";
-    map=new geomap.Map(document.getElementById("mapDiv"),{center:[114.02262568473816,-11.574944257736206],maxZoom:20,zoom:17,debug:writeDebug});
+   var szPoint=[114.02262568473816,-11.574944257736206];
+   var wordPoint=[0,0];
+    map=new geomap.Map(document.getElementById("mapDiv"),{center:szPoint,maxZoom:20,zoom:1,debug:writeDebug});
     var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     map.addLayer(tileLayer);
-    // var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
-    // map.addLayer(parkingLayer);
+    var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
+    map.addLayer(parkingLayer);
     map.addLayer(new geomap.Palette({url:""}));
+    map.on("click",clickMapFn);
     
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
 eventjs.add(document.body, 'touchmove', eventjs.prevent);
@@ -96,6 +99,15 @@ eventjs.add(document, 'touchstart', eventjs.prevent);
     mapHeight=Math.floor( winHeight *3/4);
    document.getElementById("mapDiv").style.width=winWidth+"px";
    document.getElementById("mapDiv").style.height=mapHeight+"px";
+   
+   var debugDiv=document.getElementById("debugDiv");
+    var toolDiv=document.getElementById("toolDiv");
+    toolDiv.style.top=mapHeight+"px";
+    toolDiv.style.width=winWidth+"px";
+
+    debugDiv.style.top=(mapHeight+50)+"px";
+    debugDiv.style.height=(mapHeight-50)+"px";
+    debugDiv.style.width=winWidth+"px";
    map.resize();
  }
 
@@ -123,10 +135,14 @@ Filter result = CQL.toFilter( "INTERSECT(ATTR1, GEOMETRYCOLLECTION (POINT (10 10
 Filter result = CQL.toFilter( "CROSSES(ATTR1, LINESTRING(1 2, 10 15))" );
 Filter result = CQL.toFilter( "INTERSECTS(ATTR1, GEOMETRYCOLLECTION (POINT (10 10),POINT (30 30),LINESTRING (15 15, 20 20)) )" );
 */
-function DrawGeom(){
-    var url="../apps/geo/map/fs";
-    var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
-    var bodyData="type=query&layerName=geo_parking_polygon&geometry="+geomtry+"&filter=CONTAINS(geom, POINT(-83.24153065681458 46.58482074737549))";
+function clickMapFn(e){
+    var url="../apps/geo/map/query";
+    // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
+    
+    var point=e.coord.toString();
+    geomap.debug("clickMapFn:coord="+point.toString());
+    var bodyData="type=query&layerName=geo_parking_polygon&geometry=&filter=CONTAINS(geom, "+point+")";
+    geomap.debug(bodyData);
     geomap.request(url,{method:"POST",body:bodyData,onComplete:function(data){
         var res=data.response,status=data.status; 
         geomap.debug("["+url+",status="+status+"]data:"+res);

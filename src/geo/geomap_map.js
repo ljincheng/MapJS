@@ -79,6 +79,12 @@
         this._eventDrag.addEvent(this._container);
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
+        eventjs.add(this._container,"click",function(event,self){
+          var point=new Point(event.offsetX,event.offsetY);
+          var coord=this.screenToCoord(point);
+          var e=extend({},{target: this,coord:coord ,point:point,event:event});
+          this.fire("click",e);
+        }.bind(this));
         eventjs.add(this._container,"mousedown",function(event,self){
 
           var point=new Point(event.offsetX,event.offsetY);

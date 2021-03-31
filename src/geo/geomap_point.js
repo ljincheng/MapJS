@@ -113,7 +113,7 @@
             return p.x === this.x && p.y === this.y;
         },
         toString:function(){
-            return "Point("+this.x+","+this.y+")";
+            return "POINT("+this.x+" "+this.y+")";
         }
 
     };

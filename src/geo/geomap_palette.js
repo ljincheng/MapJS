@@ -161,7 +161,7 @@
         var scale=this._canvasScale || 1;
         var size=this.map.getSize();
         var box=size._multiplyBy(scale).round();
-        var p1=this.map.transformtion.transform(p0,1-scale).round();//._subtract(p0);
+        var p1=this.map.toTransformScreen(p0,1-scale).round();//._subtract(p0);
         ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
       },
       viewReset:function(){

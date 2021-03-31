@@ -23,7 +23,7 @@
       originY:0, 
       tileSize:256,
       cache:true,
-      origin:{x:-180,y:-90},
+      origin:{x:-180,y:90},
       _canvas:null,
       _layerCanvas:null,
       _layerCtx:null,
@@ -113,7 +113,7 @@
         var scale=this._canvasScale || 1;
         var size=this.map.getSize();
         var box=size._multiplyBy(scale).round();
-        var p1=this.map.transformtion.transform(p0,1-scale).round();//._subtract(p0);
+        var p1=this.map.toTransformScreen(p0,1-scale).round();//._subtract(p0);
         ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
       },
       viewReset:function(){
@@ -127,10 +127,15 @@
         var x=point.x,y=point.y;
         var o=this.origin;
         var tsize=this.tileSize;
-        var cell=Math.floor((x-o.x)/res.x/tsize);
-        var row=Math.floor((y-o.y)/res.y/tsize);
-        var left=-(x-o.x)/res.x + tsize*(cell);
-        var top = -(y-o.y)/res.y +tsize*(row);
+        // var cell=Math.floor((x-o.x)/res.x/tsize);
+        // var row=Math.floor((y-o.y)/res.y/tsize);
+        // var left=-(x-o.x)/res.x + tsize*(cell);
+        // var top = -(y-o.y)/res.y +tsize*(row);
+
+        var cell = Math.floor((x - o.x) / res.x / tsize);
+        var row = Math.floor((o.y - y) / res.y / tsize);
+        var left = -(x - o.x) / res.x +tsize * cell ;
+        var top = -(o.y - y) / res.y +tsize * row;
         return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
       },
       drawlayer:function(z,res,point){
