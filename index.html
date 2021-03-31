@@ -68,11 +68,11 @@ var winWidth,winHeight,mapHeight,map;
     };
     document.getElementById("mapDiv").style.width=winWidth+"px";
    document.getElementById("mapDiv").style.height=mapHeight+"px";
-    map=new geomap.Map(document.getElementById("mapDiv"),{center:[114.02262568473816,-11.574944257736206],maxZoom:17,zoom:15,debug:writeDebug});
+    map=new geomap.Map(document.getElementById("mapDiv"),{center:[114.02262568473816,-11.574944257736206],maxZoom:20,zoom:17,debug:writeDebug});
     var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     map.addLayer(tileLayer);
-    var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
-    map.addLayer(parkingLayer);
+    // var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
+    // map.addLayer(parkingLayer);
     map.addLayer(new geomap.Palette({url:""}));
     
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
