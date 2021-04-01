@@ -24,6 +24,7 @@
         <script type="text/javascript" src="src/geo/geomap_map.js"></script>
         <script type="text/javascript" src="src/geo/geomap_layer.js"></script>
         <script type="text/javascript" src="src/geo/geomap_path.js"></script>
+        <script type="text/javascript" src="src/geometry/Polygon.js"></script>
         <script type="text/javascript" src="src/geo/geomap_palette.js"></script>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
@@ -40,15 +41,16 @@
  <div id="imagePlan"></div>
  <script type="text/javascript">
   
-var winWidth,winHeight,mapHeight,map;
+var winWidth,winHeight,mapHeight,map,paletteLayer;
 
     function winLoad(){
          winWidth=window.innerWidth;
          winHeight=window.innerHeight;
    
-     mapHeight=Math.floor( winHeight *3/4);
+     mapHeight=Math.floor(winHeight/2);
     var debugDiv=document.getElementById("debugDiv");
     var toolDiv=document.getElementById("toolDiv");
+    var mapDiv=document.getElementById("mapDiv");
     toolDiv.style.top=mapHeight+"px";
     toolDiv.style.width=winWidth+"px";
 
@@ -69,46 +71,47 @@ var winWidth,winHeight,mapHeight,map;
         debugDiv.innerHTML=html;
         
     };
-    document.getElementById("mapDiv").style.width=winWidth+"px";
-   document.getElementById("mapDiv").style.height=mapHeight+"px";
+    mapDiv.style.width=winWidth+"px";
+    mapDiv.style.height=mapHeight+"px";
    var szPoint=[114.02262568473816,-11.574944257736206];
    var wordPoint=[0,0];
-    map=new geomap.Map(document.getElementById("mapDiv"),{center:szPoint,maxZoom:20,zoom:1,debug:writeDebug});
+    map=new geomap.Map(mapDiv,{center:wordPoint,maxZoom:20,zoom:1,debug:writeDebug});
     var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     map.addLayer(tileLayer);
     var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
     map.addLayer(parkingLayer);
-    map.addLayer(new geomap.Palette({url:""}));
+    paletteLayer=new geomap.Palette({url:""});
+    map.addLayer(paletteLayer);
     map.on("click",clickMapFn);
     
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
-eventjs.add(document.body, 'touchmove', eventjs.prevent);
+    eventjs.add(document.body, 'touchmove', eventjs.prevent);
 
-/// Prevent right-click on desktops.
-eventjs.add(document.body, 'contextmenu', eventjs.prevent);
+    /// Prevent right-click on desktops.
+    eventjs.add(document.body, 'contextmenu', eventjs.prevent);
 
-/// Prevent elastic scrolling.
-eventjs.add(document, 'touchstart', eventjs.prevent);
+    /// Prevent elastic scrolling.
+    eventjs.add(document, 'touchstart', eventjs.prevent);
  }
 
  function winResize(){
 
-     winWidth=window.innerWidth;
-    winHeight=window.innerHeight;
+//      winWidth=window.innerWidth;
+//     winHeight=window.innerHeight;
       
-    mapHeight=Math.floor( winHeight *3/4);
-   document.getElementById("mapDiv").style.width=winWidth+"px";
-   document.getElementById("mapDiv").style.height=mapHeight+"px";
+//     mapHeight=Math.floor( winHeight *3/4);
+//    document.getElementById("mapDiv").style.width=winWidth+"px";
+//    document.getElementById("mapDiv").style.height=mapHeight+"px";
    
-   var debugDiv=document.getElementById("debugDiv");
-    var toolDiv=document.getElementById("toolDiv");
-    toolDiv.style.top=mapHeight+"px";
-    toolDiv.style.width=winWidth+"px";
+//    var debugDiv=document.getElementById("debugDiv");
+//     var toolDiv=document.getElementById("toolDiv");
+//     toolDiv.style.top=mapHeight+"px";
+//     toolDiv.style.width=winWidth+"px";
 
-    debugDiv.style.top=(mapHeight+50)+"px";
-    debugDiv.style.height=(mapHeight-50)+"px";
-    debugDiv.style.width=winWidth+"px";
-   map.resize();
+//     debugDiv.style.top=(mapHeight+50)+"px";
+//     debugDiv.style.height=(mapHeight-50)+"px";
+//     debugDiv.style.width=winWidth+"px";
+//    map.resize();
  }
 
  function moveToCoord(){ 
@@ -146,6 +149,15 @@ function clickMapFn(e){
     geomap.request(url,{method:"POST",body:bodyData,onComplete:function(data){
         var res=data.response,status=data.status; 
         geomap.debug("["+url+",status="+status+"]data:"+res);
+        if(res.length>0 && res.indexOf("Polygon")>0){
+            
+         var dataObj=JSON.parse(res);
+         geomap.debug("["+url+",status="+status+"]data:type="+dataObj.type);
+         var polygon1=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2});
+         polygon1.setData(dataObj.geometry);
+         paletteLayer.addGeometry(polygon1)
+        }
+        
     }});
 }
 </script>   

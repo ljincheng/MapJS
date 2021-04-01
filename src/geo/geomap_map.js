@@ -22,7 +22,7 @@
     geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,geomap.MapEvent,{
       type: 'object',
       width:100,
-      height:100,
+      height:1000,
       origin:{x:-180,y:-90},
       viewOrigin:{x:0,y:0},
       tileSize:256,

@@ -1,27 +1,42 @@
-(function() {
+(function() { 
+    var Point =geomap.Point;
 
     //type:0-polygon,1-point,2=line,3-rect,4-circle
-    function Path(map,pathType,fill,style){
-        pathType = pathType || 0;
+    function Polygon(map,coords,fill,style){
+        coords= coords || [];
         style= style||{};
         fill= fill||false;
         
-        this._coordinates=[];
+        this._coordinates=coords;
         this._map=map;
-        this._type=pathType;
+        this._type=0;
         this._start=true;
         this._point_weight=6;
         this._style=style;
         this._fill=fill;
+        this._lineDashOffset=0;
     };
 
      
-    Path.prototype={
+    Polygon.prototype={
         s2c:function(p){
             return this._map.screenToCoord(p);
          },
          c2s:function(c){
              return this._map.coordToScreen(c);
+         },
+         setData:function (data){
+             var gtype=data.type;
+             var gcoords=data.coordinates;
+             this._type=0;
+             if(gcoords.length>0){
+                 var gcoord=gcoords[0];
+                 if(gcoord.length>0){
+                     for(var i=0,k=gcoord.length;i<k;i++){
+                         this._coordinates.push(new Point(gcoord[i][0],gcoord[i][1]));
+                     }
+                 }
+             }
          },
          push:function(p){ 
              var coord=this.s2c(p);
@@ -95,10 +110,14 @@
          },
          render:function(ctx){
              var len=this._coordinates.length;
+             this._lineDashOffset += 4;
+            //  this._lineDashOffset =this._lineDashOffset/16;
             if(len>0){ 
                 this.setStyle(ctx);
                 switch(this._type){
                     case 0:{
+                        ctx.setLineDash([8, 4]);
+                        ctx.lineDashOffset = -this._lineDashOffset;
                         ctx.beginPath();
                         var p0=this.c2s(this._coordinates[0]);
                         ctx.moveTo(p0.x,p0.y);
@@ -111,7 +130,8 @@
                             ctx.lineTo(this._movePoint.x,this._movePoint.y);
                         }
                          ctx.closePath();
-                         this._fill?ctx.fill():ctx.stroke();
+                         ctx.stroke();
+                        //  this._fill?ctx.fill():ctx.stroke();
                          
                     }break;
                     case 1:{
@@ -154,7 +174,7 @@
     };
  
     
-    geomap.Path=Path;
+    geomap.Polygon=Polygon;
     
   })();
   

@@ -125,6 +125,11 @@
             
         }
       },
+      addGeometry:function(geomtry){
+        this.paths.push(geomtry);
+        setInterval(this._draw.bind(this),90);
+        this._draw();
+      },
       pathEnd:function(e,p){
         if(this._pathing && this._pathing!=null){
             geomap.debug("dragE(END):"+p.toString()+",ectrKey="+e.event.ctrlKey);

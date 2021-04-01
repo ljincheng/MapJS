@@ -104,14 +104,46 @@
   
       function ScrollWheelZoom(map){
           this._map=map;
+          this.wheelDebounceTime=40;
+          this.wheelPxPerZoomLevel=60;
       };
   
+      function userAgentContains(str) {
+        return navigator.userAgent.toLowerCase().indexOf(str) >= 0;
+    }
+
       ScrollWheelZoom.prototype={
           addEvent:function(element){
               eventjs.add(element,"wheel",this.handle.bind(this));
           },
+          getWheelDelta:function(e){
+            var ie = 'ActiveXObject' in window;
+            var ielt9 = ie && !document.addEventListener;
+            var webkit = userAgentContains('webkit');
+            var android = userAgentContains('android');
+            var android23 = userAgentContains('android 2') || userAgentContains('android 3');
+            var opera = !!window.opera;
+            var safari = !chrome && userAgentContains('safari');
+            var mobile = typeof orientation !== 'undefined' || userAgentContains('mobile');
+            var edge = 'msLaunchUri' in navigator && !('documentMode' in document);
+            var chrome = !edge && userAgentContains('chrome');
+            var win = navigator.platform.indexOf('Win') === 0;
+            var gecko = userAgentContains('gecko') && !webkit && !opera && !ie;
+            var wheelPxFactor =(win && chrome) ? 2 * window.devicePixelRatio :gecko ? window.devicePixelRatio : 1;
+
+            return edge ? e.wheelDeltaY / 2 : // Don't trust window-geometry-based delta
+            (e.deltaY && e.deltaMode === 0) ? -e.deltaY / wheelPxFactor : // Pixels
+            (e.deltaY && e.deltaMode === 1) ? -e.deltaY * 20 : // Lines
+            (e.deltaY && e.deltaMode === 2) ? -e.deltaY * 60 : // Pages
+            (e.deltaX || e.deltaZ) ? 0 :	// Skip horizontal/depth wheel events
+            e.wheelDelta ? (e.wheelDeltaY || e.wheelDelta) / 2 : // Legacy IE pixels
+            (e.detail && Math.abs(e.detail) < 32765) ? -e.detail * 20 : // Legacy Moz lines
+            e.detail ? e.detail / -32765 * 60 : // Legacy Moz pages
+            0;
+          },
           handle:function(event,self){
               eventjs.cancel(event);
+              var delta=self.wheelDelta;//this.getWheelDelta(event);
               if(self.state == 'start'){
                   this._zooming=true;
                   this._zooming_start=false; 
@@ -125,7 +157,7 @@
                       clearTimeout(this._timer);
                       this._timer=null;
                   }
-                  this._map.wheelZoomEnd(event,new Point(event.offsetX,event.offsetY),self.wheelDelta);
+                  this._map.wheelZoomEnd(event,new Point(event.offsetX,event.offsetY),delta);
               }else{
                   if(!this._zooming ){
                       return this;
@@ -135,12 +167,17 @@
                       this._map.wheelZoomStart(event,new Point(event.offsetX,event.offsetY));
                       return 
                   }
-                  if(this._timer){
-                      clearTimeout(this._timer);
-                      this._timer=null;
-                  }
+                //   if(!this._startTime){
+                //       this._startTime= +new Date(); 
+                //   }
+                //   var left=Math.max(this.wheelDebounceTime - (+new Date() - this._startTime),0);
+                //   if(this._timer){
+                //       clearTimeout(this._timer);
+                //       this._timer=null;
+                //   }
                   var point=new Point(event.offsetX,event.offsetY);
-                  this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),10);
+                //   this._timer=setTimeout(this._preformWheelZoom.bind(this,event,point,self.wheelDelta),left);
+                this._map.wheelZoom(event,point,delta);
                   
               } 
           },

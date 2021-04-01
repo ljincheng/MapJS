@@ -77,10 +77,28 @@
         this.map._redrawing=true;
         this._draw();
       },
-      scrollZoom:function(arg){
-       
-        this.map._redrawing=true;
+      scrollZoomEnd:function(arg){
+        this._canvasScale=1;
         this._draw();
+        this.map._redrawing=true;
+      },
+      scrollZoom:function(arg){
+    //     var delta=arg.delta,startZoom=arg.startZoom,endZoom=arg.endZoom,point=arg.point;
+    //    var r1=this.map.resolution(startZoom),
+    //       r2=this.map.resolution(endZoom),
+    //      scale=r2.x/r1.x;
+
+    //      geomap.debug("(Map_Event) r1.x="+r1.x+",r2.x="+r2.x+",scale="+scale+",zoom="+endZoom+"|"+startZoom);
+       
+    //   //  var r0=this.map.getScale(startZoom),
+    //   //      r1=this.map.getScale(endZoom),
+    //   //      scale=r1/r0/256;
+        
+    //  // geomap.debug("(Map_Event) scale="+scale);
+    //     this._drawStart=point;
+    //     this._canvasScale=geomap.util.formatNum(scale,4);
+        this.map._redrawing=true;
+         this._draw();
       },
       dragStart:function(arg){
       //  var event=arg.event,self=arg.self;
