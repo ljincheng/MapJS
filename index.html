@@ -82,7 +82,7 @@ var winWidth,winHeight,mapHeight,map,paletteLayer;
     map=new geomap.Map(mapDiv,{center:wordPoint,maxZoom:20,zoom:1,debug:writeDebug});
     //  var tileLayer=new geomap.TileLayer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
     //  map.addLayer(tileLayer);
-    var parkingLayer=new geomap.TileLayer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
+    var parkingLayer=new geomap.TileLayer({url:"../apps/geo/map/image/{z}/{x}/{y}"});
     map.addLayer(parkingLayer);
     paletteLayer=new geomap.PaletteLayer({url:""});
     paletteLayer.setType("Line",false);
