@@ -80,8 +80,9 @@
         this._eventDrag.addEvent(this._container);
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
-        eventjs.add(this._container,"click",function(event,self){
-          var point=new Point(event.offsetX,event.offsetY);
+        eventjs.add(this._container,"click touch",function(event,self){
+          geomap.debug("[click touch] point="+self.x+","+self.y);
+          var point=new Point(event.offsetX || self.x ,event.offsetY || self.y);
           var coord=this.screenToCoord(point);
           var e=extend({},{target: this,coord:coord ,point:point,event:event});
           this.fire("click",e);
@@ -122,7 +123,7 @@
       _loopTime:function(){
         for(var i=0,k=this.layers.length;i<k;i++){
           var layer=this.layers[i];
-              layer.time_event();
+              layer.OnLoopTime();
         }
         this._redrawingCanvas.call(this);
       },

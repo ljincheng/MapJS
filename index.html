@@ -162,7 +162,7 @@ function clickMapFn(e){
          if(!ClickPolygon){
             // ClickPolygon=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},[4,2]);
             ClickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
-            map.addGeometry(ClickPolygon);
+            paletteLayer.addGeometry(ClickPolygon);
          }
          //var polygon1=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2});
          ClickPolygon.setData(dataObj.geometry);

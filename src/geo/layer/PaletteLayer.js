@@ -18,6 +18,7 @@
       paths:[],
       drawType:0,
       fill:true,
+      loopRender:false,
       initialize: function(options) {
         options || (options = { }); 
         this._setOptions(options);
@@ -93,16 +94,25 @@
             this.ViewReset();
         }
       },
+      OnLoopTime:function(){ 
+
+        if(this.loopRender && this._canvasScale==1){
+           this.ViewReset();
+        }
+      },
       ViewReset:function(){ 
         this._layerCtx.clearRect(0,0,this.width,this.height);
         this._drawStart && this._drawStart.zero();
         this._canvasScale=1;
         var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
-       
+        this.loopRender=false;
         if(this.paths.length>0){
             for(var i=0,k=this.paths.length;i<k;i++){
                 var path=this.paths[i];
                 path.render(this._layerCtx);
+                if(path.loopRender){
+                  this.loopRender=true;
+                }
             }
         }
         if(this._pathing && this._pathing != null){

@@ -87,9 +87,7 @@
       ViewReset:function(){ 
         this.fire("drawCanvas");
       },
-      time_event:function(){
-
-      },
+      OnLoopTime:function(){ },
       drawingCanvas:function(ctx,options){
         var map=this._map,
           p0 = (this._drawStart || new Point(0,0)).round(),
