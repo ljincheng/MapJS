@@ -58,7 +58,6 @@
               eventjs.add(element,"drag",this.handle.bind(this));
           },
           handle:function(event,self){ 
-              geomap.debug("dragInfo:fingers="+self.fingers+",xy="+self.x+"|" +self.y);
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
               if(self.state == 'down'){

@@ -8,24 +8,28 @@
         <script type="text/javascript" src="src/lib/event.js"></script>
         <script type="text/javascript" src="src/core/Observable.js"></script>
         <script type="text/javascript" src="src/core/util.js"></script>
-        <script type="text/javascript" src="src/core/lang_common.js"></script>
+        <script type="text/javascript" src="src/core/CommonMethods.js"></script>
         <script type="text/javascript" src="src/core/util_object.js"></script>
         <script type="text/javascript" src="src/core/util_element.js"></script>
         <script type="text/javascript" src="src/core/util_event.js"></script>
         <script type="text/javascript" src="src/core/Class.js"></script>
         <script type="text/javascript" src="src/core/Request.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_point.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_transformation.js"></script>
+        <script type="text/javascript" src="src/geo/Point.js"></script>
+        <script type="text/javascript" src="src/geo/Transformtion.js"></script>
         <script type="text/javascript" src="src/event/Event.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_bounds.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_coord.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_model.js"></script>
-        <script type="text/javascript" src="src/geo/handler/Map_Event.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_map.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_layer.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_path.js"></script>
+        <script type="text/javascript" src="src/geo/Bounds.js"></script>
+        <!-- <script type="text/javascript" src="src/geo/geomap_coord.js"></script> -->
+        <script type="text/javascript" src="src/geo/Model.js"></script>
+        <script type="text/javascript" src="src/geo/MapEvent.js"></script>
+        <script type="text/javascript" src="src/geo/Map.js"></script>
+        
+        <script type="text/javascript" src="src/geometry/Geometry.js"></script>
+        <script type="text/javascript" src="src/geometry/Path.js"></script>
         <script type="text/javascript" src="src/geometry/Polygon.js"></script>
-        <script type="text/javascript" src="src/geo/geomap_palette.js"></script>
+        <script type="text/javascript" src="src/geo/Layer.js"></script>
+        <script type="text/javascript" src="src/geo/layer/TileLayer.js"></script>
+        <script type="text/javascript" src="src/geo/layer/PaletteLayer.js"></script>
+        
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
 <div id="mapDiv" style="z-index:1;border:0px solid blue;"></div>
@@ -76,11 +80,12 @@ var winWidth,winHeight,mapHeight,map,paletteLayer;
    var szPoint=[114.02262568473816,-11.574944257736206];
    var wordPoint=[0,0];
     map=new geomap.Map(mapDiv,{center:wordPoint,maxZoom:20,zoom:1,debug:writeDebug});
-    var tileLayer=new geomap.Layer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
-    map.addLayer(tileLayer);
-    var parkingLayer=new geomap.Layer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
+    //  var tileLayer=new geomap.TileLayer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
+    //  map.addLayer(tileLayer);
+    var parkingLayer=new geomap.TileLayer({url:"http://localhost:8080/apps/geo/map/image/{z}/{x}/{y}"});
     map.addLayer(parkingLayer);
-    paletteLayer=new geomap.Palette({url:""});
+    paletteLayer=new geomap.PaletteLayer({url:""});
+    paletteLayer.setType("Line",false);
     map.addLayer(paletteLayer);
     map.on("click",clickMapFn);
     
@@ -96,22 +101,22 @@ var winWidth,winHeight,mapHeight,map,paletteLayer;
 
  function winResize(){
 
-//      winWidth=window.innerWidth;
-//     winHeight=window.innerHeight;
+     winWidth=window.innerWidth;
+    winHeight=window.innerHeight;
       
-//     mapHeight=Math.floor( winHeight *3/4);
-//    document.getElementById("mapDiv").style.width=winWidth+"px";
-//    document.getElementById("mapDiv").style.height=mapHeight+"px";
+    mapHeight=Math.floor( winHeight *3/4);
+   document.getElementById("mapDiv").style.width=winWidth+"px";
+   document.getElementById("mapDiv").style.height=mapHeight+"px";
    
-//    var debugDiv=document.getElementById("debugDiv");
-//     var toolDiv=document.getElementById("toolDiv");
-//     toolDiv.style.top=mapHeight+"px";
-//     toolDiv.style.width=winWidth+"px";
+   var debugDiv=document.getElementById("debugDiv");
+    var toolDiv=document.getElementById("toolDiv");
+    toolDiv.style.top=mapHeight+"px";
+    toolDiv.style.width=winWidth+"px";
 
-//     debugDiv.style.top=(mapHeight+50)+"px";
-//     debugDiv.style.height=(mapHeight-50)+"px";
-//     debugDiv.style.width=winWidth+"px";
-//    map.resize();
+    debugDiv.style.top=(mapHeight+50)+"px";
+    debugDiv.style.height=(mapHeight-50)+"px";
+    debugDiv.style.width=winWidth+"px";
+   map.resize();
  }
 
  function moveToCoord(){ 
@@ -138,6 +143,7 @@ Filter result = CQL.toFilter( "INTERSECT(ATTR1, GEOMETRYCOLLECTION (POINT (10 10
 Filter result = CQL.toFilter( "CROSSES(ATTR1, LINESTRING(1 2, 10 15))" );
 Filter result = CQL.toFilter( "INTERSECTS(ATTR1, GEOMETRYCOLLECTION (POINT (10 10),POINT (30 30),LINESTRING (15 15, 20 20)) )" );
 */
+var ClickPolygon=null;
 function clickMapFn(e){
     var url="../apps/geo/map/query";
     // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
@@ -153,9 +159,14 @@ function clickMapFn(e){
             
          var dataObj=JSON.parse(res);
          geomap.debug("["+url+",status="+status+"]data:type="+dataObj.type);
-         var polygon1=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2});
-         polygon1.setData(dataObj.geometry);
-         paletteLayer.addGeometry(polygon1)
+         if(!ClickPolygon){
+            // ClickPolygon=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},[4,2]);
+            ClickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
+            map.addGeometry(ClickPolygon);
+         }
+         //var polygon1=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2});
+         ClickPolygon.setData(dataObj.geometry);
+        
         }
         
     }});

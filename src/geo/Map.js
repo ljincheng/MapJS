@@ -23,9 +23,7 @@
       type: 'object',
       width:100,
       height:1000,
-      origin:{x:-180,y:-90},
       viewOrigin:{x:0,y:0},
-      tileSize:256,
       center:undefined,
       canvas:undefined,
       canvasCtx:undefined,
@@ -36,7 +34,9 @@
       _global_interval:null,
       _canrender:true,
       _container:undefined,
+      _geometrys:[],
       model:undefined,
+      loopTime:40,
       initialize: function(container, options) {
         options || (options = { });  
         this._setOptions(options);  
@@ -53,8 +53,9 @@
         this._container=container;
         this._initElement();
        // this._drawlayer();
-        this.on("drawmap",this._drawlayer.bind(this));
-        this._global_interval=setInterval(this.time_event.bind(this),20);
+        this.on("drawmap",this._onDrawMap.bind(this));
+        this.on("drawCanvas",this._redrawingCanvasTag.bind(this));
+        this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
       },
       _dispose:function(){
         if(this._global_interval!=null){
@@ -109,7 +110,7 @@
           var point=new Point(event.offsetX,event.offsetY);
           this.fire("mouseup",{event:event,point:point});
         }.bind(this));
-      }, 
+      },
       _limitZoom:function(z){
         if(this.maxZoom<z){
           return this.maxZoom;
@@ -118,7 +119,55 @@
         }
         return z;
       },
-       setCenter:function(coord){
+      _loopTime:function(){
+        for(var i=0,k=this.layers.length;i<k;i++){
+          var layer=this.layers[i];
+              layer.time_event();
+        }
+        this._redrawingCanvas.call(this);
+      },
+      _redrawingCanvas:function(){
+        if(this._redrawing==true || this._move_type==1){
+          this._redrawing=false;
+          const ctx=this.canvasCtx;
+          var size=this.getSize();
+         // var wh=geomap.coord.size(this._move_start,this._pos);
+          this.canvasCtx.clearRect(0,0,size.x,size.y);
+          for(var i=0,k=this.layers.length;i<k;i++){
+                var layer=this.layers[i];
+                layer.drawingCanvas(ctx);
+          } 
+          var geomNum=this._geometrys.length;
+          if(geomNum>0){
+            for(var i=0;i<geomNum;i++){
+              var geomObj=this._geometrys[i];
+              
+                 geomObj.render(ctx);
+                 if(geomObj.loopRender){
+                   this._redrawing=true;
+                 }
+            }
+          }
+          //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
+        }
+      }, 
+      _onDrawMap:function(){
+          this.fire("viewreset");
+          this._redrawing=true;
+      },
+      _redrawingCanvasTag:function(){
+        this._redrawing=true;
+      },
+      _loadLayer:function(layer){
+        layer.on("drawCanvas",this._redrawingCanvasTag.bind(this));
+        layer.initLayer(this.canvas,this);
+        this.fire("drawmap");
+      },
+      addLayer:function(layer){ 
+        this._loadLayer(layer);
+        this.layers.push(layer);
+      },
+      setCenter:function(coord){
         this.center=toPoint(coord);
         this._boundsChanged=true;
        },
@@ -133,13 +182,6 @@
           this.setZoom(zoom);
         }
          this.fire("drawmap");
-      },
-      time_event:function(){
-        for(var i=0,k=this.layers.length;i<k;i++){
-          var layer=this.layers[i];
-              layer.time_event();
-        }
-        this._draw.call(this);
       },
       getSize:function(){
         if(!this._size || this._sizeChanged){
@@ -160,36 +202,14 @@
          this.fire("resize");
          this.fire("drawmap");
       },
-      _draw:function(){
-        if(this._redrawing==true || this._move_type==1){
-          this._redrawing=false;
-          const ctx=this.canvasCtx;
-          var size=this.getSize();
-         // var wh=geomap.coord.size(this._move_start,this._pos);
-          this.canvasCtx.clearRect(0,0,size.x,size.y);
-          for(var i=0,k=this.layers.length;i<k;i++){
-                var layer=this.layers[i];
-                layer.draw(ctx);
-          } 
-          //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
-        }
-      },
       getCoord:function(p0){
         return this.model.screenToCoord(Util.toPoint(p0));
-      }, 
-      _drawlayer:function(){
-          this.fire("viewreset");
       },
-      addLayer:function(layer){
-        this.layers.push(layer);
-        this._loadLayer(layer);
-      },
-      _loadLayer:function(layer){
-        layer.on("draw",function(){this._redrawing=true;}.bind(this));
-        layer.initLayer(this.canvas,this);
-        
-        this.fire("drawmap");
+      addGeometry:function(geomtry){
+        this._geometrys.push(geomtry);
+        this._redrawing=true;
       }
+      
      
     });
   

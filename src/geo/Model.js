@@ -3,7 +3,8 @@
     var Point =geomap.Point;
     var Bounds =geomap.Bounds;
     var toPoint=geomap.util.toPoint;
-    geomap.Model={origin:new Point(-180,90),
+    geomap.Model={
+        origin:new Point(-180,90),
         tileSize:256,
         res:undefined,
         bounds:undefined,

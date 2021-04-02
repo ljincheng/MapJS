@@ -1,12 +1,11 @@
 (function() { 
     var Point =geomap.Point;
 
-    geomap.Polygon=geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Geometry, {
+    geomap.Path=geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Geometry, {
        initialize: function(map, options) {
         this._map=map;
         options || (options = { });
         this._setOptions(options); 
-        this._type=0;
       },
       setData:function (data){
         // var gtype=data.type;
@@ -25,4 +24,3 @@
         }
     });
   })();
-  
