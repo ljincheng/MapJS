@@ -13,6 +13,7 @@
         <script type="text/javascript" src="src/core/util_element.js"></script>
         <script type="text/javascript" src="src/core/util_event.js"></script>
         <script type="text/javascript" src="src/core/Class.js"></script>
+        <script type="text/javascript" src="src/core/Animation.js"></script>
         <script type="text/javascript" src="src/core/Request.js"></script>
         <script type="text/javascript" src="src/geo/Point.js"></script>
         <script type="text/javascript" src="src/geo/Transformtion.js"></script>
@@ -40,12 +41,14 @@
     　<input type="button" value="跳转到设置点" onclick="moveToCoord()">
     <input type="button" value="刷新地图配置" onclick="ReloadMapSetting()">
     <input type="button" value="绘图" onclick="DrawGeom()">
+    <input type="button" value="MoveToSZ" onclick="MoveToSZ()">
 </div>
   <div id="debugDiv" style="z-index:2;position: absolute;left:0px;bottom: 0px; overflow-y: hidden; border:0px solid blue;"></div>   
  <div id="imagePlan"></div>
  <script type="text/javascript">
   
 var winWidth,winHeight,mapHeight,map,paletteLayer;
+var szPoint=[114.02262568473816,11.574944257736206];
 
     function winLoad(){
          winWidth=window.innerWidth;
@@ -77,7 +80,7 @@ var winWidth,winHeight,mapHeight,map,paletteLayer;
     };
     mapDiv.style.width=winWidth+"px";
     mapDiv.style.height=mapHeight+"px";
-   var szPoint=[114.02262568473816,-11.574944257736206];
+   
    var wordPoint=[0,0];
     map=new geomap.Map(mapDiv,{center:wordPoint,maxZoom:20,zoom:1,debug:writeDebug});
      var tileLayer=new geomap.TileLayer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
@@ -170,6 +173,9 @@ function clickMapFn(e){
         }
         
     }});
+}
+function MoveToSZ(){
+    map.animMove(szPoint);
 }
 </script>   
 </body>

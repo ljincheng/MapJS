@@ -55,13 +55,19 @@
        // this._drawlayer();
         this.on("drawmap",this._onDrawMap.bind(this));
         this.on("drawCanvas",this._redrawingCanvasTag.bind(this));
-        this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
+        // this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
+        this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
+        // this._global_interval=window.requestAnimationFrame(this._loopTime.bind(this));
+        
       },
       _dispose:function(){
-        if(this._global_interval!=null){
-          clearInterval(this._global_interval);
-          this._global_interval=null;
-        } 
+        geomap.util.cancelAnimFrame(this._global_interval);
+        this._global_interval=null;
+        
+        // if(this._global_interval!=null){
+        //   clearInterval(this._global_interval);
+        //   this._global_interval=null;
+        // } 
       },
       _initElement:function(){
         this._container.style.position="absolute";
@@ -126,6 +132,8 @@
               layer.OnLoopTime();
         }
         this._redrawingCanvas.call(this);
+        geomap.util.cancelAnimFrame(this._global_interval);
+        this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
       },
       _redrawingCanvas:function(){
         if(this._redrawing==true || this._move_type==1){
@@ -162,15 +170,52 @@
       _loadLayer:function(layer){
         layer.on("drawCanvas",this._redrawingCanvasTag.bind(this));
         layer.initLayer(this.canvas,this);
-        this.fire("drawmap");
       },
       addLayer:function(layer){ 
         this._loadLayer(layer);
         this.layers.push(layer);
+        this.fire("drawmap");
       },
       setCenter:function(coord){
-        this.center=toPoint(coord);
+        coord=toPoint(coord);
+        this.center=coord;
         this._boundsChanged=true;
+       },
+       animMove:function(coord){
+          coord=toPoint(coord);
+          var startCoord,size=this.getSize(),
+            pos1=this.coordToScreen(coord).round(); 
+          var cpos=size.divideBy(2).round();
+          var offsetR=Math.round( pos1.distanceTo(cpos));
+          var sizeR=Math.round( Math.sqrt(size.x* size.x + size.y* size.y));
+          if(offsetR > sizeR){
+            geomap.debug("offsetR 1");
+            var scale=offsetR/sizeR;
+            var startCoordX,startCoordY; 
+            startCoordX = pos1.x - (pos1.x-cpos.x) * scale;
+            startCoordY = pos1.y + (cpos.y - pos1.y) * scale;
+            pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
+            startCoord=this.screenToCoord(pos1);
+          }else{
+            geomap.debug("offsetR 2");
+            startCoord=this.center;
+            // geomap.debug("2 startCoord="+startCoord.toString()+",center="+this.center.toString());
+          }
+          if(!coord.equals(this.center)){
+              if(this._animMoveFn){
+                this._animMoveFn.stop();
+              }else{
+                this._animMoveFn=new geomap.PosAnimation();
+              }
+            
+              this._animMoveFn.run(function(pos){
+              // this.moveTo(pos); 
+             // geomap.debug("pos="+pos.toString());
+              this.setCenter(pos);
+              this.fire("drawmap");
+            }.bind(this),[startCoord,coord],1);
+          }
+
        },
       moveTo:function(coord,zoom,data){
         this.setCenter(toPoint(coord))

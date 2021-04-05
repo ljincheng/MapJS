@@ -25,6 +25,7 @@
         this.on("initLayer",this.OnInitLayer.bind(this));
       }, 
       OnInitLayer:function(){
+        this._drawLock2=1;
         var canvas_copy=geomap.util.element.create("canvas",{},{zIndex:2,position:"absolute",top:"0px"});
         const ctx_copy=canvas_copy.getContext("2d");
         this._canvas_copy=canvas_copy;
@@ -43,7 +44,7 @@
       OnDrag:function(arg){
         if(arg.boundsChanged){
           this._drawStart=arg.point.subtract(this._dragStartPos);
-          this.ViewReset2();
+         this.ViewReset2();
           this.fire("drawCanvas");
         }
       },
@@ -59,7 +60,7 @@
          box=size._multiplyBy(scale).round(),
          p1=map.toTransformScreen(p0,1-scale).round();
           // ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
-        ctx.drawImage(this._canvas_copy,p1.x,p1.y,box.x,box.y);
+         ctx.drawImage(this._canvas_copy,p1.x,p1.y,box.x,box.y);
          ctx.drawImage(this._layerCanvas,0,0,size.x,size.y);
       } ,
       ViewReset2:function(){ 
@@ -70,7 +71,7 @@
             tsize=map.tileSize,
             bounds=map.getBounds(),
             res=map.resolution(z),
-            lock=this._drawLock+1;
+            lock=this._drawLock2+1;
            
         var cells=Math.round(this.width/tsize)+2;
         var rows=Math.round(this.height/tsize)+2;
@@ -81,7 +82,7 @@
         var left=startTile.left;
         var top=startTile.top;
   
-        this._drawLock=lock;
+        this._drawLock2=lock;
         this._layerCtx.clearRect(0,0,this.width,this.height);
         for(var c=0;c<cells;c++){
           for(var r=0;r<rows;r++){
@@ -91,11 +92,11 @@
             var t=Math.floor(top+tsize*r);
             if( x>=0 && y>=0 ){
                 var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
-                this.FromURL(imgUrl,{left:l,top:t,lock:lock});  
+                this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:2});  
             }
           }
         }
-        //this.fire("drawCanvas");
+         this.fire("drawCanvas");
       },
       ViewReset:function(){ 
         this._drawStart && this._drawStart.zero();
@@ -126,7 +127,7 @@
             var t=Math.floor(top+tsize*r);
             if( x>=0 && y>=0 ){
                 var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
-                this.FromURL(imgUrl,{left:l,top:t,lock:lock});  
+                this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
             }
           }
         }
@@ -166,23 +167,35 @@
         if(cacheImg==null){
           doDraw=true;
         }else{
-          if(opts.lock == this._drawLock){
+         // if(opts.lock == this._drawLock){
             this._layerCtx.drawImage(cacheImg,opts.left,opts.top);
             this.fire("drawCanvas");
-          }
+         // }
         } 
         if(!this.cache || doDraw){
+          if(!this.hasImageKey(url)){
           this.LoadImage(url,function(img,isError){
             if(isError){
-              console.log("load img fail:"+url);
+              geomap.log("load img fail:"+url);
               return ;
             }
-            console.log("load img:"+url+",left="+this.opts.left+",top="+this.opts.top);
+            //geomap.debug("load img:"+url+",left="+this.opts.left+",top="+this.opts.top);
+            if(this.opts.drawLock ==2){
+            if(this.opts.lock == this.obj._drawLock2){
+              this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
+              this.obj.fire("drawCanvas");
+            }else{
+              this.obj.ViewReset2();
+            }
+          }else{
             if(this.opts.lock == this.obj._drawLock){
               this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
             
               this.obj.fire("drawCanvas");
+            }else{
+              this.obj.ViewReset();
             }
+          }
         
   
               var cacheImg=this.obj.getCacheImage.call(this.obj,url);
@@ -195,6 +208,7 @@
             
           },{obj:this,opts:opts,doDraw:doDraw});
         }
+      }
        
       },
       getCacheImage:function(url){
@@ -214,15 +228,18 @@
            this.__cache_imgs[url]=img;
         return img; 
       },
-      getImageKey:function(url){
+      hasImageKey:function(url){
         if(!this.__load_img_key){
           this.__load_img_key={};
+          this.__load_img_key[url]=1;
+          return false;
         }
         if(this.__load_img_key[url]){
-          return this.__load_img_key[url];
+          this.__load_img_key[url]=this.__load_img_key[url]+1;
+          return true;
         }else{
           this.__load_img_key[url]=1;
-          return 0;
+          return false;
         } 
       },
       removeImageKey:function(url){

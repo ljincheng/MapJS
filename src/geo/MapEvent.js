@@ -108,7 +108,8 @@
             dragChange:function(e,p){
                 this.__bounds_changed= !e.ctrlKey;
                 if(this.__bounds_changed){
-                    this.panScreen(this.__startPos.subtract(p)); 
+                    // this.panScreen(this.__startPos.subtract(p)); 
+                    this.panScreen(p.subtract(this.__startPos)); 
                 }
                 this.fire("drag",{event:e,point:p,boundsChanged:this.__bounds_changed});
                 this.__startPos=p;

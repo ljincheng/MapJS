@@ -25,6 +25,7 @@
       _map:undefined,
       initLayer:function(canvas,map){
         this._canvas=canvas; 
+        this._drawLock=1;
         this._map=map;
         var el_offscreen_canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
         const offscreen_ctx=el_offscreen_canvas.getContext("2d");

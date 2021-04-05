@@ -37,10 +37,14 @@
                 r1=this.resolution(this.zoom);
                 s1=this.getSize().divideBy(2);
                 p1=r1._scaleBy(s1);
-                min=cp1.subtract(p1);
-                max=cp1.add(p1);
-                min=this.modelCoord(min);
-                max=this.modelCoord(max);
+                // min=cp1.subtract(p1);
+                // max=cp1.add(p1);
+                // min=this.modelCoord(min);
+                // max=this.modelCoord(max);
+                min=cp1.subtract(this.modelCoord(p1));
+                max=cp1.add(this.modelCoord(p1));
+                // min=this.modelCoord(min);
+                // max=this.modelCoord(max);
                 this._bounds= new Bounds(min,max);
                 this._boundsChanged=false;
             }
@@ -59,7 +63,8 @@
             }
             var sc1=this.coordToScreen(coord);
             var r1=this.resolution(zoom);
-            var min= this.modelCoord(coord).subtract(sc1._scaleBy(r1));
+            // var min= this.modelCoord(coord).subtract(sc1._scaleBy(r1));
+            var min= coord.subtract(this.modelCoord(sc1._scaleBy(r1)));
             this.center=this.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
             this.zoom=zoom;
             this._boundsChanged=true;
@@ -71,16 +76,17 @@
               coord=this.screenToCoord(p1),
               viewHalf=this.getSize().divideBy(2),
               centerOffset=viewHalf.subtract(p1);
-              this.center=this.modelCoord(coord).add(centerOffset.scaleBy(r1));
+            //   this.center=this.modelCoord(coord)._add(centerOffset._scaleBy(r1));
+              this.center=coord._add(this.modelCoord(centerOffset._scaleBy(r1)));
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;
         },
         panScreen:function(opts){
-            var p1=new Point(opts.x,opts.y);
-            var zoom=opts.z || this.zoom;
+            var p1=toPoint(opts);
+            var zoom=this.zoom;
             var  r1=this.resolution(zoom);
-            this.center._add(p1.scaleBy(r1));
+            this.center._subtract(this.modelCoord(p1.scaleBy(r1)));
             this._boundsChanged=true;
         },
         screenToCoord:function(p0){
@@ -91,10 +97,11 @@
         },
         coordToScreen:function(p0){
             var bounds=this.getBounds();
+           
             var r1=this.resolution(this.zoom);
-            // var p1=this.modelCoord(p0.clone()).subtract(bounds.min);
-            var p1=p0.subtract(bounds.min);
-            return this.modelCoord(p1._unscaleBy(r1));
+            var p1=this.modelCoord(p0.subtract(bounds.min));
+             return p1._unscaleBy(r1);
+           //return this.modelCoord(p1._unscaleBy(r1));
         },
         toTransform:function(coord,scale){
             return this.transformtion.transform(coord,scale);
