@@ -60,24 +60,49 @@
         }
         return this._canvas_copy_size;
        },
+      //  OnTouchZoomStart:function(arg){
+      //   var event=arg.event,cpos=arg.point;
+      //   var size=this.getCanavsSize(), 
+      //   offsetSize=this._canvas_map_size;
+      //   this._drawStart=cpos.add(offsetSize);
+      // },
+      //  OnDrag:function(arg){
+      //   if(arg.boundsChanged){
+      //     var size=this.getCanavsSize(), 
+      //     offsetSize=this._canvas_map_size;
+      //     this._drawStart=arg.point.subtract(this._dragStartPos);
+      //     // this._drawStart=this._dragStartPos.subtract(arg.point);
+         
+      //     this._canvasScale=1;
+      //     this.fire("drawCanvas");
+      //   }
+      // },
       drawingCanvas:function(ctx,options){
         var map=this._map,
-          p0 = (this._drawStart || new Point(0,0)).round(),
-         scale=(this._canvasScale || 1),
           size=this.getCanavsSize(),
           mapSize=map.getSize(),
           offsetSize=this._canvas_map_size,
-         box=mapSize._multiplyBy(scale).round();
-        //  var p0=p0.add(offsetSize);
-         var p0=offsetSize.subtract(p0);
-         var p1=map.toTransformScreen(p0,1-scale).round();
-          // ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
-        //  ctx.drawImage(this._canvas_copy,p1.x,p1.y,box.x,box.y);
-        //  ctx.drawImage(this._layerCanvas,0,0,size.x,size.y);
-         ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,0,0,box.x,box.y);
-        //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,0,0,box.x,box.y);
+          p0 = (this._drawStart || new Point(0,0)),
+         scale=(this._canvasScale || 1),
+         box1=mapSize.multiplyBy(scale).round(),
+         box=size.multiplyBy(scale).round();
+        
+         var p1=map.toTransformScreen(p0.clone(),1-scale).round();
+         var baseP0=map.toTransformScreen(offsetSize.clone(),1-scale).round();
+      
+         var baseP1=map.toTransformScreen(p0.add(offsetSize),1-scale).round();
+         
+        //  var baseP2=map.toTransformScreen(p0.add(offsetSize),1-scale).round();
+        // var box1=size.multiplyBy(scale).round(); 
+        //  var p20=(new Point(0,0))._subtract(p0);
+        //  var p2=map.toTransformScreen(p20,1-scale).round();
+        //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box1.x,box1.y,0,0,box1.x,box1.y);
+        //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,-baseP0.x,-baseP0.y,box.x,box.y);
+        //  ctx.drawImage(this._layerCanvas,baseP0.x,baseP0.y,box.x,box.y,p1.x,p1.y,box.x,box.y);
+        ctx.drawImage(this._layerCanvas,-baseP1.x,-baseP1.y,box.x,box.y);
       } ,
       ViewReset:function(){ 
+        //  this._drawStart && this._drawStart.zero();
          this._drawStart && this._drawStart.zero();
         this._canvasScale=1;
         var map=this._map,
