@@ -5,6 +5,7 @@
   
     var extend = geomap.util.object.extend;
     var Point =geomap.Point;
+    //var toPoint =geomap.util.toPoint;
   
     if (!global.geomap) {
       global.geomap = { };
@@ -18,98 +19,78 @@
     geomap.TileLayer = geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Layer, {
         url:null,
         _drawLock:1,
-        cache:true, 
+        cache:true,
+        _canvas_map_size:new Point(0,0),
+        _mapSize:null,
        initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options); 
         this.on("initLayer",this.OnInitLayer.bind(this));
       }, 
       OnInitLayer:function(){
-        this._drawLock2=1;
-        var canvas_copy=geomap.util.element.create("canvas",{},{zIndex:2,position:"absolute",top:"0px"});
-        const ctx_copy=canvas_copy.getContext("2d");
-        this._canvas_copy=canvas_copy;
-        this._ctx_copy=ctx_copy;
-        var size=this._map.getSize();
-        this._canvas_copy.width=size.x;
-        this._canvas_copy.height=size.y;
-        this._canvas_copy.style.width=size.x+"px";
-        this._canvas_copy.style.height=size.y+"px";
+        // this._drawLock2=1;
+        // var canvas_copy=geomap.util.element.create("canvas",{},{zIndex:2,position:"absolute",top:"0px"});
+        // const ctx_copy=canvas_copy.getContext("2d");
+        // this._canvas_copy=canvas_copy;
+        // this._ctx_copy=ctx_copy;
+        this.getCanavsSize();
+        // var size=this._map.getSize();
+        // this._canvas_copy_size=toPoint([size.x,size.y]);
+        // this._canvas_copy.width=this._canvas_copy_size.x;
+        // this._canvas_copy.height=this._canvas_copy_size.y;
+        // this._layerCanvas.width=this._canvas_copy_size.x;
+        // this._layerCanvas.height=this._canvas_copy_size.y;
+        // this._canvas_copy.style.width=size.x+"px";
+        // this._canvas_copy.style.height=size.y+"px";
       },
-      OnDragStart:function(arg){
-        this._dragStartPos=arg.point;
-        this._ctx_copy.clearRect(0,0,this.width,this.height);
-        this._ctx_copy.drawImage(this._layerCanvas,0,0);
-      },
-      OnDrag:function(arg){
-        if(arg.boundsChanged){
-          this._drawStart=arg.point.subtract(this._dragStartPos);
-         this.ViewReset2();
-          this.fire("drawCanvas");
+       getCanavsSize:function(){
+        var map=this._map,size=map.getSize();
+        if(!this._canvas_copy_size || !this._mapSize || !size.equals(this._mapSize)){
+          this._mapSize=size.clone();
+          this._canvas_copy_size=size.multiplyBy(3); 
+          // this._canvas_copy.width=this._canvas_copy_size.x;
+          // this._canvas_copy.height=this._canvas_copy_size.y;
+          this._layerCanvas.width=this._canvas_copy_size.x;
+          this._layerCanvas.height=this._canvas_copy_size.y;
+          // this._canvas_copy.style.width=this._canvas_copy_size.x+"px";
+          // this._canvas_copy.style.height=this._canvas_copy_size.y+"px";
+          this._layerCanvas.style.width=this._canvas_copy_size.x+"px";
+          this._layerCanvas.style.height=this._canvas_copy_size.y+"px";
+           this._canvas_map_size=size;
         }
-      },
-      OnDragEnd:function(arg){
-        this.ViewReset();
-        this._ctx_copy.clearRect(0,0,this.width,this.height);
+        return this._canvas_copy_size;
        },
       drawingCanvas:function(ctx,options){
         var map=this._map,
           p0 = (this._drawStart || new Point(0,0)).round(),
          scale=(this._canvasScale || 1),
-          size=map.getSize(),
-         box=size._multiplyBy(scale).round(),
-         p1=map.toTransformScreen(p0,1-scale).round();
+          size=this.getCanavsSize(),
+          mapSize=map.getSize(),
+          offsetSize=this._canvas_map_size,
+         box=mapSize._multiplyBy(scale).round();
+        //  var p0=p0.add(offsetSize);
+         var p0=offsetSize.subtract(p0);
+         var p1=map.toTransformScreen(p0,1-scale).round();
           // ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y);
-         ctx.drawImage(this._canvas_copy,p1.x,p1.y,box.x,box.y);
-         ctx.drawImage(this._layerCanvas,0,0,size.x,size.y);
+        //  ctx.drawImage(this._canvas_copy,p1.x,p1.y,box.x,box.y);
+        //  ctx.drawImage(this._layerCanvas,0,0,size.x,size.y);
+         ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,0,0,box.x,box.y);
+        //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,0,0,box.x,box.y);
       } ,
-      ViewReset2:function(){ 
-        // this._drawStart && this._drawStart.zero();
-        // this._canvasScale=1;
-        var map=this._map,
-            z=map.zoom,
-            tsize=map.tileSize,
-            bounds=map.getBounds(),
-            res=map.resolution(z),
-            lock=this._drawLock2+1;
-           
-        var cells=Math.round(this.width/tsize)+2;
-        var rows=Math.round(this.height/tsize)+2;
-  
-        var startTile=this.OriginTileInfo(res,bounds.min);
-        var cell=startTile.cell;
-        var row=startTile.row;
-        var left=startTile.left;
-        var top=startTile.top;
-  
-        this._drawLock2=lock;
-        this._layerCtx.clearRect(0,0,this.width,this.height);
-        for(var c=0;c<cells;c++){
-          for(var r=0;r<rows;r++){
-            var  x=1*cell + c;
-            var y=1*row + r;
-            var l=Math.floor(left+tsize*c);
-            var t=Math.floor(top+tsize*r);
-            if( x>=0 && y>=0 ){
-                var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
-                this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:2});  
-            }
-          }
-        }
-         this.fire("drawCanvas");
-      },
       ViewReset:function(){ 
-        this._drawStart && this._drawStart.zero();
+         this._drawStart && this._drawStart.zero();
         this._canvasScale=1;
         var map=this._map,
             z=map.zoom,
             tsize=map.tileSize,
             bounds=map.getBounds(),
             res=map.resolution(z),
+            canvasSize=this.getCanavsSize(),
+            offsetSize=this._canvas_map_size,
             lock=this._drawLock+1;
            
-        var cells=Math.round(this.width/tsize)+2;
-        var rows=Math.round(this.height/tsize)+2;
+        var cells=Math.round(offsetSize.x  /tsize)+2;
+        var rows=Math.round(offsetSize.y /tsize)+2;
   
         var startTile=this.OriginTileInfo(res,bounds.min);
         var cell=startTile.cell;
@@ -118,19 +99,21 @@
         var top=startTile.top;
   
         this._drawLock=lock;
-        this._layerCtx.clearRect(0,0,this.width,this.height);
-        for(var c=0;c<cells;c++){
-          for(var r=0;r<rows;r++){
-            var  x=1*cell + c;
-            var y=1*row + r;
-            var l=Math.floor(left+tsize*c);
-            var t=Math.floor(top+tsize*r);
-            if( x>=0 && y>=0 ){
-                var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
-                this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
-            }
+        this._layerCtx.clearRect(0,0,canvasSize.x,canvasSize.y);
+        for(var c=-cells,k=cells*2;c<k;c++){
+          for(var r=-rows,k2=rows*2;r<k2;r++){
+                var  x=1*cell + c;
+                var y=1*row + r;
+                var l=Math.floor(left+tsize*c)+offsetSize.x;
+                var t=Math.floor(top+tsize*r)+offsetSize.y;
+                if( x>=0 && y>=0 ){
+                    var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
+                    this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
+                }
           }
         }
+
+
         this.fire("drawCanvas");
       },
       OriginTileInfo:function(res,min){
@@ -174,28 +157,20 @@
         } 
         if(!this.cache || doDraw){
           if(!this.hasImageKey(url)){
+
           this.LoadImage(url,function(img,isError){
             if(isError){
-              geomap.log("load img fail:"+url);
+              console.log("load img fail:"+url);
               return ;
             }
-            //geomap.debug("load img:"+url+",left="+this.opts.left+",top="+this.opts.top);
-            if(this.opts.drawLock ==2){
-            if(this.opts.lock == this.obj._drawLock2){
-              this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
-              this.obj.fire("drawCanvas");
-            }else{
-              this.obj.ViewReset2();
-            }
-          }else{
+            
             if(this.opts.lock == this.obj._drawLock){
               this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
-            
               this.obj.fire("drawCanvas");
             }else{
               this.obj.ViewReset();
             }
-          }
+          
         
   
               var cacheImg=this.obj.getCacheImage.call(this.obj,url);

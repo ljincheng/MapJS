@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../HEADER.js"></script>
+        <script type="text/javascript" src="../globalGeomap.js"></script>
+        <script type="text/javascript" src="../lib/event.js"></script>
+        <script type="text/javascript" src="../core/Observable.js"></script>
+        <script type="text/javascript" src="../core/util.js"></script>
+        <script type="text/javascript" src="../core/CommonMethods.js"></script>
+        <script type="text/javascript" src="../core/util_object.js"></script>
+        <script type="text/javascript" src="../core/util_element.js"></script>
+        <script type="text/javascript" src="../core/util_event.js"></script>
+        <script type="text/javascript" src="../core/Class.js"></script>
+        <script type="text/javascript" src="../core/Animation.js"></script>
+        <script type="text/javascript" src="../core/Request.js"></script>
+        <script type="text/javascript" src="../geo/Point.js"></script>
+        <script type="text/javascript" src="../geo/Transformtion.js"></script>
+        <script type="text/javascript" src="../event/Event.js"></script>
+        <script type="text/javascript" src="../geo/Bounds.js"></script>
+        <!-- <script type="text/javascript" src="../geo/geomap_coord.js"></script> -->
+        <script type="text/javascript" src="../geo/Model.js"></script>
+        <script type="text/javascript" src="../geo/MapEvent.js"></script>
+        <script type="text/javascript" src="../geo/Map.js"></script>
+        
+        <script type="text/javascript" src="../geometry/Geometry.js"></script>
+        <script type="text/javascript" src="../geometry/Path.js"></script>
+        <script type="text/javascript" src="../geometry/Polygon.js"></script>
+        <script type="text/javascript" src="../geo/Layer.js"></script>
+        <script type="text/javascript" src="../geo/layer/TileLayer.js"></script>
+        <script type="text/javascript" src="../geo/layer/PaletteLayer.js"></script>
+        
+    </head>
+<body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
+<div id="mapPane" style="z-index:1;border:0px solid blue;"></div>
+ 
+ <script type="text/javascript">
+  
+var winWidth,winHeight,mapHeight,map,mapPane,paletteLayer,ClickPolygon=null;
+var szPoint=[114.02262568473816,11.574944257736206];
+
+    function winLoad(){
+         winWidth=window.innerWidth;
+         winHeight=window.innerHeight;
+   
+     mapHeight=winHeight;
+    
+    mapPane=document.getElementById("mapPane");
+    mapPane.style.width=winWidth+"px";
+    mapPane.style.height=mapHeight+"px";
+    map=new geomap.Map(mapPane,{maxZoom:20,zoom:1});
+    //  var tileLayer=new geomap.TileLayer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
+    //  map.addLayer(tileLayer);
+    var parkingLayer=new geomap.TileLayer({url:"http://master.cn/apps/geo/map/image/{z}/{x}/{y}"});
+    map.addLayer(parkingLayer);
+    paletteLayer=new geomap.PaletteLayer({url:""});
+    paletteLayer.setType("Line",false);
+    map.addLayer(paletteLayer);
+    map.on("click",clickMapFn);
+    // map.on("click",clickMapFn);
+    // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
+    eventjs.add(document.body, 'touchmove', eventjs.prevent);
+    /// Prevent right-click on desktops.
+    eventjs.add(document.body, 'contextmenu', eventjs.prevent);
+    /// Prevent elastic scrolling.
+    eventjs.add(document, 'touchstart', eventjs.prevent);
+ }
+
+ function winResize(){
+    winWidth=window.innerWidth;
+    winHeight=window.innerHeight;
+    mapHeight=winHeight;
+    mapPane.style.width=winWidth+"px";
+    mapPane.style.height=mapHeight+"px";
+   map.resize();
+ }
+  
+function clickMapFn(e){
+    var url="http://master.cn/apps/geo/map/query";
+    // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
+    
+    var point=e.coord.toString();
+    geomap.debug("clickMapFn:coord="+point.toString());
+    var bodyData="type=query&layerName=geo_parking_polygon&geometry=&filter=CONTAINS(geom, "+point+")";
+    geomap.debug(bodyData);
+    geomap.request(url,{method:"POST",body:bodyData,onComplete:function(data){
+        var res=data.response,status=data.status; 
+        geomap.debug("["+url+",status="+status+"]data:"+res);
+        if(res.length>0 && res.indexOf("Polygon")>0){
+            
+         var dataObj=JSON.parse(res);
+         geomap.debug("["+url+",status="+status+"]data:type="+dataObj.type);
+         if(!ClickPolygon){
+            // ClickPolygon=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},[4,2]);
+            ClickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
+            paletteLayer.addGeometry(ClickPolygon);
+         }
+         //var polygon1=new geomap.Polygon(map,null,true,{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2});
+         ClickPolygon.setData(dataObj.geometry);
+        
+        }
+        
+    }});
+}
+</script>   
+</body>
+</html>

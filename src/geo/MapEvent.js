@@ -95,7 +95,7 @@
                 this._wheel_d0=0;
                 this._wheel_d1=0;
                 this._wheel_d2=0;
-                geomap.debug("_wheel_delta(END)="+this._wheel_delta);
+                // geomap.debug("_wheel_delta(END)="+this._wheel_delta);
                 this.fire("zoomend",{event:e,point:p,delta:delta});
             },
             dragStart:function(e,p){
