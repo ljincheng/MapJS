@@ -15,20 +15,26 @@
             d4 = snap ? Math.ceil(d3/snap) * snap : d3,
             zoomDelta=this._limitZoom(zoom+(this._wheel_delta > 0 ? d4 : -d4)) - zoom;
 
-             geomap.debug("_wheel_delta="+this._wheel_delta+",d0="+ this._wheel_d0);
+            // geomap.debug("_wheel_delta="+this._wheel_delta+",d0="+ this._wheel_d0);
 
              if(this._wheel_delta>0){
                  if(this._wheel_d0>=0){ 
                     if(this._wheel_d0<this._wheel_delta){
                         this._wheel_d0=this._wheel_delta;
+                        this._wheel_d1=0;
                     }else{
                         if(this._wheel_d1==0){
                             this._wheel_d1=1;
                             //TODO fire
-                            geomap.debug("fire zoom +");
-                            var zoom=this._limitZoom(this.zoom+1);
+                            //geomap.debug("fire zoom +");
+                            var startZoom=this.zoom;
+                            var zoom=this._limitZoom(startZoom+1);
                              this.setZoomScreen(point,zoom);
                             this.fire("zoom",{event:event,point:point,delta:this._wheel_delta});
+                            this.fire("wheelzoom",{event:event,point:point,delta:this._wheel_delta,startZoom:startZoom,endZoom:zoom});
+                        }else{
+                             this._wheel_d0=this._wheel_delta;
+                            // this._wheel_d1=0;
                         } 
                     }
                     
@@ -37,21 +43,26 @@
                  if(this._wheel_d2<=0){
                     if(this._wheel_d2<=this._wheel_delta){
                         this._wheel_d2=this._wheel_delta;
+                        this._wheel_d1=0;
                     }else{
                         if(this._wheel_d1==0){
                             this._wheel_d1=1;
                             //TODO fire
-                            geomap.debug("fire zoom -");
-                            var zoom=this._limitZoom(this.zoom-1);
+                           // geomap.debug("fire zoom -");
+                            var startZoom=this.zoom;
+                            var zoom=this._limitZoom(startZoom-1);
                              this.setZoomScreen(point,zoom);
                             this.fire("zoom",{event:event,point:point,delta:this._wheel_delta});
-                        }  
+                            this.fire("wheelzoom",{event:event,point:point,delta:this._wheel_delta,startZoom:startZoom,endZoom:zoom});
+                        } else{
+                            this._wheel_d2=this._wheel_delta;
+                        }
                     }
                  } 
 
              }
              
-            this._wheel_delta=0;
+            // this._wheel_delta=0;
             this.__wheel_startTime=null;
             if(!zoomDelta){
                 return ;
@@ -71,7 +82,8 @@
             wheelZoom:function(e,p,delta){
 
                 
-                this._wheel_delta +=delta;
+                this._wheel_delta =delta;
+                // this._wheel_delta +=delta;
               //  geomap.debug("delta="+delta+",w="+this._wheel_delta);
 
                 if(!this.__wheel_startTime){
@@ -122,8 +134,8 @@
             touchZoomStart:function(e,p){
                     this.__touch_point=p;
                     this.__touch_zoom=this.zoom;
-                    geomap.debug("(touchZoomStart) point="+p.toString());
-                this.fire("touchzoomstart",{event:e,point:p});
+                   // geomap.debug("(touchZoomStart2) point="+p.toString());
+                this.fire("touchzoomstart",{event:e,point: this.__touch_point});
             },
         touchZoom:function(e,p,scale){
                // geomap.debug("(Map_Event) scale="+scale);
@@ -131,7 +143,8 @@
                     var s1=r0 * scale;
                 var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
-                var z=newZoom;
+                
+                var z=this._limitZoom(newZoom);
                 this.setZoomScreen(this.__touch_point,z);
                 this.zoom=z;
                 this.fire("touchzoom",{event:e,scale:scale,point:p});

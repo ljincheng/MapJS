@@ -84,10 +84,11 @@
         this._eventTouchZoom=new geomap.Event.TouchZoom(this);
         this._eventWheelZoom=new geomap.Event.ScrollWheelZoom(this);
         this._eventDrag.addEvent(this._container);
+        // geomap.debug("==============new event|||2222=============");
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
         eventjs.add(this._container,"click touch",function(event,self){
-          geomap.debug("[click touch] point="+self.x+","+self.y);
+          // geomap.debug("[click touch] point="+self.x+","+self.y);
           var point=new Point(event.offsetX || self.x ,event.offsetY || self.y);
           var coord=this.screenToCoord(point);
           var e=extend({},{target: this,coord:coord ,point:point,event:event});
@@ -98,7 +99,7 @@
           var point=new Point(event.offsetX,event.offsetY);
           if(event.ctrlKey){
             var coord=this.screenToCoord(point);
-            geomap.debug("mousedown|coord="+coord.toString());
+            // geomap.debug("mousedown|coord="+coord.toString());
           }
           this.fire("mousedown",{event:event,point:point});
 
@@ -144,8 +145,16 @@
           this.canvasCtx.clearRect(0,0,size.x,size.y);
           for(var i=0,k=this.layers.length;i<k;i++){
                 var layer=this.layers[i];
-                layer.drawingCanvas(ctx);
+                // if(layer.type !='PaletteLayer'){
+                  layer.drawingCanvas(ctx);
+              //   }
           } 
+      //     for(var i=0,k=this.layers.length;i<k;i++){
+      //       var layer=this.layers[i];
+      //       if(layer.type =='PaletteLayer'){
+      //         layer.drawingCanvas(ctx);
+      //       }
+      // } 
           var geomNum=this._geometrys.length;
           if(geomNum>0){
             for(var i=0;i<geomNum;i++){
@@ -189,7 +198,7 @@
           var offsetR=Math.round( pos1.distanceTo(cpos));
           var sizeR=Math.round( Math.sqrt(size.x* size.x + size.y* size.y));
           if(offsetR > sizeR){
-            geomap.debug("offsetR 1");
+            // geomap.debug("offsetR 1");
             var scale=offsetR/sizeR;
             var startCoordX,startCoordY; 
             startCoordX = pos1.x - (pos1.x-cpos.x) * scale;
@@ -197,7 +206,7 @@
             pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
             startCoord=this.screenToCoord(pos1);
           }else{
-            geomap.debug("offsetR 2");
+            // geomap.debug("offsetR 2");
             startCoord=this.center;
             // geomap.debug("2 startCoord="+startCoord.toString()+",center="+this.center.toString());
           }
@@ -213,7 +222,7 @@
              // geomap.debug("pos="+pos.toString());
               this.setCenter(pos);
               this.fire("drawmap");
-            }.bind(this),[startCoord,coord],1);
+            },[startCoord,coord],1,this);
           }
 
        },

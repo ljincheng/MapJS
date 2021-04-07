@@ -13,7 +13,7 @@
         loopRender:true,
         setMap:function(map){this._map=map;},
         s2c:function(p){return this._map.screenToCoord(p);},
-        c2s:function(c){ return this._map.coordToScreen(c); },
+        c2s:function(c){ return this._map.coordToScreen(c).round(); },
         addCoord:function(coord){ 
             var len=this._coordinates.length;
             if(len>0){

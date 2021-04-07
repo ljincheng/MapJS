@@ -10,6 +10,11 @@
     };
 
     Transformtion.prototype={
+        setOrigin: function(b,d){
+            this._b=b;
+            this._d=d;
+            return this;
+        },
         transform:function(point,scale){
             return this._transform(point,scale);
         },

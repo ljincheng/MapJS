@@ -8,13 +8,23 @@
 
     geomap.PosAnimation=geomap.Class(geomap.CommonMethods, geomap.Observable,{
  
-	run: function (fn, pos, duration, easeLinearity) {
+	 
+	easeLinearity:0.5,
+	initialize: function( options) {
+        options || (options = { }); 
+		this.fnContext=this; 
+        this._setOptions(options);  
+	},
+	run: function (fn, pos, duration, context) {
 		this.stop();
 		this._fn = fn;
+		this._fnContext=context;
 		this._inProgress = true;
 		this._duration = duration || 0.25;
-		this._easeOutPower = 1 / Math.max(easeLinearity || 0.5, 0.2);
+		// this._easeOutPower = 1 / Math.max(easeLinearity || 0.5, 0.2);
+		this._easeOutPower = 1 / Math.max(this.easeLinearity, 0.2);
 
+		this._pos=pos;
 		this._startPos = pos[0];
 		this._offset = pos[1].subtract(this._startPos);
 		this._startTime = +new Date();
@@ -49,11 +59,14 @@
 	},
 
 	_runFrame: function (progress, round) {
-		var pos = this._startPos.add(this._offset.multiplyBy(progress));
+		var _stepProgress=this._offset.multiplyBy(progress);
+		var pos = this._startPos.add(_stepProgress);
 		if (round) {
 			pos._round();
 		}
-        this._fn(pos);   
+		var e={animationTarget:this,step: _stepProgress,offset:this._offset,progress:progress,pos:this._pos};
+		this._fn.call(this._fnContext,pos,e);
+        // this._fn(pos,e);   
 		this.fire('step');
 	},
 

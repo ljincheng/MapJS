@@ -14,7 +14,7 @@
     }
    
     geomap.PaletteLayer = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Layer,  {
-      type: 'Layer',
+      type: 'PaltteLayer',
       paths:[],
       drawType:0,
       fill:true,
@@ -28,6 +28,7 @@
         this._map.on("mousedown",this.OnMouseDown.bind(this));
         this._map.on("mousemove",this.OnMouseMove.bind(this));
         this._map.on("mouseup",this.OnMouseUp.bind(this));
+        this.transformtion.setOrigin(0,0);
       },
       setType:function(gtype,fill){
           this.drawType=gtype;
@@ -95,31 +96,35 @@
         }
       },
       OnLoopTime:function(){ 
-
         if(this.loopRender && this._canvasScale==1){
+          this._dragOffset=null;//实时重绘canvas，不需要拖拽偏移量。
            this.ViewReset();
         }
       },
       ViewReset:function(){ 
-        this._layerCtx.clearRect(0,0,this.width,this.height);
-        this._drawStart && this._drawStart.zero();
-        this._canvasScale=1;
-        var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
-        this.loopRender=false;
-        if(this.paths.length>0){
-            for(var i=0,k=this.paths.length;i<k;i++){
-                var path=this.paths[i];
-                path.render(this._layerCtx);
-                if(path.loopRender){
-                  this.loopRender=true;
+        if(!this.wheelZoomChanage && this._canvasScale==1){
+          this._layerCtx.clearRect(0,0,this.width,this.height);
+            this._canvasScale=1;
+            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            this.loopRender=false;
+            if(this.paths.length>0){
+                for(var i=0,k=this.paths.length;i<k;i++){
+                    var path=this.paths[i];
+                    path.render(this._layerCtx);
+                    if(path.loopRender){
+                      this.loopRender=true;
+                    }
                 }
             }
+            if(this._pathing && this._pathing != null){
+                this._pathing.render(this._layerCtx);
+            }
+            this.fire("drawCanvas");
         }
-        if(this._pathing && this._pathing != null){
-            this._pathing.render(this._layerCtx);
-        }
-        this.fire("drawCanvas");
-      } 
+      }
+       
+     
+       
       
     });
   
