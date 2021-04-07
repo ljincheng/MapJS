@@ -122,10 +122,11 @@
             touchZoomStart:function(e,p){
                     this.__touch_point=p;
                     this.__touch_zoom=this.zoom;
+                    geomap.debug("(touchZoomStart) point="+p.toString());
                 this.fire("touchzoomstart",{event:e,point:p});
             },
         touchZoom:function(e,p,scale){
-                geomap.debug("(Map_Event) scale="+scale);
+               // geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
                     var s1=r0 * scale;
                 var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
@@ -133,14 +134,14 @@
                 var z=newZoom;
                 this.setZoomScreen(this.__touch_point,z);
                 this.zoom=z;
-                this.fire("touchzoom",{event:e,scale:scale,point:this.__touch_point});
+                this.fire("touchzoom",{event:e,scale:scale,point:p});
             },
             touchZoomEnd:function(e,p,scale){
                 var r0=this.getScale(this.__touch_zoom);
                 var s1=r0 * scale;
                 var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
                 var z=newZoom;
-                geomap.debug("(Map_Event) newZoom="+newZoom);
+                // geomap.debug("(Map_Event) newZoom="+newZoom);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
                 this.setZoomScreen(this.__touch_point,z);
                 this.zoom=z;

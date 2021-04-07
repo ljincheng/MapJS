@@ -22,6 +22,7 @@
         cache:true,
         _canvas_map_size:new Point(0,0),
         _mapSize:null,
+        transformtion:null,
        initialize: function( options) {
         options || (options = { }); 
         this._setOptions(options); 
@@ -57,15 +58,17 @@
           this._layerCanvas.style.width=this._canvas_copy_size.x+"px";
           this._layerCanvas.style.height=this._canvas_copy_size.y+"px";
            this._canvas_map_size=size;
+           this.transformtion=new geomap.Transformtion(1,-(size.x),1, -(size.y));
         }
         return this._canvas_copy_size;
        },
-      //  OnTouchZoomStart:function(arg){
-      //   var event=arg.event,cpos=arg.point;
-      //   var size=this.getCanavsSize(), 
-      //   offsetSize=this._canvas_map_size;
-      //   this._drawStart=cpos.add(offsetSize);
-      // },
+       OnTouchZoomStart:function(arg){
+        var event=arg.event,cpos=arg.point;
+        var size=this._mapSize;
+        // this._drawStart=cpos;
+        this._drawStart=this.transformtion.untransform(cpos,1).round();
+        geomap.debug("okkkk7,_drawStart="+this._drawStart.toString());
+      },
       //  OnDrag:function(arg){
       //   if(arg.boundsChanged){
       //     var size=this.getCanavsSize(), 
@@ -80,17 +83,20 @@
       drawingCanvas:function(ctx,options){
         var map=this._map,
           size=this.getCanavsSize(),
-          mapSize=map.getSize(),
+          // mapSize=map.getSize(),
           offsetSize=this._canvas_map_size,
           p0 = (this._drawStart || new Point(0,0)),
          scale=(this._canvasScale || 1),
-         box1=mapSize.multiplyBy(scale).round(),
+        //  box1=mapSize.multiplyBy(scale).round(),
          box=size.multiplyBy(scale).round();
         
-         var p1=map.toTransformScreen(p0.clone(),1-scale).round();
-         var baseP0=map.toTransformScreen(offsetSize.clone(),1-scale).round();
+        //  var p1=map.toTransformScreen(p0.clone(),1-scale).round();
+        //  var baseP0=map.toTransformScreen(offsetSize.clone(),1-scale).round();
       
-         var baseP1=map.toTransformScreen(p0.add(offsetSize),1-scale).round();
+        //  var baseP1=map.toTransformScreen(p0.subtract(offsetSize),1-scale).round();
+        // var p1=this.transformtion.untransform(p0).round();
+         var baseP1=this.transformtion.transform(p0.clone(),1-scale).round();
+         geomap.debug("okkkk8");
          
         //  var baseP2=map.toTransformScreen(p0.add(offsetSize),1-scale).round();
         // var box1=size.multiplyBy(scale).round(); 
@@ -99,7 +105,7 @@
         //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box1.x,box1.y,0,0,box1.x,box1.y);
         //  ctx.drawImage(this._layerCanvas,p1.x,p1.y,box.x,box.y,-baseP0.x,-baseP0.y,box.x,box.y);
         //  ctx.drawImage(this._layerCanvas,baseP0.x,baseP0.y,box.x,box.y,p1.x,p1.y,box.x,box.y);
-        ctx.drawImage(this._layerCanvas,-baseP1.x,-baseP1.y,box.x,box.y);
+        ctx.drawImage(this._layerCanvas,baseP1.x,baseP1.y,box.x,box.y);
       } ,
       ViewReset:function(){ 
         //  this._drawStart && this._drawStart.zero();
