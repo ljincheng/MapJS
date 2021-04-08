@@ -23,7 +23,8 @@
       var method = options.method ? options.method.toUpperCase() : 'GET',
           onComplete = options.onComplete || function() { },
           xhr = new geomap.window.XMLHttpRequest(),
-          body = options.body || options.parameters;
+          body = options.body || options.parameters
+          headers=options.header||{};
   
       /** @ignore */
       xhr.onreadystatechange = function() {
@@ -42,6 +43,10 @@
   
       xhr.open(method, url, true);
   
+      for(var key in headers){
+        xhr.setRequestHeader(key,headers[key]);
+      }
+      
       if (method === 'POST' || method === 'PUT') {
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       }

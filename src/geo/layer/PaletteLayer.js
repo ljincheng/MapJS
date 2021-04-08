@@ -96,13 +96,13 @@
         }
       },
       OnLoopTime:function(){ 
-        if(this.loopRender && this._canvasScale==1){
+        if(this.loopRender && (this._canvasScale==1 || this._canvasScale == undefined )){
           this._dragOffset=null;//实时重绘canvas，不需要拖拽偏移量。
            this.ViewReset();
         }
       },
       ViewReset:function(){ 
-        if(!this.wheelZoomChanage && this._canvasScale==1){
+        if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
           this._layerCtx.clearRect(0,0,this.width,this.height);
             this._canvasScale=1;
             var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);

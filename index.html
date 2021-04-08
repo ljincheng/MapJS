@@ -85,7 +85,7 @@ var szPoint=[114.02262568473816,11.574944257736206];
     map=new geomap.Map(mapDiv,{center:wordPoint,maxZoom:20,zoom:1,debug:writeDebug});
      var tileLayer=new geomap.TileLayer({url:"https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"});
      map.addLayer(tileLayer);
-    // var parkingLayer=new geomap.TileLayer({url:"../apps/geo/map/image/{z}/{x}/{y}"});
+    // var parkingLayer=new geomap.TileLayer({url:"http://master.cn/apps/geo/map/image/T20210308-001/{z}/{x}/{y}.png"});
     // map.addLayer(parkingLayer);
     paletteLayer=new geomap.PaletteLayer({url:""});
     paletteLayer.setType("Line",false);

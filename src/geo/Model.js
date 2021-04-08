@@ -65,7 +65,8 @@
             var r1=this.resolution(zoom);
             // var min= this.modelCoord(coord).subtract(sc1._scaleBy(r1));
             var min= coord.subtract(this.modelCoord(sc1._scaleBy(r1)));
-            this.center=this.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
+            // this.center=this.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
+            this.center=this.getSize().divideBy(2)._scaleBy(r1).add(min);
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;

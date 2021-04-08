@@ -35,6 +35,7 @@
         if(!this._canvas_copy_size || !this._mapSize || !size.equals(this._mapSize)){
           this._mapSize=size.clone();
           this._canvas_copy_size=size.multiplyBy(3); 
+          // this._canvas_copy_size=size; 
           this._layerCanvas.width=this._canvas_copy_size.x;
           this._layerCanvas.height=this._canvas_copy_size.y;
           this._layerCanvas.style.width=this._canvas_copy_size.x+"px";
@@ -66,8 +67,10 @@
   
         this._drawLock=lock;
         this._layerCtx.clearRect(0,0,canvasSize.x,canvasSize.y);
-        for(var c=-cells,k=cells*2;c<k;c++){
-          for(var r=-rows,k2=rows*2;r<k2;r++){
+        // for(var c=-cells,k=cells*2;c<k;c++){
+          // for(var r=-rows,k2=rows*2;r<k2;r++){
+          for(var c=-0,k=cells;c<k;c++){
+            for(var r=-0,k2=rows;r<k2;r++){
                 var  x=1*cell + c;
                 var y=1*row + r;
                 var l=Math.floor(left+tsize*c)+offsetSize.x;
@@ -148,6 +151,11 @@
               this.obj.cacheImage.call(this.obj,img);
             
           },{obj:this,opts:opts,doDraw:doDraw});
+        }else{
+          var cacheImg=this.getCacheImage(url);
+          if(cacheImg==null){
+            this.__load_img_key[url]=null;
+          }
         }
       }
        

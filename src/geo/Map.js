@@ -37,6 +37,7 @@
       _geometrys:[],
       model:undefined,
       loopTime:40,
+      canvasRatio:1,
       initialize: function(container, options) {
         options || (options = { });  
         this._setOptions(options);  
@@ -76,6 +77,7 @@
         var size=this.getSize();
         var width=size.x,height=size.y;
         var el_canvas=geomap.util.element.create("canvas",{id:"_map_canvas",width:width,height:height},{zIndex:2,border:"0px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
+        geomap.util.element.createHiDPICanvas(el_canvas,width,height,this.canvasRatio);
         this._container.appendChild(el_canvas);
         this.canvas=el_canvas;
         const ctx=el_canvas.getContext("2d");
@@ -185,10 +187,13 @@
         this.layers.push(layer);
         this.fire("drawmap");
       },
-      setCenter:function(coord){
+      setCenter:function(coord,zoom){
         coord=toPoint(coord);
         this.center=coord;
         this._boundsChanged=true;
+        if(zoom != undefined && typeof zoom == "number"){
+          this.setZoom(zoom);
+        }
        },
        animMove:function(coord){
           coord=toPoint(coord);
@@ -248,10 +253,11 @@
        resize:function(){
          this._sizeChanged=true;
          var size=this.getSize();
-         this.canvas.width=size.x;
-         this.canvas.height=size.y;
-         this.canvas.style.width=size.x+"px";
-         this.canvas.style.height=size.y+"px";
+        //  this.canvas.width=size.x;
+        //  this.canvas.height=size.y;
+        //  this.canvas.style.width=size.x+"px";
+        //  this.canvas.style.height=size.y+"px";
+         geomap.util.element.createHiDPICanvas(this.canvas,size.x,size.y,this.canvasRatio);
          this._boundsChanged=true;
          this._redrawing=true;
          this.fire("resize");
