@@ -20,20 +20,20 @@
       width:100,
       height:100, 
       _canvas:null,
-      _layerCanvas:null,
-      _layerCtx:null, 
       _map:undefined,
       transformtion: null,
       wheelZoomChanage:false,
+      canvas:null,
+      canvasCtx:null,
       initLayer:function(canvas,map){
         this.transformtion=new geomap.Transformtion(-1,0,-1, 0);
         this._canvas=canvas; 
         this._drawLock=1;
         this._map=map;
-        var el_offscreen_canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
-        const offscreen_ctx=el_offscreen_canvas.getContext("2d");
-        this._layerCanvas=el_offscreen_canvas;
-        this._layerCtx=offscreen_ctx;
+        var canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
+        const canvasCtx=canvas.getContext("2d");
+        this.canvas=canvas;
+        this.canvasCtx=canvasCtx;
         this.OnResize();
         map.on("resize",this.OnResize.bind(this));
         map.on("viewreset",this.ViewReset.bind(this));
@@ -51,10 +51,10 @@
         var size=this._map.getSize();
         this.width=size.x;
         this.height=size.y;
-        this._layerCanvas.width=size.x;
-        this._layerCanvas.height=size.y;
-        this._layerCanvas.style.width=size.x+"px";
-        this._layerCanvas.style.height=size.y+"px";
+        this.canvas.width=size.x;
+        this.canvas.height=size.y;
+        this.canvas.style.width=size.x+"px";
+        this.canvas.style.height=size.y+"px";
       },
       OnTouchZoomStart:function(arg){
         var event=arg.event,cpos=arg.point;
@@ -85,7 +85,7 @@
             this._animMoveFn.on("end",function(){this._touchZoomStart=null;this._canvasScale = 1; this.wheelZoomChanage=false;this.ViewReset();}.bind(this));
           }
           this._touchZoomStart=arg.point;
-          this._animMoveFn.run(function(pos,e){
+          this._animMoveFn.run(this._map,function(pos,e){
            var startRes=this._map.getScale(e.pos[0].x)/256;
            var res=this._map.getScale(pos.x)/256;
            var scale=res/startRes;
@@ -124,7 +124,7 @@
         scale=(this._canvasScale || 1),
         box=size.multiplyBy(scale).round();
         var baseP1=this.transformtion.transform(p0.clone(),scale)._add(p0).add(offsetDrag).round();
-        ctx.drawImage(this._layerCanvas,baseP1.x,baseP1.y,box.x,box.y);
+        ctx.drawImage(this.canvas,baseP1.x,baseP1.y,box.x,box.y);
         // var r=5;
         // ctx.globalAlpha = 1;
         // ctx.fillRect(p0.x-r/2,p0.y-r/2,r,r);

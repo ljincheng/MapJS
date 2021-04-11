@@ -19,7 +19,7 @@
       return;
     }
    
-    geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,geomap.MapEvent,{
+    geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,geomap.MapEvent, geomap.Caliper, {
       type: 'object',
       width:100,
       height:1000,
@@ -27,6 +27,8 @@
       center:undefined,
       canvas:undefined,
       canvasCtx:undefined,
+      bgCanvas:undefined,
+      bgCanvasCtx:undefined,
       zoom:2,
       maxZoom:11,
       minZoom:0,
@@ -57,9 +59,9 @@
         this.on("drawmap",this._onDrawMap.bind(this));
         this.on("drawCanvas",this._redrawingCanvasTag.bind(this));
         // this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
-        this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
+        // this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
         // this._global_interval=window.requestAnimationFrame(this._loopTime.bind(this));
-        
+        this._loopTime();
       },
       _dispose:function(){
         geomap.util.cancelAnimFrame(this._global_interval);
@@ -78,6 +80,9 @@
         var width=size.x,height=size.y;
         var el_canvas=geomap.util.element.create("canvas",{id:"_map_canvas",width:width,height:height},{zIndex:2,border:"0px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
         geomap.util.element.createHiDPICanvas(el_canvas,width,height,this.canvasRatio);
+        var bgCanvas=geomap.util.element.create("canvas",{width:width,height:height},{backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
+        this.bgCanvas=bgCanvas;
+        this.bgCanvasCtx=bgCanvas.getContext("2d");
         this._container.appendChild(el_canvas);
         this.canvas=el_canvas;
         const ctx=el_canvas.getContext("2d");
@@ -130,21 +135,26 @@
         return z;
       },
       _loopTime:function(){
+        this.fire("looptime");
         for(var i=0,k=this.layers.length;i<k;i++){
           var layer=this.layers[i];
               layer.OnLoopTime();
         }
         this._redrawingCanvas.call(this);
-        geomap.util.cancelAnimFrame(this._global_interval);
-        this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
+        // geomap.util.cancelAnimFrame(this._global_interval);
+        // this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
+        geomap.util.requestAnimFrame(this._loopTime,this);
       },
       _redrawingCanvas:function(){
         if(this._redrawing==true || this._move_type==1){
           this._redrawing=false;
           const ctx=this.canvasCtx;
+          // const fgCtx=this.bgCanvasCtx;
           var size=this.getSize();
          // var wh=geomap.coord.size(this._move_start,this._pos);
-          this.canvasCtx.clearRect(0,0,size.x,size.y);
+        //  fgCtx.clearRect(0,0,size.x,size.y);
+        //  fgCtx.drawImage(this.bgCanvas,0,0,size.x,size.y);
+           ctx.clearRect(0,0,size.x,size.y);
           for(var i=0,k=this.layers.length;i<k;i++){
                 var layer=this.layers[i];
                 // if(layer.type !='PaletteLayer'){
@@ -168,7 +178,11 @@
                  }
             }
           }
+          this.caliperDraw(ctx);
           //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
+          // fgCtx.clearRect(0,0,size.x,size.y);
+        //  fgCtx.drawImage(this.bgCanvas,0,0,this.canvas.width,this.canvas.height);
+        
         }
       }, 
       _onDrawMap:function(){
@@ -222,7 +236,7 @@
                 this._animMoveFn=new geomap.PosAnimation();
               }
             
-              this._animMoveFn.run(function(pos){
+              this._animMoveFn.run(this,function(pos){
               // this.moveTo(pos); 
              // geomap.debug("pos="+pos.toString());
               this.setCenter(pos);
@@ -258,6 +272,7 @@
         //  this.canvas.style.width=size.x+"px";
         //  this.canvas.style.height=size.y+"px";
          geomap.util.element.createHiDPICanvas(this.canvas,size.x,size.y,this.canvasRatio);
+         geomap.util.element.createHiDPICanvas(this.bgCanvas,size.x,size.y,this.canvasRatio);
          this._boundsChanged=true;
          this._redrawing=true;
          this.fire("resize");

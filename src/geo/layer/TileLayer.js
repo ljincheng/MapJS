@@ -36,10 +36,10 @@
           this._mapSize=size.clone();
           this._canvas_copy_size=size.multiplyBy(3); 
           // this._canvas_copy_size=size; 
-          this._layerCanvas.width=this._canvas_copy_size.x;
-          this._layerCanvas.height=this._canvas_copy_size.y;
-          this._layerCanvas.style.width=this._canvas_copy_size.x+"px";
-          this._layerCanvas.style.height=this._canvas_copy_size.y+"px";
+          this.canvas.width=this._canvas_copy_size.x;
+          this.canvas.height=this._canvas_copy_size.y;
+          this.canvas.style.width=this._canvas_copy_size.x+"px";
+          this.canvas.style.height=this._canvas_copy_size.y+"px";
            this._canvas_map_size=size;
            this.transformtion.setOrigin(-size.x,-size.y);
         }
@@ -65,8 +65,8 @@
         var left=startTile.left;
         var top=startTile.top;
   
-        this._drawLock=lock;
-        this._layerCtx.clearRect(0,0,canvasSize.x,canvasSize.y);
+        this._drawLock=lock; 
+        this.canvasCtx.clearRect(0,0,canvasSize.x,canvasSize.y);
         // for(var c=-cells,k=cells*2;c<k;c++){
           // for(var r=-rows,k2=rows*2;r<k2;r++){
           for(var c=-0,k=cells;c<k;c++){
@@ -76,13 +76,55 @@
                 var l=Math.floor(left+tsize*c)+offsetSize.x;
                 var t=Math.floor(top+tsize*r)+offsetSize.y;
                 if( x>=0 && y>=0 ){
-                    var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
-                    this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
+                    // var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
+                    // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
+                    this.loadTile(c,r,l,t,z,x,y);
                 }
           }
         }
 
 
+        this.fire("drawCanvas");
+      },
+      getTileImage:function(cell,row,z,x,y){
+        if(!this._tileImageMap){
+          this._tileImageMap={};
+        }
+        var tableKey=cell+"-"+row;
+        var tileKey=z+"-"+x+"-"+y;
+        var tileImg=this._tileImageMap[tableKey];
+        if(!tileImg){
+          tileImg=new geomap.Image(geomap.window.document.createElement("img"));
+          tileImg.tileKey=tileKey;
+          tileImg.tableKey=tableKey;
+          tileImg.on("onload",this._imageLoad.bind(this));
+          this._tileImageMap[tableKey]=tileImg;
+        }else{
+          for(var tkey in this._tileImageMap){
+            var tileImgObj=this._tileImageMap[tkey];
+            var _tableKey=tileImgObj.tableKey;
+            var _tileKey=tileImgObj.tileKey;
+            if(_tileKey === tileKey){
+              tileImgObj.tableKey=tableKey;
+              tileImg.tableKey=_tableKey;
+              this._tileImageMap[tableKey]=tileImgObj;
+              this._tileImageMap[_tableKey]=tileImg;
+              return tileImgObj;
+            }
+          }
+        }
+        return tileImg;
+      },
+      loadTile:function(cell,row,left,top,z,x,y){
+        var image=this.getTileImage(cell,row,z,x,y);
+        image.tileKey=z+"-"+x+"-"+y;
+          image.x=left,image.y=top;
+        var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
+        image.fromURL(imgUrl);
+      },
+      _imageLoad:function(e){
+        // this.canvasCtx.drawImage(e.img,e.target.x,e.target.y);
+        e.target.draw(this.canvasCtx);
         this.fire("drawCanvas");
       },
       OriginTileInfo:function(res,min){
@@ -93,112 +135,8 @@
         var left = -(min.x - o.x) / res.x +tsize * cell ;
         var top = -(o.y - min.y) / res.y +tsize * row;
         return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
-      },
-      LoadImage:function(url,callback,context){
-  
-        if(!url){
-          callback && callback.call(context,url);
-          return;
-        }
-        var img=geomap.util.element.create("img");
-        var onLoadCallback=function(){
-          callback && callback.call(context,img,false);
-          //img=img.onload=img.onerror=null;
-        };
-        img.onload=onLoadCallback;
-        img.onerror=function(){
-          //console.log("Error loading "+img.src);
-          img = img.onload = img.onerror = null;
-          //callback && callback.call(context,null,true);
-        };
-        img.src=url;
-      },
-      FromURL:function(url,opts){
-        var cacheImg=this.getCacheImage(url);
-        var doDraw=false;
-        if(cacheImg==null){
-          doDraw=true;
-        }else{
-         // if(opts.lock == this._drawLock){
-            this._layerCtx.drawImage(cacheImg,opts.left,opts.top);
-            this.fire("drawCanvas");
-         // }
-        } 
-        if(!this.cache || doDraw){
-          if(!this.hasImageKey(url)){
-
-          this.LoadImage(url,function(img,isError){
-            if(isError){
-              console.log("load img fail:"+url);
-              return ;
-            }
-            
-            if(this.opts.lock == this.obj._drawLock){
-              this.obj._layerCtx.drawImage(img,this.opts.left,this.opts.top);
-              this.obj.fire("drawCanvas");
-            }else{
-              this.obj.ViewReset();
-            }
-          
-        
-  
-              var cacheImg=this.obj.getCacheImage.call(this.obj,url);
-              if(cacheImg!=null){
-                cacheImg.onload=null;
-                cacheImg.onerror=null;
-                cacheImg=null;
-              }
-              this.obj.cacheImage.call(this.obj,img);
-            
-          },{obj:this,opts:opts,doDraw:doDraw});
-        }else{
-          var cacheImg=this.getCacheImage(url);
-          if(cacheImg==null){
-            this.__load_img_key[url]=null;
-          }
-        }
       }
        
-      },
-      getCacheImage:function(url){
-        if(!this.__cache_imgs){
-          return null;
-        }
-        if(this.__cache_imgs[url]){
-          return this.__cache_imgs[url];
-        }
-        return null; 
-      },
-      cacheImage:function(img){
-        if(!this.__cache_imgs){
-          this.__cache_imgs={};
-        }
-        var url=img.src;
-           this.__cache_imgs[url]=img;
-        return img; 
-      },
-      hasImageKey:function(url){
-        if(!this.__load_img_key){
-          this.__load_img_key={};
-          this.__load_img_key[url]=1;
-          return false;
-        }
-        if(this.__load_img_key[url]){
-          this.__load_img_key[url]=this.__load_img_key[url]+1;
-          return true;
-        }else{
-          this.__load_img_key[url]=1;
-          return false;
-        } 
-      },
-      removeImageKey:function(url){
-        if(!this.__load_img_key){
-          return ;
-        }
-        if(this.__load_img_key[url]){
-          this.__load_img_key[url]=0;
-        }
-      }
     } );
     
   

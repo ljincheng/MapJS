@@ -14,6 +14,7 @@
         <script type="text/javascript" src="../core/util_event.js"></script>
         <script type="text/javascript" src="../core/Class.js"></script>
         <script type="text/javascript" src="../core/Animation.js"></script>
+        <script type="text/javascript" src="../core/Image.js"></script>
         <script type="text/javascript" src="../core/Request.js"></script>
         <script type="text/javascript" src="../geo/Point.js"></script>
         <script type="text/javascript" src="../geo/Transformtion.js"></script>
@@ -21,6 +22,7 @@
         <script type="text/javascript" src="../geo/Bounds.js"></script>
         <!-- <script type="text/javascript" src="../geo/geomap_coord.js"></script> -->
         <script type="text/javascript" src="../geo/Model.js"></script>
+        <script type="text/javascript" src="../geo/Caliper.js"></script>
         <script type="text/javascript" src="../geo/MapEvent.js"></script>
         <script type="text/javascript" src="../geo/Map.js"></script>
         
@@ -53,6 +55,7 @@ var szPoint=[114.02262568473816,11.574944257736206];
     mapPane.style.height=mapHeight+"px";
     // map=new geomap.Map(mapPane,{maxZoom:20,zoom:1});
     map=CCWMAP.Map.create("mapPane","T20210308-001");
+    // map=CCWMAP.Map.create("mapPane","example2");
      
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
     eventjs.add(document.body, 'touchmove', eventjs.prevent);

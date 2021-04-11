@@ -15,10 +15,10 @@
 		this.fnContext=this; 
         this._setOptions(options);  
 	},
-	run: function (fn, pos, duration, context) {
+	run: function(loopTarget,callback,pos,duration,context){
 		this.stop();
-		this._fn = fn;
-		this._fnContext=context;
+		this._callback = callback;
+		this._callbackContext=context || this;
 		this._inProgress = true;
 		this._duration = duration || 0.25;
 		// this._easeOutPower = 1 / Math.max(easeLinearity || 0.5, 0.2);
@@ -30,6 +30,9 @@
 		this._startTime = +new Date();
 		this.fire('start');
 		this._animate();
+		this.loopTarget=loopTarget;
+		this._timerId=this._animate.bind(this);
+		this.loopTarget.on("looptime",this._timerId);
 	},
 
 	// @method stop()
@@ -42,14 +45,15 @@
 	},
 
 	_animate: function () {
-		this._animId = geomap.util.requestAnimFrame(this._animate, this);
+		// this._animId = geomap.util.requestAnimFrame(this._animate, this);
+		console.log("[Animation.js]_animate=========");
 		this._step();
 	},
 
 	_step: function (round) {
 		var elapsed = (+new Date()) - this._startTime,
 		    duration = this._duration * 1000;
-
+			console.log("[Animation.js]_step=========");
 		if (elapsed < duration) {
 			this._runFrame(this._easeOut(elapsed / duration), round);
 		} else {
@@ -65,14 +69,16 @@
 			pos._round();
 		}
 		var e={animationTarget:this,step: _stepProgress,offset:this._offset,progress:progress,pos:this._pos};
-		this._fn.call(this._fnContext,pos,e);
+		console.log("[Animation.js]_runFrame=========");
+		// this._fn.call(this._fnContext,pos,e);
+		this._callback.call(this._callbackContext,pos,e);
         // this._fn(pos,e);   
 		this.fire('step');
 	},
 
 	_complete: function () {
-		geomap.util.cancelAnimFrame(this._animId);
-
+		// geomap.util.cancelAnimFrame(this._animId);
+		this.loopTarget.off("looptime",this._timerId);
 		this._inProgress = false; 
 		this.fire('end');
 	},

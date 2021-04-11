@@ -89,6 +89,7 @@ else if (typeof define === 'function' && define.amd) {
 
        var marker=new geomap.Marker(map,{width:200,height:120,style:{lineWidth:0}});
        map.addGeometry(marker);
+        // map.ccw={paletteLayer:paletteLayer,clickPolygon:clickPolygon};
         map.ccw={paletteLayer:paletteLayer,clickPolygon:clickPolygon,marker:marker};
     }
 
@@ -102,6 +103,7 @@ else if (typeof define === 'function' && define.amd) {
         var map=this,ClickPolygon=map.ccw.ClickPolygon;
         Request(url,{method:"POST",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
+            geomap.debug("url="+url+",body="+res);
             if( status==200 && res.length>0 && res.indexOf("Polygon")>0){ 
                 var dataObj=JSON.parse(res);
                 geomap.debug("["+url+",status="+status+"]data:type="+dataObj.type);
