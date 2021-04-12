@@ -113,12 +113,12 @@
             dragStart:function(e,p){
                 this.__startPos=p;
                 
-                this.__bounds_changed= !e.ctrlKey;
+                this.__bounds_changed= (!e.ctrlKey && !e.altKey);
                 
                 this.fire("dragstart",{event:e,point:p,boundsChanged:this.__bounds_changed});
             },
             dragChange:function(e,p){
-                this.__bounds_changed= !e.ctrlKey;
+                // this.__bounds_changed= (!e.ctrlKey && !e.altKey);
                 if(this.__bounds_changed){
                     // this.panScreen(this.__startPos.subtract(p)); 
                     this.panScreen(p.subtract(this.__startPos)); 

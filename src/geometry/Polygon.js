@@ -1,11 +1,16 @@
 (function() { 
     var Point =geomap.Point;
+    var Clone=geomap.util.object.clone;
+    // var Extend=geomap.util.object.extend;
 
-    geomap.Polygon=geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Geometry, {
+    geomap.Polygon=geomap.Class( geomap.Geometry,{
        initialize: function(map, options) {
-        this._map=map;
+      
         options || (options = { });
-        this._setOptions(options); 
+        // Extend(this,geomap.Geometry,true);
+        // this._setOptions(options); 
+        this.callSuper('initialize',map,options);
+        // this._map=map;
         this._type=0;
       },
       setData:function (data){

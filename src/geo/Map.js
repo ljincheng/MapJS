@@ -19,7 +19,8 @@
       return;
     }
    
-    geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,geomap.MapEvent, geomap.Caliper, {
+    geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,
+      geomap.MapEvent, geomap.Caliper,geomap.MapRectSelect, {
       type: 'object',
       width:100,
       height:1000,
@@ -58,6 +59,7 @@
        // this._drawlayer();
         this.on("drawmap",this._onDrawMap.bind(this));
         this.on("drawCanvas",this._redrawingCanvasTag.bind(this));
+        this.on("clear_geometry",this.clearGeometry.bind(this));
         // this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
         // this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
         // this._global_interval=window.requestAnimationFrame(this._loopTime.bind(this));
@@ -94,36 +96,34 @@
         // geomap.debug("==============new event|||2222=============");
         this._eventTouchZoom.addEvent(this._container);
         this._eventWheelZoom.addEvent(this._container);
+        this.RectSelectBindEvent(this);
         eventjs.add(this._container,"click touch",function(event,self){
           // geomap.debug("[click touch] point="+self.x+","+self.y);
           var point=new Point(event.offsetX || self.x ,event.offsetY || self.y);
           var coord=this.screenToCoord(point);
           var e=extend({},{target: this,coord:coord ,point:point,event:event});
           this.fire("click",e);
+          // if(event.altKey){
+          //   this.fire("pointcoord",e);
+          // }
         }.bind(this));
         eventjs.add(this._container,"mousedown",function(event,self){
-
           var point=new Point(event.offsetX,event.offsetY);
-          if(event.ctrlKey){
-            var coord=this.screenToCoord(point);
-            // geomap.debug("mousedown|coord="+coord.toString());
-          }
-          this.fire("mousedown",{event:event,point:point});
+          var arg={event:event,point:point};
+          this.fire("mousedown",arg);
 
         }.bind(this));
         eventjs.add(this._container,"mousemove",function(event,self){
 
           var point=new Point(event.offsetX,event.offsetY);
-          // if(event.ctrlKey){
-          //   var coord=this.screenToCoord(point);
-          //   geomap.debug("mousemove|coord="+coord.toString());
-          // }
+          var arg={event:event,point:point};
           this.fire("mousemove",{event:event,point:point});
 
         }.bind(this));
         eventjs.add(this._container,"mouseup",function(event,self){
           var point=new Point(event.offsetX,event.offsetY);
-          this.fire("mouseup",{event:event,point:point});
+          var arg={event:event,point:point};
+          this.fire("mouseup",arg);
         }.bind(this));
       },
       _limitZoom:function(z){
@@ -179,6 +179,7 @@
             }
           }
           this.caliperDraw(ctx);
+          this.fire("drawingCanvas",ctx);
           //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
           // fgCtx.clearRect(0,0,size.x,size.y);
         //  fgCtx.drawImage(this.bgCanvas,0,0,this.canvas.width,this.canvas.height);
@@ -283,6 +284,10 @@
       },
       addGeometry:function(geomtry){
         this._geometrys.push(geomtry);
+        this._redrawing=true;
+      },
+      clearGeometry:function(){
+        this._geometrys=[];
         this._redrawing=true;
       }
       

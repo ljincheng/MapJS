@@ -1,16 +1,26 @@
 (function() {
 
-    var Geometry={
+     
+     
+    
+    geomap.Geometry=geomap.Class(geomap.CommonMethods, geomap.Observable ,{
         _coordinates:[],
         _map:null, 
         _start:true,
         _fill:false,
         _pointWeight:6,
         _type:0,//type:0-polygon,1-point,2=line,3-rect,4-circle
-        style:{},
+        style:{fillStyle:"rgba(0, 0, 0, 0.4)",strokeStyle:"rgba(0,255,255,0.9)",lineWidth:2},
         lineDashOffset:0,
-        lineDash:null,
-        loopRender:true,
+        lineDash:[],
+        loopRender:false,
+           initialize: function(map, options) { 
+                options || (options = { });
+                // Extend(this,Geometry);
+                this._setOptions(options); 
+                this._map=map;
+                this._type=0;
+              },
         setMap:function(map){this._map=map;},
         s2c:function(p){return this._map.screenToCoord(p);},
         c2s:function(c){ return this._map.coordToScreen(c).round(); },
@@ -70,19 +80,19 @@
                    if(len>2){
                        this._coordinates.push(this._coordinates[0])
                    }else{
-                       this.clearPoint();
+                       this.clear();
                    }
                 }
                 break;
                 case 2:{
                     if(len<2){
-                        this.clearPoint();
+                        this.clear();
                     }
                 }break;
                 case 3:
                 case 4:{
                     if(len!=2){
-                        this.clearPoint();
+                        this.clear();
                     }
                 }break;
                 
@@ -106,7 +116,7 @@
         },
         render:function(ctx){
             var len=this._coordinates.length;
-            if(this.lineDash){
+            if(this.lineDash && this.lineDash.length>1){
                 ctx.setLineDash(this.lineDash);
                 ctx.lineDashOffset = this.lineDashOffset;
                 this.lineDashOffset += 1;
@@ -140,6 +150,7 @@
                    case 1:{
                        var p=this.c2s(this._coordinates[0]),r=this._point_weight;
                        ctx.fillRect(p.x-r/2,p.y-r/2,r,r);
+                       ctx.strokeRect(p.x-r/2,p.y-r/2,r,r);
                    }break;
                    case 2:{
                        ctx.beginPath();
@@ -173,10 +184,7 @@
            }
 
         }
-    };
-     
-    
-    geomap.Geometry=Geometry;
+    });
     
   })();
   

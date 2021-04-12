@@ -1,11 +1,13 @@
 (function() { 
     var Point =geomap.Point;
 
-    geomap.Path=geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Geometry, {
+    geomap.Path=geomap.Class(geomap.Geometry, {
+      lineDash:null,
        initialize: function(map, options) {
-        this._map=map;
+        // this._map=map;
         options || (options = { });
-        this._setOptions(options); 
+        this.callSuper('initialize',map,options); 
+        //  this._setOptions(options); 
       },
       setData:function (data){
         // var gtype=data.type;

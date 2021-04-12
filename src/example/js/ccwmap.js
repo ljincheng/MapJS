@@ -12,7 +12,7 @@ else if (typeof define === 'function' && define.amd) {
 (function(global) {
 
    var MAP_SERVER="http://master.cn/apps",
-       REQ_HEADER={token:"test001"}, Request=geomap.request;
+       REQ_HEADER={token:"test001"}, Request=geomap.request, Extend =geomap.util.object.extend;
      
    function createMap(container,mapId){ 
        var mapContainer;
@@ -29,7 +29,7 @@ else if (typeof define === 'function' && define.amd) {
 
     function loadMapId(map){
         var mapId=map.mapId;
-        var url=MAP_SERVER+"/geo/map/map/"+mapId;
+        var url=MAP_SERVER+"/geo/wms/map/"+mapId;
         Request(url,{method:"POST",header:REQ_HEADER,onComplete:function(xhr){
             var body=xhr.response,status=xhr.status; 
             console.log("["+url+",status="+status+"]data:"+body);
@@ -77,12 +77,19 @@ else if (typeof define === 'function' && define.amd) {
         map.setCenter(center,zoom);
         var parkingLayer=new geomap.TileLayer({url:rdata.mapUrl});
         map.addLayer(parkingLayer);
-        var paletteLayer=new geomap.PaletteLayer();
-        paletteLayer.setType("Line",false);
+        var paletteLayer=new geomap.PaletteLayer({drawType:"Polygon"});
+        // paletteLayer.setType("Line",false);
         map.addLayer(paletteLayer);
-        var clickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
-        paletteLayer.addGeometry(clickPolygon);
-        map.on("click",clickParingInfoEvent.bind(map));
+        // var clickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
+        // paletteLayer.addGeometry(clickPolygon);
+        map.on("pointcoord",function(e){
+            var p=e.coord.x+","+e.coord.y;
+            clickParingInfoEvent(map,p);});
+        map.on("rectcoord",function(e){
+            var p=e.minx+","+e.miny+","+e.maxx+","+e.maxy;
+            clickParingInfoEvent(map,p);
+           // console.log("[ccwmap.js]rectcoord="+e.minx+","+e.miny+","+e.maxx+","+e.maxy);
+        });
         map.fire("drawmap");
 
         //=== 测试区===
@@ -90,26 +97,43 @@ else if (typeof define === 'function' && define.amd) {
        var marker=new geomap.Marker(map,{width:200,height:120,style:{lineWidth:0}});
        map.addGeometry(marker);
         // map.ccw={paletteLayer:paletteLayer,clickPolygon:clickPolygon};
-        map.ccw={paletteLayer:paletteLayer,clickPolygon:clickPolygon,marker:marker};
+        map.ccw={paletteLayer:paletteLayer,marker:marker};
     }
 
-    function clickParingInfoEvent(e){
-        // var url="http://master.cn/apps/geo/map/query";
+    function clickParingInfoEvent(map,p){
         // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
-        var url=MAP_SERVER+"/geo/map/query";
-        var point=e.coord.toString();
-        var mapId=this.mapId;
-        var bodyData="mapId="+mapId+"&type=query&layerName=geo_parking_polygon&geometry=&filter=CONTAINS(geom, "+point+")";
-        var map=this,ClickPolygon=map.ccw.ClickPolygon;
+        var mapId=map.mapId;
+        var layerId="PARKING-POLYGON-001";
+        var url=MAP_SERVER+"/geo/wms/pointQuery/"+mapId;
+        // var bodyValue=Extend({layerId:layerId},e.coord);
+        var bodyValue={layerId:layerId,p:p};
+       
+        var bodyData=geomap.util.template("layerId={layerId}&p={p}",bodyValue);
+        // var ClickPolygon=map.ccw.ClickPolygon;
         Request(url,{method:"POST",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
             geomap.debug("url="+url+",body="+res);
-            if( status==200 && res.length>0 && res.indexOf("Polygon")>0){ 
-                var dataObj=JSON.parse(res);
-                geomap.debug("["+url+",status="+status+"]data:type="+dataObj.type);
-                map.ccw.clickPolygon.setData(dataObj.geometry); 
-                map.ccw.marker.setData(dataObj);
+            map.ccw.paletteLayer.clearGeometry();
+            if( status==200 && res.length>0 && res.indexOf("{")==0){ 
+                var featureCollection=JSON.parse(res);
+               if(featureCollection.type="FeatureCollection"){
+
+                var geomNum=featureCollection.features.length;
+            
+                for(var i=0;i<geomNum;i++){
+                    var geometry=featureCollection.features[i].geometry;
+                    var clickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
+                    clickPolygon.setData(geometry); 
+                   
+                    map.ccw.paletteLayer.addGeometry(clickPolygon);
+                }
+                // map.ccwpaletteLayer.addGeometry(clickPolygon);
+
+                // map.ccw.clickPolygon.setData(dataObj.geometry); 
+                // map.ccw.marker.setData(dataObj);
                 map.fire("drawmap");
+               }
+               
             }else{
                 geomap.debug("["+url+",status="+status+"]data:"+res);
             }
