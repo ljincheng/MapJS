@@ -36,23 +36,6 @@ else if (typeof define === 'function' && define.amd) {
             if(status==200){ 
                 var result=JSON.parse(body);
                 if(result.code == 1){
-                    // var center,rdata=result.data,centerStr=rdata.center,zoom=rdata.zoom,maxZoom=rdata.maxZoom||5,minZoom=rdata.minZoom||0;
-                    
-                    // if(centerStr && centerStr.indexOf(",")>0){
-                    //     var p=centerStr.split(",");
-                    //     center=new geomap.Point(p[0],p[1]);
-                    // }else{
-                    //     center=new geomap.Point(0,0);
-                    // }
-                    // if(zoom === undefined){
-                    //     zoom=1;
-                    // }
-                    // this.maxZoom=maxZoom;
-                    // this.minZoom=minZoom;
-                    // this.setCenter(center,zoom);
-                    // var parkingLayer=new geomap.TileLayer({url:rdata.mapUrl});
-                    //  this.addLayer(parkingLayer);
-                    //this.fire("drawmap");
                     initMap(this,result);
                 }
             }
@@ -77,7 +60,13 @@ else if (typeof define === 'function' && define.amd) {
         map.setCenter(center,zoom);
         var parkingLayer=new geomap.TileLayer({url:rdata.mapUrl});
         map.addLayer(parkingLayer);
-        var paletteLayer=new geomap.PaletteLayer({drawType:"Polygon"});
+        var vectorLayer=new geomap.VectorLayer();
+        // paletteLayer.setType("Line",false);
+        map.addLayer(vectorLayer);
+        // var paletteLayer=new geomap.PaletteLayer({drawType:"Polygon"});
+        var paletteLayer=new geomap.PaletteLayer({drawType:"Rect"});
+        
+        paletteLayer.on("geometry_change",function(e){paletteGeometryChangeEvent(map,e)});
         // paletteLayer.setType("Line",false);
         map.addLayer(paletteLayer);
         // var clickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
@@ -97,14 +86,47 @@ else if (typeof define === 'function' && define.amd) {
        var marker=new geomap.Marker(map,{width:200,height:120,style:{lineWidth:0}});
        map.addGeometry(marker);
         // map.ccw={paletteLayer:paletteLayer,clickPolygon:clickPolygon};
-        map.ccw={paletteLayer:paletteLayer,marker:marker};
+        map.ccw={parkingLayer:parkingLayer,paletteLayer:paletteLayer,marker:marker,vectorLayer:vectorLayer,deleteFeature:deleteFeature.bind(map)};
     }
 
+    function paletteGeometryChangeEvent(map,geometry){
+
+        console.log(geometry._coordinates.length);
+        if(geometry._coordinates.length<1){
+            return;
+        }
+        var mapId=map.mapId;
+        var url=MAP_SERVER+"/geo/wms/addFeature/"+mapId;
+        var layerId="PARKING-POLYGON-001";
+        var typeName="geo_parking_polygon";
+        // var p="";
+        // for(var i=0,k=geometry._coordinates.length;i<k;i++){
+        //     var point=geometry._coordinates[i];
+        //     if(i>0){
+        //         p+=",";
+        //     }
+        //     p+=point.x+","+point.y;
+        // }
+        // var bodyValue={layerId:layerId,coords:p};
+        // var bodyData=geomap.util.template("layerId={layerId}&coords={coords}&building_id=b001&parking_no=车位：XXXX-002",bodyValue);
+        var bodyData={layerName:typeName,geometry:geometry.getText(),properties:{building_id:"b001",parking_no:"车位：XXXX-004"}};
+        Request(url,{method:"JSON",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
+            var body=xhr.response,status=xhr.status; 
+            geomap.debug("url="+url+",body="+body);
+            if(status==200){ 
+                var result=JSON.parse(body);
+                if(result.code == 1){
+                    map.ccw.paletteLayer.clearGeometry();
+                    map.ccw.parkingLayer.refreshCache();
+                }
+            }
+        }});
+    }
     function clickParingInfoEvent(map,p){
         // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
         var mapId=map.mapId;
         var layerId="PARKING-POLYGON-001";
-        var url=MAP_SERVER+"/geo/wms/pointQuery/"+mapId;
+        var url=MAP_SERVER+"/geo/wms/coordQuery/"+mapId;
         // var bodyValue=Extend({layerId:layerId},e.coord);
         var bodyValue={layerId:layerId,p:p};
        
@@ -113,29 +135,39 @@ else if (typeof define === 'function' && define.amd) {
         Request(url,{method:"POST",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
             geomap.debug("url="+url+",body="+res);
-            map.ccw.paletteLayer.clearGeometry();
+            map.ccw.vectorLayer.clearData();
             if( status==200 && res.length>0 && res.indexOf("{")==0){ 
                 var featureCollection=JSON.parse(res);
                if(featureCollection.type="FeatureCollection"){
-
-                var geomNum=featureCollection.features.length;
-            
-                for(var i=0;i<geomNum;i++){
-                    var geometry=featureCollection.features[i].geometry;
-                    var clickPolygon=new geomap.Polygon(map,{style:{fillStyle:"rgba(0, 0, 200, 0.5)",strokeStyle:"white",lineWidth:2},_fill:true,lineDash:[4,2]});
-                    clickPolygon.setData(geometry); 
-                   
-                    map.ccw.paletteLayer.addGeometry(clickPolygon);
-                }
-                // map.ccwpaletteLayer.addGeometry(clickPolygon);
-
-                // map.ccw.clickPolygon.setData(dataObj.geometry); 
-                // map.ccw.marker.setData(dataObj);
+                map.ccw.vectorLayer.addData(featureCollection,{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]});
                 map.fire("drawmap");
                }
+               setEditContent(featureCollection);
+               editContentPane_show();
                
             }else{
                 geomap.debug("["+url+",status="+status+"]data:"+res);
+            }
+        }});
+    }
+
+    function deleteFeature(fid){
+        var mapId=this.mapId;
+        var layerId="PARKING-POLYGON-001";
+        var url=MAP_SERVER+"/geo/wms/deleteFeature/"+mapId;
+        // var bodyValue=Extend({layerId:layerId},e.coord);
+        var bodyValue={layerId:layerId,featureId:fid};
+        // var ClickPolygon=map.ccw.ClickPolygon;
+        var map=this;
+        Request(url,{method:"JSON",body:bodyValue,header:REQ_HEADER,onComplete:function(xhr){
+            var body=xhr.response,status=xhr.status; 
+            geomap.debug("url="+url+",body="+body);
+            if(status==200){ 
+                var result=JSON.parse(body);
+                if(result.code == 1){
+                    map.ccw.vectorLayer.clearData();
+                    map.ccw.parkingLayer.refreshCache();
+                }
             }
         }});
     }

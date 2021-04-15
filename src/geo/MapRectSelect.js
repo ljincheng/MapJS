@@ -56,6 +56,7 @@
             if(this.__status_draw && this._movingPos){
                 var p0=this.__status_draw_p0,
                    p1=this._movingPos;
+                   ctx.setLineDash([]);
                 ctx.fillStyle = "rgba(255, 127, 0, 0.4)";
                 ctx.strokeStyle="#fb2109";
                 ctx.beginPath();

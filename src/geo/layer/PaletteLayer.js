@@ -13,16 +13,16 @@
       return;
     }
    
-    geomap.PaletteLayer = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Layer,  {
+    geomap.PaletteLayer = geomap.Class( geomap.Layer,  {
       type: 'PaltteLayer',
       paths:[],
       drawType:0,
       fill:true,
       loopRender:false,
       _enabled:true,
+      referenceLine:false,
       initialize: function(options) {
-        options || (options = { }); 
-        this._setOptions(options);
+        this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
       }, 
       OnInitLayer:function(){
@@ -122,6 +122,8 @@
       PathEnd:function(e,p){
         if(this._pathing && this._pathing!=null){
             this._pathing.end();
+
+            this.fire("geometry_change",this._pathing);
             this.paths.push(this._pathing);
             this._pathing=null;
             this.ViewReset();
@@ -133,27 +135,84 @@
            this.ViewReset();
         }
       },
+      drawingCanvas:function(ctx){
+        this.callSuper('drawingCanvas',ctx);
+        this.drawReferenceLine(ctx);
+      },
+      // drawingCanvas:function(ctx){
+        
+      //   var map=this._map,zeroP=new Point(0,0),
+      //   size=this.getCanavsSize(),
+      //   offsetDrag=this._dragOffset || zeroP,
+      //   p0 = (this._touchZoomStart || zeroP),
+      //   scale=(this._canvasScale || 1),
+      //   box=size.multiplyBy(scale).round();
+      //   var baseP1=this.transformtion.transform(p0.clone(),scale)._add(p0).add(offsetDrag).round();
+      //   ctx.drawImage(this.canvas,baseP1.x,baseP1.y,box.x,box.y);
+      //   this.drawReferenceLine(ctx);
+      // } ,
       ViewReset:function(){ 
+        var ctx=this.canvasCtx;
         if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
-          this.canvasCtx.clearRect(0,0,this.width,this.height);
+          ctx.clearRect(0,0,this.width,this.height);
+          ctx.setLineDash([]);
             this._canvasScale=1;
             var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
             this.loopRender=false;
             if(this.paths.length>0){
                 for(var i=0,k=this.paths.length;i<k;i++){
                     var path=this.paths[i];
-                    path.render(this.canvasCtx);
+                    path.render(ctx);
                     if(path.loopRender){
                       this.loopRender=true;
                     }
                 }
             }
             if(this._pathing && this._pathing != null){
-                this._pathing.render(this.canvasCtx);
+                this._pathing.render(ctx);
             }
             this.fire("drawCanvas");
         }
+      },
+      toggleReferenceLine:function(){
+        this.toggle("referenceLine");
+        // this.ViewReset();
+        this.fire("drawCanvas");
+      },
+      drawReferenceLine:function(ctx){
+        if(!this.referenceLine){
+          return;
+        }
+        var w=this.width,h=this.height,divide=20;
+        ctx.strokeStyle = "rgba(66, 66, 66, 0.3)";
+        ctx.beginPath();
+        for(var i=0;i<w;i++){
+          var x=i*divide,y=0;
+           ctx.moveTo(x,y);
+           ctx.lineTo(x,h);
+        }
+        for(var i=0;i<h;i++){
+          var y=i*divide,x=0;
+          ctx.moveTo(x,y);
+          ctx.lineTo(w,y);
+        }
+        ctx.stroke();
+        divide=10;
+        ctx.strokeStyle = "rgba(224, 224, 224, 0.3)";
+        ctx.beginPath();
+        for(var i=0;i<w;i++){
+          var x=i*divide,y=0;
+           ctx.moveTo(x,y);
+           ctx.lineTo(x,h);
+        }
+        for(var i=0;i<h;i++){
+          var y=i*divide,x=0;
+          ctx.moveTo(x,y);
+          ctx.lineTo(w,y);
+        }
+        ctx.stroke();
       }
+
        
      
        

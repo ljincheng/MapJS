@@ -41,17 +41,31 @@
         }
       }
   
-      xhr.open(method, url, true);
+      if(method === 'JSON'){
+        xhr.open('POST', url, true);
+      }else{
+        xhr.open(method, url, true);
+      }
   
       for(var key in headers){
         xhr.setRequestHeader(key,headers[key]);
       }
       
-      if (method === 'POST' || method === 'PUT') {
+      if(method === 'JSON'){
+        xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+        // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      }else if (method === 'POST' || method === 'PUT') {
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       }
+
+      
   
-      xhr.send(body);
+      if(body!= undefined && method=== 'JSON' && body !=null ){
+        xhr.send(JSON.stringify(body));
+      }else{
+        xhr.send(body);
+      }
+     
       return xhr;
     }
   

@@ -54,6 +54,26 @@
             }
             
         },
+        getType:function(){
+            var mtype="Polygon";
+            
+            switch(this._type){
+                case 1:
+                    mtype="Point";
+                    break;
+                case 2:
+                    mtype="Line";
+                    break;
+                case 3:
+                    mtype="Rect";
+                    break;
+                case 4:
+                    mtype="Circle";
+                    break;
+
+            }
+            return mtype;
+        },
         push:function(p){ 
             var coord=this.s2c(p);
            this.addCoord(coord);
@@ -114,8 +134,63 @@
                    ctx[prop]=options[prop];
                 }
         },
+        getText:function(){
+            var jsonObj=this.getJson();
+            return JSON.stringify(jsonObj);
+        },
+        getJson:function(){
+            var coords=this._coordinates,num=coords.length;
+            var geoJson={type:"",coordinates:[]};
+            if(num<1){
+                return geoJson;
+            } 
+            switch(this._type){
+                case 1:{
+                    geoJson.type="Point";
+                    geoJson.coordinates=[coords[0].x,coords[0].y];
+                }
+                    break;
+                case 2:{
+                    geoJson.type="Line";
+                    for(var i=0;i<num;i++){
+                        geoJson.coordinates.push([coords[i].x,coords[i].y]);
+                    }
+                }
+                    break;
+                case 3:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        pg1.push([p1.x,p1.y]);
+                        pg1.push([p1.x,p2.y]);
+                        pg1.push([p2.x,p2.y]);
+                        pg1.push([p2.x,p1.y]);
+                        pg1.push([p1.x,p1.y]);
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+                    break;
+                default:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        for(var i=0;i<num;i++){
+                            pg1.push([coords[i].x,coords[i].y]);
+                        }
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+
+            }
+            return geoJson; 
+
+        },
         render:function(ctx){
             var len=this._coordinates.length;
+            ctx.setLineDash([]);
+            
             if(this.lineDash && this.lineDash.length>1){
                 ctx.setLineDash(this.lineDash);
                 ctx.lineDashOffset = this.lineDashOffset;

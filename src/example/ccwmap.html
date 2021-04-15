@@ -33,11 +33,36 @@
         <script type="text/javascript" src="../geometry/Marker.js"></script>
         <script type="text/javascript" src="../geo/Layer.js"></script>
         <script type="text/javascript" src="../geo/layer/TileLayer.js"></script>
+        <script type="text/javascript" src="../geo/layer/VectorLayer.js"></script>
         <script type="text/javascript" src="../geo/layer/PaletteLayer.js"></script>
         <script type="text/javascript" src="js/ccwmap.js"></script>
-        
+        <style>
+            .infoTable{
+                 border: 1px solid #2196f3;font-size:12px;width:100%;
+            }
+            #toolPane{
+                z-index: 10; position: absolute; top:0px;  right: 0px; width:60px; height:18px; padding: 4px;
+                background-color: #101010c7; font-size:12px;
+                color:#fff;
+            }
+            #editInfoPane{
+                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
+                background-color: #101010c7; 
+                color:#fff;
+            }
+            #editInfoPane .closeBtn{
+                position: relative; left: -35px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
+            }
+        </style>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
+    <div id="toolPane"  >
+    <a onclick="tool_show_referenceLine()">参考线</a>
+    </div>
+    <div id="editInfoPane">
+    <div class="closeBtn"><a onclick="editContentPane_close()" id="editWinBtn">隐藏</a></div>
+    <div id="editMain"></div>
+    </div>
 <div id="mapPane" style="z-index:1;border:0px solid blue;"></div>
  
  <script type="text/javascript">
@@ -77,6 +102,83 @@ var szPoint=[114.02262568473816,11.574944257736206];
    map.resize();
  }
 
+
+function tool_show_referenceLine(){
+    map.ccw.paletteLayer.toggleReferenceLine();
+}
+
+function editContentPane_close(){
+    var editPaneObj=window.document.getElementById("editInfoPane");
+    var mw = editPaneObj.clientWidth;
+    var closeRightPos= "-"+mw+"px";
+    if(editPaneObj.style.right == closeRightPos){
+        editPaneObj.style.right=0+"px";
+    }else{
+        editPaneObj.style.right=closeRightPos;
+    }
+   
+    console.log("mv="+mw);
+}
+function editContentPane_show(){
+    var editPane=document.getElementById("editInfoPane");
+        editPane.style.right=0+"px";
+}
+
+function setEditContent(featureData){ 
+            var rows=[];
+    if(featureData.type=="FeatureCollection"){
+            var geomNum=featureData.features.length;
+            for(var i=0;i<geomNum;i++){
+                var feature=featureData.features[i];
+                var properties=feature.properties;
+                var fid=feature.id.split(".");
+                if(fid.length>1){
+                    properties.id=fid[1]
+                }else{
+                    properties.id=feature.id;
+                }
+                
+                rows.push(properties);
+            }
+        }else if(featureData.type=="Feature"){
+            var properties=featureData.properties;
+            var fid=featureData.id.split(".");
+                if(fid.length>1){
+                    properties.id=fid[1]
+                }else{
+                    properties.id=featureData.id;
+                }
+            rows.push(properties);
+        }
+        if(rows.length>0){
+            var html="<table class=\"infoTable\">";
+            var header="<tr>";
+            for(var item in rows[0]){
+                header+="<th>"+item+"</th>";
+            }
+            header+="<th>操作</th></tr>";
+            html+=header;
+            for(var i=0,k=rows.length;i<k;i++){
+                var rowHtml="<tr>";
+                for(var item in rows[i]){
+                    rowHtml+="<td>"+rows[i][item]+"</td>";
+                }
+                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].id+"')\">删除</a></td>";
+                rowHtml+"</tr>";
+                html+=rowHtml;
+            }
+            html+="</table>"; 
+            document.getElementById("editMain").innerHTML=html;
+        } else{
+            document.getElementById("editMain").innerHTML="";
+        }
+}
+
+function deleteFeature(fid){
+    console.log("fid="+fid);
+    map.ccw.deleteFeature(fid);
+  
+}
 </script>   
 </body>
 </html>

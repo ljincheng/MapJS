@@ -16,18 +16,18 @@
       return;
     }
    
-    geomap.TileLayer = geomap.Class(geomap.CommonMethods, geomap.Observable,geomap.Layer, {
+    geomap.TileLayer = geomap.Class(geomap.Layer, {
         url:null,
         _drawLock:1,
         cache:true,
         _canvas_map_size:new Point(0,0),
         _mapSize:null,
        initialize: function( options) {
-        options || (options = { }); 
-        this._setOptions(options); 
+        this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
       }, 
       OnInitLayer:function(){
+       
         this.getCanavsSize();
       },
        getCanavsSize:function(){
@@ -119,7 +119,7 @@
         var image=this.getTileImage(cell,row,z,x,y);
         image.tileKey=z+"-"+x+"-"+y;
           image.x=left,image.y=top;
-        var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
+        var imgUrl=geomap.util.template(this.url+ (/\?/.test(this.url) ? '&' : '?')+"cacheTime={cacheTime}",{z:z,x:x,y:y,cacheTime:this.cacheTime});
         image.fromURL(imgUrl);
       },
       _imageLoad:function(e){

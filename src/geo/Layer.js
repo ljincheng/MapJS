@@ -25,11 +25,13 @@
       wheelZoomChanage:false,
       canvas:null,
       canvasCtx:null,
+      cacheTime:0,
       initLayer:function(canvas,map){
         this.transformtion=new geomap.Transformtion(-1,0,-1, 0);
         this._canvas=canvas; 
         this._drawLock=1;
         this._map=map;
+        this.cacheTime= +new Date();
         var canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
         const canvasCtx=canvas.getContext("2d");
         this.canvas=canvas;
@@ -115,6 +117,33 @@
         return this._map.getSize();
       },
       OnLoopTime:function(){ },
+      refreshCache:function(){
+        this.cacheTime= +new Date();
+        this.ViewReset();
+      }
+      // drawingCanvas:function(ctx){
+        
+      //   var map=this._map,zeroP=new Point(0,0),
+      //   size=this.getCanavsSize(),
+      //   offsetDrag=this._dragOffset || zeroP,
+      //   p0 = (this._touchZoomStart || zeroP),
+      //   scale=(this._canvasScale || 1),
+      //   box=size.multiplyBy(scale).round();
+      //   var baseP1=this.transformtion.transform(p0.clone(),scale)._add(p0).add(offsetDrag).round();
+      //   ctx.drawImage(this.canvas,baseP1.x,baseP1.y,box.x,box.y);
+      //   // var r=5;
+      //   // ctx.globalAlpha = 1;
+      //   // ctx.fillRect(p0.x-r/2,p0.y-r/2,r,r);
+      //   // ctx.globalAlpha = 1;
+      // } 
+     
+    };
+   
+    geomap.Layer = geomap.Class(geomap.CommonMethods, geomap.Observable, Layer,{
+      initialize: function(options) {
+        options || (options = { }); 
+        this._setOptions(options);
+      },
       drawingCanvas:function(ctx){
         
         var map=this._map,zeroP=new Point(0,0),
@@ -131,11 +160,10 @@
         // ctx.globalAlpha = 1;
       } 
      
-    };
-   
+    }); 
      
 
-  geomap.Layer=Layer;
+  // geomap.Layer=Layer;
   
   })(typeof exports !== 'undefined' ? exports : this);
   
