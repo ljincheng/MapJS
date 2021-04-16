@@ -41,7 +41,7 @@
                  border: 1px solid #2196f3;font-size:12px;width:100%;
             }
             #toolPane{
-                z-index: 10; position: absolute; top:0px;  right: 0px; width:60px; height:18px; padding: 4px;
+                z-index: 10; position: absolute; top:0px;  right: 0px; width:260px; height:18px; padding: 4px;
                 background-color: #101010c7; font-size:12px;
                 color:#fff;
             }
@@ -53,12 +53,18 @@
             #editInfoPane .closeBtn{
                 position: relative; left: -35px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
             }
+            .iconBtn{
+                margin: 0 10px;;
+            }
         </style>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
     <div id="toolPane"  >
-    <a onclick="tool_show_referenceLine()">参考线</a>
+   
+    <a onclick="tool_show_referenceLine()" class="iconBtn">参考线</a>
+    <span id="toolContainer"></span>
     </div>
+   
     <div id="editInfoPane">
     <div class="closeBtn"><a onclick="editContentPane_close()" id="editWinBtn">隐藏</a></div>
     <div id="editMain"></div>
@@ -80,7 +86,8 @@ var szPoint=[114.02262568473816,11.574944257736206];
     mapPane.style.width=winWidth+"px";
     mapPane.style.height=mapHeight+"px";
     // map=new geomap.Map(mapPane,{maxZoom:20,zoom:1});
-    map=CCWMAP.Map.create("mapPane","T20210308-001");
+    map=CCWMAP.Map.create("mapPane","example");
+    map.on("map_complete",projectMapDataChange);
     // map=CCWMAP.Map.create("mapPane","example2");
      
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
@@ -176,8 +183,22 @@ function setEditContent(featureData){
 
 function deleteFeature(fid){
     console.log("fid="+fid);
-    map.ccw.deleteFeature(fid);
+    map.ccw.mapObj.deleteFeature(fid);
   
+}
+
+function projectMapDataChange(map){
+    var mapsHtml="";
+    var projectMap=map.ccw.projectMap;
+    console.info("=======================com===");
+    if(projectMap != undefined && projectMap.length>0){
+        for(var i=0,k=projectMap.length;i<k;i++){
+            var mapInfo=projectMap[i];
+            mapsHtml+="<a class='iconBtn' onclick=\"map.ccw.mapObj.projectMapChange("+i+")\">"+mapInfo.subTitle+"</a>";
+        }
+    }
+    document.getElementById("toolContainer").innerHTML=mapsHtml;
+
 }
 </script>   
 </body>
