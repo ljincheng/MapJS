@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../geo/Caliper.js"></script>
         <script type="text/javascript" src="../geo/MapEvent.js"></script>
         <script type="text/javascript" src="../geo/MapRectSelect.js"></script>
+        <script type="text/javascript" src="../geo/layer/FrameLayer.js"></script>
         <script type="text/javascript" src="../geo/Map.js"></script>
         
         <script type="text/javascript" src="../geometry/Geometry.js"></script>
@@ -49,12 +50,14 @@
                 z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
                 background-color: #101010c7; 
                 color:#fff;
+                overflow: scroll;
             }
             #editInfoPane .closeBtn{
-                position: relative; left: -35px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
+                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
             }
             .iconBtn{
-                margin: 0 10px;;
+                margin: 0 10px;
+                cursor: pointer;
             }
         </style>
     </head>
@@ -62,6 +65,7 @@
     <div id="toolPane"  >
    
     <a onclick="tool_show_referenceLine()" class="iconBtn">参考线</a>
+    <a onclick="frame_show()" class="iconBtn">消息框</a>
     <span id="toolContainer"></span>
     </div>
    
@@ -91,11 +95,11 @@ var szPoint=[114.02262568473816,11.574944257736206];
     // map=CCWMAP.Map.create("mapPane","example2");
      
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
-    eventjs.add(document.body, 'touchmove', eventjs.prevent);
-    /// Prevent right-click on desktops.
-    eventjs.add(document.body, 'contextmenu', eventjs.prevent);
-    /// Prevent elastic scrolling.
-    eventjs.add(document, 'touchstart', eventjs.prevent);
+    // eventjs.add(mapPane, 'touchmove', eventjs.prevent);
+    // /// Prevent right-click on desktops.
+    // eventjs.add(mapPane, 'contextmenu', eventjs.prevent);
+    // /// Prevent elastic scrolling.
+    // eventjs.add(mapPane, 'touchstart', eventjs.prevent);
 
     // CCWMAP.Map.create(mapPane,"T20210308-001");
  }
@@ -111,7 +115,7 @@ var szPoint=[114.02262568473816,11.574944257736206];
 
 
 function tool_show_referenceLine(){
-    map.ccw.paletteLayer.toggleReferenceLine();
+    map.ccw.mapObj.paletteLayer.toggleReferenceLine();
 }
 
 function editContentPane_close(){
@@ -199,6 +203,9 @@ function projectMapDataChange(map){
     }
     document.getElementById("toolContainer").innerHTML=mapsHtml;
 
+}
+function frame_show(){
+    map.frameLayer.open({title:"Test",body:"你好：<input type='text' value=''/>"});
 }
 </script>   
 </body>

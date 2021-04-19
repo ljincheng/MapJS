@@ -57,8 +57,8 @@
                 var p0=this.__status_draw_p0,
                    p1=this._movingPos;
                    ctx.setLineDash([]);
-                ctx.fillStyle = "rgba(255, 127, 0, 0.4)";
-                ctx.strokeStyle="#fb2109";
+                ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+                ctx.strokeStyle="#fff";
                 ctx.beginPath();
                 ctx.moveTo(p0.x,p0.y);
                 ctx.lineTo(p0.x,p1.y);

@@ -41,6 +41,7 @@
       model:undefined,
       loopTime:40,
       canvasRatio:1,
+      frameLayer:null,
       initialize: function(container, options) {
         options || (options = { });  
         this._setOptions(options);  
@@ -56,14 +57,12 @@
         // this._element = element;
         this._container=container;
         this._initElement();
+        this.InitFrameLayer();
        // this._drawlayer();
-        this.on("drawmap",this._onDrawMap.bind(this));
-        this.on("drawCanvas",this._redrawingCanvasTag.bind(this));
+        this.on("drawmap",this.OnDrawMap.bind(this));
+        this.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
         this.on("clear_geometry",this.clearGeometry.bind(this));
-        // this._global_interval=setInterval(this._loopTime.bind(this),this.loopTime);
-        // this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
-        // this._global_interval=window.requestAnimationFrame(this._loopTime.bind(this));
-        this._loopTime();
+        this.LoopTime();
       },
       _dispose:function(){
         geomap.util.cancelAnimFrame(this._global_interval);
@@ -76,6 +75,7 @@
       },
       _initElement:function(){
         this._container.style.position="absolute";
+        this._container.style.overflow="hidden";
         // this._container.style.width=this.width+"px";
         // this._container.style.height=this.height+"px";
         var size=this.getSize();
@@ -92,12 +92,13 @@
         this._eventDrag=new geomap.Event.Drag(this);
         this._eventTouchZoom=new geomap.Event.TouchZoom(this);
         this._eventWheelZoom=new geomap.Event.ScrollWheelZoom(this);
-        this._eventDrag.addEvent(this._container);
+        this._eventDrag.addEvent(this.canvas);
         // geomap.debug("==============new event|||2222=============");
-        this._eventTouchZoom.addEvent(this._container);
-        this._eventWheelZoom.addEvent(this._container);
+        this._eventTouchZoom.addEvent(this.canvas);
+        this._eventWheelZoom.addEvent(this.canvas);
         this.RectSelectBindEvent(this);
-        eventjs.add(this._container,"click touch",function(event,self){
+        eventjs.add(this.canvas,"contextmenu",eventjs.cancel);
+        eventjs.add(this.canvas,"click touch",function(event,self){
           // geomap.debug("[click touch] point="+self.x+","+self.y);
           var point=new Point(event.offsetX || self.x ,event.offsetY || self.y);
           var coord=this.screenToCoord(point);
@@ -107,24 +108,34 @@
           //   this.fire("pointcoord",e);
           // }
         }.bind(this));
-        eventjs.add(this._container,"mousedown",function(event,self){
+        eventjs.add(this.canvas,"mousedown",function(event,self){
           var point=new Point(event.offsetX,event.offsetY);
           var arg={event:event,point:point};
           this.fire("mousedown",arg);
 
         }.bind(this));
-        eventjs.add(this._container,"mousemove",function(event,self){
+        eventjs.add(this.canvas,"mousemove",function(event,self){
 
           var point=new Point(event.offsetX,event.offsetY);
           var arg={event:event,point:point};
           this.fire("mousemove",{event:event,point:point});
 
         }.bind(this));
-        eventjs.add(this._container,"mouseup",function(event,self){
+        eventjs.add(this.canvas,"mouseup",function(event,self){
           var point=new Point(event.offsetX,event.offsetY);
           var arg={event:event,point:point};
           this.fire("mouseup",arg);
         }.bind(this));
+      },
+      InitFrameLayer:function(){
+        var frameRoot=document.createElement("div");
+        var size=this.getSize();
+        var styles={position:"absolute",zIndex:1000,left:"0px",top:"0px"};
+        for(var item in styles){
+          frameRoot.style[item]=styles[item];
+        } 
+        this.frameLayer=new geomap.FrameLayer(frameRoot,{map:this});
+        this._container.appendChild(frameRoot);
       },
       _limitZoom:function(z){
         if(this.maxZoom<z){
@@ -134,7 +145,7 @@
         }
         return z;
       },
-      _loopTime:function(){
+      LoopTime:function(){
         this.fire("looptime");
         for(var i=0,k=this.layers.length;i<k;i++){
           var layer=this.layers[i];
@@ -142,31 +153,20 @@
         }
         this._redrawingCanvas.call(this);
         // geomap.util.cancelAnimFrame(this._global_interval);
-        // this._global_interval=geomap.util.requestAnimFrame(this._loopTime,this,this.loopTime);
-        geomap.util.requestAnimFrame(this._loopTime,this);
+        // this._global_interval=geomap.util.requestAnimFrame(this.LoopTime,this,this.loopTime);
+        geomap.util.requestAnimFrame(this.LoopTime,this);
       },
       _redrawingCanvas:function(){
         if(this._redrawing==true || this._move_type==1){
           this._redrawing=false;
           const ctx=this.canvasCtx;
-          // const fgCtx=this.bgCanvasCtx;
           var size=this.getSize();
-         // var wh=geomap.coord.size(this._move_start,this._pos);
-        //  fgCtx.clearRect(0,0,size.x,size.y);
-        //  fgCtx.drawImage(this.bgCanvas,0,0,size.x,size.y);
            ctx.clearRect(0,0,size.x,size.y);
           for(var i=0,k=this.layers.length;i<k;i++){
                 var layer=this.layers[i];
-                // if(layer.type !='PaletteLayer'){
                   layer.drawingCanvas(ctx);
-              //   }
           } 
-      //     for(var i=0,k=this.layers.length;i<k;i++){
-      //       var layer=this.layers[i];
-      //       if(layer.type =='PaletteLayer'){
-      //         layer.drawingCanvas(ctx);
-      //       }
-      // } 
+     
           var geomNum=this._geometrys.length;
           if(geomNum>0){
             for(var i=0;i<geomNum;i++){
@@ -180,21 +180,18 @@
           }
           this.caliperDraw(ctx);
           this.fire("drawingCanvas",ctx);
-          //  ctx.strokeRect(this._move_start.x,this._move_start.y,wh[0],wh[1]);
-          // fgCtx.clearRect(0,0,size.x,size.y);
-        //  fgCtx.drawImage(this.bgCanvas,0,0,this.canvas.width,this.canvas.height);
         
         }
       }, 
-      _onDrawMap:function(){
+      OnDrawMap:function(){
           this.fire("viewreset");
           this._redrawing=true;
       },
-      _redrawingCanvasTag:function(){
+      RedrawingCanvasTag:function(){
         this._redrawing=true;
       },
       _loadLayer:function(layer){
-        layer.on("drawCanvas",this._redrawingCanvasTag.bind(this));
+        layer.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
         layer.initLayer(this.canvas,this);
       },
       addLayer:function(layer){ 

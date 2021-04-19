@@ -133,42 +133,88 @@ else if (typeof define === 'function' && define.amd) {
             return;
         }
         var mapId=map.ccw.mapInfo.mapId;
-        var url=MAP_SERVER+"/geo/wms/addFeature/"+mapId;
-        var layerId="PARKING-POLYGON-001";
-        var typeName="geo_parking_polygon";
-        // var p="";
-        // for(var i=0,k=geometry._coordinates.length;i<k;i++){
-        //     var point=geometry._coordinates[i];
-        //     if(i>0){
-        //         p+=",";
-        //     }
-        //     p+=point.x+","+point.y;
-        // }
-        // var bodyValue={layerId:layerId,coords:p};
-        // var bodyData=geomap.util.template("layerId={layerId}&coords={coords}&building_id=b001&parking_no=车位：XXXX-002",bodyValue);
-        var bodyData={layerName:typeName,geometry:geometry.getText(),properties:{building_id:"b001",parking_no:"车位：XXXX-004",sale_status:1,map_id:mapId}};
-        Request(url,{method:"JSON",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
-            var body=xhr.response,status=xhr.status; 
-            geomap.debug("url="+url+",body="+body);
-            if(status==200){ 
-                var result=JSON.parse(body);
-                if(result.code == 1){
-                    map.ccw.mapObj.paletteLayer.clearGeometry();
-                    map.ccw.mapObj.parkingLayer.refreshCache();
-                }
-            }
-        }});
+        var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
+        // {
+        //     var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
+        //     var bodyData={geometry:geometry.getText(),properties:{building_id:"b001",parking_no:"车位：XXXX-004",sale_status:1,map_id:mapId}};
+        //     Request(url,{method:"JSON",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
+        //         var body=xhr.response,status=xhr.status; 
+        //         geomap.debug("url="+url+",body="+body);
+        //         if(status==200){ 
+        //             var result=JSON.parse(body);
+        //             if(result.code == 1){
+        //                 map.ccw.mapObj.paletteLayer.clearGeometry();
+        //                 map.ccw.mapObj.parkingLayer.refreshCache();
+        //             }
+        //         }
+        //     }});
+        //  };
+
+         {
+             var formTemplate=[{name:"车位",url:url,properties:[{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+            ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
+            ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+            ,{id:"sale_status",type:"radio",title:"销售状态",value:"",option:{"1":"已售","2":"未售"},required:true}
+        ]}];
+
+         var url=MAP_SERVER+"/geo/wms/addForm/"+mapId; 
+         var tplObj=geomap.util.element.tplToFormHtml(formTemplate,"车位");
+         var formId= ""+ new Date();
+         if(window._addParkingGeometry=== undefined){
+            window._addParkingGeometry=[];
+         }
+         
+         var body="<form id='"+formId+"'>"+tplObj.html;
+         body+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;'>&nbsp;</span><input  type='button' class='btn' value='确定' onclick='addParkingGeom(\""+formId+"\")' /></form>"
+         var frameObj=map.frameLayer.open({title:tplObj.form.name,body:body,offset:"rb",onComplete:function(ev){
+
+                map.ccw.mapObj.paletteLayer.clearGeometry();
+                // map.ccw.mapObj.parkingLayer.refreshCache();
+         }});
+         window._addParkingGeometry.push({formId:formId,geometry:geometry.getText(),frameObj:frameObj});
+       
+    };
+       
     }
+
+   window.addParkingGeom= function(formId){ 
+   
+        var obj=  geomap.util.element.formToJson(document.getElementById(formId));
+        console.log(JSON.stringify(obj))
+        var mapId=map.ccw.mapInfo.mapId;
+        var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
+        for(var i=0,k=window._addParkingGeometry.length;i<k;i++){
+
+            var editGeom=window._addParkingGeometry[i];
+            if(editGeom.formId === formId)
+            {
+                var bodyData={geometry:editGeom.geometry,properties:obj};
+                Request(url,{method:"JSON",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
+                    var body=xhr.response,status=xhr.status; 
+                    geomap.debug("url="+url+",body="+body);
+                    if(status==200){ 
+                        var result=JSON.parse(body);
+                        if(result.code == 1){
+                            map.ccw.mapObj.paletteLayer.clearGeometry();
+                            map.ccw.mapObj.parkingLayer.refreshCache();
+                            editGeom.frameObj.fire("close");
+                            // geomap.closeFrame(editGeom.frameObj);
+                        }
+                    }
+                }});
+                
+            }
+        }
+      
+    }
+
+    
+ 
     function clickParingInfoEvent(map,p){
         // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
         var mapId=map.ccw.mapInfo.mapId;
-        var layerId="PARKING-POLYGON-001";
-        var url=MAP_SERVER+"/geo/wms/coordQuery/"+mapId;
-        // var bodyValue=Extend({layerId:layerId},e.coord);
-        var bodyValue={layerId:layerId,p:p};
-       
-        var bodyData=geomap.util.template("layerId={layerId}&p={p}",bodyValue);
-        // var ClickPolygon=map.ccw.ClickPolygon;
+        var url=MAP_SERVER+"/geo/wms/queryParking/"+mapId;
+        var bodyData=geomap.util.template("p={p}",{p:p});
         Request(url,{method:"POST",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
             geomap.debug("url="+url+",body="+res);
@@ -190,10 +236,9 @@ else if (typeof define === 'function' && define.amd) {
 
     function deleteFeature(fid){
         var mapId=this.ccw.mapInfo.mapId;
-        var layerId="PARKING-POLYGON-001";
-        var url=MAP_SERVER+"/geo/wms/deleteFeature/"+mapId;
+        var url=MAP_SERVER+"/geo/wms/deleteParking/"+mapId;
         // var bodyValue=Extend({layerId:layerId},e.coord);
-        var bodyValue={layerId:layerId,featureId:fid};
+        var bodyValue={featureId:fid};
         // var ClickPolygon=map.ccw.ClickPolygon;
         var map=this;
         Request(url,{method:"JSON",body:bodyValue,header:REQ_HEADER,onComplete:function(xhr){
