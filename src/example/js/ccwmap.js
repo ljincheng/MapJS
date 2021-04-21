@@ -11,7 +11,8 @@ else if (typeof define === 'function' && define.amd) {
 
 (function(global) {
 
-   var MAP_SERVER="http://master.cn/apps",
+//    var MAP_SERVER="http://master.cn/apps",
+   var MAP_SERVER="http://master.cn/ccw",CODE_OK=0,
        REQ_HEADER={token:"test001"}, Request=geomap.request, Extend =geomap.util.object.extend;
      
    function createMap(container,mapId){ 
@@ -29,13 +30,13 @@ else if (typeof define === 'function' && define.amd) {
 
     function loadMapId(map){
         var mapId=map.mapId;
-        var url=MAP_SERVER+"/geo/wms/map/"+mapId;
+        var url=MAP_SERVER+"/wms/map/project/"+mapId;
         Request(url,{method:"POST",header:REQ_HEADER,onComplete:function(xhr){
             var body=xhr.response,status=xhr.status; 
             console.log("["+url+",status="+status+"]data:"+body);
             if(status==200){ 
                 var result=JSON.parse(body);
-                if(result.code == 1){
+                if(result.code == CODE_OK){
                     loadProjectMap(this,result);
                 }
             }
@@ -133,7 +134,7 @@ else if (typeof define === 'function' && define.amd) {
             return;
         }
         var mapId=map.ccw.mapInfo.mapId;
-        var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
+        var url=MAP_SERVER+"/wms/parking/add/"+mapId; 
         // {
         //     var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
         //     var bodyData={geometry:geometry.getText(),properties:{building_id:"b001",parking_no:"车位：XXXX-004",sale_status:1,map_id:mapId}};
@@ -182,7 +183,7 @@ else if (typeof define === 'function' && define.amd) {
         var obj=  geomap.util.element.formToJson(document.getElementById(formId));
         console.log(JSON.stringify(obj))
         var mapId=map.ccw.mapInfo.mapId;
-        var url=MAP_SERVER+"/geo/wms/addParking/"+mapId; 
+        var url=MAP_SERVER+"/wms/parking/add/"+mapId; 
         for(var i=0,k=window._addParkingGeometry.length;i<k;i++){
 
             var editGeom=window._addParkingGeometry[i];
@@ -194,7 +195,7 @@ else if (typeof define === 'function' && define.amd) {
                     geomap.debug("url="+url+",body="+body);
                     if(status==200){ 
                         var result=JSON.parse(body);
-                        if(result.code == 1){
+                        if(result.code == CODE_OK){
                             map.ccw.mapObj.paletteLayer.clearGeometry();
                             map.ccw.mapObj.parkingLayer.refreshCache();
                             editGeom.frameObj.fire("close");
@@ -213,7 +214,7 @@ else if (typeof define === 'function' && define.amd) {
     function clickParingInfoEvent(map,p){
         // var geomtry="POLYGON((0 0,0 90,90 90,90 0,0 0))";
         var mapId=map.ccw.mapInfo.mapId;
-        var url=MAP_SERVER+"/geo/wms/queryParking/"+mapId;
+        var url=MAP_SERVER+"/wms/parking/query/"+mapId;
         var bodyData=geomap.util.template("p={p}",{p:p});
         Request(url,{method:"POST",body:bodyData,header:REQ_HEADER,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
@@ -236,7 +237,7 @@ else if (typeof define === 'function' && define.amd) {
 
     function deleteFeature(fid){
         var mapId=this.ccw.mapInfo.mapId;
-        var url=MAP_SERVER+"/geo/wms/deleteParking/"+mapId;
+        var url=MAP_SERVER+"/wms/parking/delete/"+mapId;
         // var bodyValue=Extend({layerId:layerId},e.coord);
         var bodyValue={featureId:fid};
         // var ClickPolygon=map.ccw.ClickPolygon;
@@ -246,7 +247,7 @@ else if (typeof define === 'function' && define.amd) {
             geomap.debug("url="+url+",body="+body);
             if(status==200){ 
                 var result=JSON.parse(body);
-                if(result.code == 1){
+                if(result.code == CODE_OK){
                     map.ccw.mapObj.vectorLayer.clearData();
                     map.ccw.mapObj.parkingLayer.refreshCache();
                 }
