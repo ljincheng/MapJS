@@ -90,8 +90,27 @@ var szPoint=[114.02262568473816,11.574944257736206];
     mapPane.style.width=winWidth+"px";
     mapPane.style.height=mapHeight+"px";
     // map=new geomap.Map(mapPane,{maxZoom:20,zoom:1});
-    map=CCWMAP.Map.create("mapPane","example");
+    
+    var ccw_config={ 
+           project:"http://master.cn/apps/wms/map/project/{mapId}",
+           tile:"http://master.cn/apps/wms/map/image/{mapId}/{z}/{x}/{y}.png",
+           parkingAdd:"http://master.cn/apps/wms/parking/add/{mapId}",
+           parkingQuery:"http://master.cn/apps/wms/parking/query/{mapId}",
+           parkingDelete:"http://master.cn/apps/wms/parking/delete/{mapId}",
+           forms:[{name:"车位",properties:[{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+                ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
+                ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+                ,{id:"sale_status",type:"radio",title:"销售状态",value:"",option:{"1":"已售","2":"未售"},required:true}
+            ]}],
+           code:{ok:1,fail:0},
+       };
+    map=CCWMAP.Map.create("mapPane",ccw_config,"example");
     map.on("map_complete",projectMapDataChange);
+    map.on("coord_query_change",function(featureCollection){
+              setEditContent(featureCollection);
+              editContentPane_show();
+                   
+    });
     // map=CCWMAP.Map.create("mapPane","example2");
      
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
@@ -115,7 +134,7 @@ var szPoint=[114.02262568473816,11.574944257736206];
 
 
 function tool_show_referenceLine(){
-    map.ccw.mapObj.paletteLayer.toggleReferenceLine();
+    map.project.paletteLayer.toggleReferenceLine();
 }
 
 function editContentPane_close(){
@@ -187,18 +206,18 @@ function setEditContent(featureData){
 
 function deleteFeature(fid){
     console.log("fid="+fid);
-    map.ccw.mapObj.deleteFeature(fid);
+    map.project.deleteFeature(fid);
   
 }
 
 function projectMapDataChange(map){
     var mapsHtml="";
-    var projectMap=map.ccw.projectMap;
+    var projectMap=map.project.projectMap;
     console.info("=======================com===");
     if(projectMap != undefined && projectMap.length>0){
         for(var i=0,k=projectMap.length;i<k;i++){
             var mapInfo=projectMap[i];
-            mapsHtml+="<a class='iconBtn' onclick=\"map.ccw.mapObj.projectMapChange("+i+")\">"+mapInfo.subTitle+"</a>";
+            mapsHtml+="<a class='iconBtn' onclick=\"map.project.projectMapChange("+i+")\">"+mapInfo.subTitle+"</a>";
         }
     }
     document.getElementById("toolContainer").innerHTML=mapsHtml;

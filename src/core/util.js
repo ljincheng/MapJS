@@ -72,7 +72,8 @@ function cancelAnimFrame(id) {
         return str.replace(templateRe,function(str,key){
           var value=data[key];
           if(value === undefined){
-            throw new Error("变量值不存在"+key+"|"+str);
+            value="{"+key+"}";
+            // throw new Error("变量值不存在"+key+"|"+str);
           }else if(typeof value === 'function'){
             value=value(data);
           }

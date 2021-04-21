@@ -56,7 +56,7 @@
       },
       open:function(options){
           var winSize=this.map.getSize();
-          var opt=extend({type:1,title:'', closeBtn:true, area:[400,200], offset:'center',body:"",borderRadius:"8px",background:"rgba(255,255,255,0.9)",headBorderBottom:"1px solid #e4e4e4",onComplete:function(event){}},options);
+          var opt=extend({type:1,title:'', closeBtn:true, area:[400,200], offset:'center',body:"",borderRadius:"8px",background:"rgba(255,255,255,0.9)",headBorderBottom:"1px solid #e4e4e4",closeCallback:function(event,self){},okBtn:false,okCallback:function(event,self){}},options);
           var p=4,w=opt.area[0],h=opt.area[1],headHeight=this.headHeight,headWidth=w-2*p,contentHeight=h-headHeight - 2*p;
           var left=0,top=0,cpos= winSize.divideBy(2);
           if(opt.offset=== 'center'){
@@ -85,25 +85,39 @@
           var headBar=this.createElement("div",styles);
           headBar.innerHTML="<b style=\"float:left\">"+opt.title+"</b>";
           rootDiv.appendChild(headBar);
+          extend(rootDiv,geomap.Observable);
+          var closeFn=function(event,self){
+              // if(geomap.util.element.hasClass(event.target,"closeIcon")){
+              //     event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode);
+              // }
+              this.outerHTML="";
+              var frameObj={target:rootDiv}
+              opt.closeCallback(event,frameObj);
+          }.bind(rootDiv);
 
           var closeBtn=this.createElement("span",{float:"right",cursor:"pointer"},{className:"closeIcon"},"&nbsp; X &nbsp;")
          
           headBar.appendChild(closeBtn);
 
           styles={position:"absolute",width: w+"px",height:contentHeight+"px",top:(h-contentHeight)+"px",left:"0px"};
+        
           var contentDiv=this.createElement("div",styles);
-        contentDiv.innerHTML=opt.body;
+          contentDiv.innerHTML=opt.body;
+        if(opt.okBtn){
+          //<input  type='button' class='btn' value='确定' onclick='addParkingGeom(\""+formId+"\")' />
+          var el_btnOK=this.createElement("input",{marginLeft:"100px"},{className:"btn",type:"button",value:"确定"});
+          var okFn=function(event,self){ 
+            var frameObj={target:rootDiv,closeFn:closeFn};
+            opt.okCallback(event,frameObj);
+           };
+          eventjs.add(el_btnOK,"click touch",okFn);
+          contentDiv.appendChild(el_btnOK);
+        }
+
         rootDiv.appendChild(contentDiv);
         this.container.appendChild(rootDiv);
 
-        extend(rootDiv,geomap.Observable);
-        var closeFn=function(event,self){
-            // if(geomap.util.element.hasClass(event.target,"closeIcon")){
-            //     event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode);
-            // }
-            this.outerHTML="";
-            opt.onComplete(event);
-        }.bind(rootDiv);
+        
         eventjs.add(closeBtn,"click touch",closeFn);
         rootDiv.on("close",closeFn);
          return rootDiv;
