@@ -1,23 +1,13 @@
 
-(function(global) {
-    'use strict';
+(function() {
+    
     var extend = geomap.util.object.extend;
     var Point =geomap.Point;
-  
-    if (!global.geomap) {
-      global.geomap = { };
-    }
-  
-    if (global.geomap.Palette) {
-      geomap.warn('geomap.Map is already defined.');
-      return;
-    }
-
     geomap.closeFrame=function(ev){
         if(geomap.util.element.hasClass(ev.target,"closeIcon")){
             ev.target.parentNode.parentNode.parentNode.removeChild(ev.target.parentNode.parentNode);
         }
-    }
+    };
 
    
     geomap.FrameLayer = geomap.Class(geomap.CommonMethods, geomap.Observable,  {
@@ -78,7 +68,7 @@
           
           eventjs.add(rootDiv, 'contextmenu', function(event){
             eventjs.stop(event);
-            console.log("##### form contextmenu");
+            // console.log("##### form contextmenu");
           });
           
           styles={position:"absolute",width: headWidth+"px",height:headHeight+"px",top:"0px",left:"0px",borderBottom:opt.headBorderBottom,padding:p+"px"};
@@ -91,11 +81,11 @@
               //     event.target.parentNode.parentNode.parentNode.removeChild(event.target.parentNode.parentNode);
               // }
               this.outerHTML="";
-              var frameObj={target:rootDiv}
+              var frameObj={target:rootDiv};
               opt.closeCallback(event,frameObj);
           }.bind(rootDiv);
 
-          var closeBtn=this.createElement("span",{float:"right",cursor:"pointer"},{className:"closeIcon"},"&nbsp; X &nbsp;")
+          var closeBtn=this.createElement("span",{"float":"right","cursor":"pointer"},{"className":"closeIcon"},"&nbsp; X &nbsp;");
          
           headBar.appendChild(closeBtn);
 
@@ -104,7 +94,6 @@
           var contentDiv=this.createElement("div",styles);
           contentDiv.innerHTML=opt.body;
         if(opt.okBtn){
-          //<input  type='button' class='btn' value='确定' onclick='addParkingGeom(\""+formId+"\")' />
           var el_btnOK=this.createElement("input",{marginLeft:"100px"},{className:"btn",type:"button",value:"确定"});
           var okFn=function(event,self){ 
             var frameObj={target:rootDiv,closeFn:closeFn};
@@ -126,5 +115,5 @@
       
     });
   
-  })(typeof exports !== 'undefined' ? exports : this);
+  })();
   

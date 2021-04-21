@@ -24,7 +24,7 @@
         this._setOptions(options); 
         this._type=0;
         var canvas=geomap.util.element.create("canvas");
-        const ctx=canvas.getContext("2d");
+        var ctx=canvas.getContext("2d");
         geomap.util.element.createHiDPICanvas(canvas,this.width,this.height,this.ratio);
         this.canvas=canvas;
         this.ctx=ctx;
@@ -33,8 +33,8 @@
       },
       setData:function (data){
         // var gtype=data.type;
-        var geometry=data.geometry 
-        properties=data.properties;
+        var geometry=data.geometry;
+        var properties=data.properties;
         // var gcoords=geometry && geometry.coordinates,
         // this._type=0;
         // this._coordinates=[];
@@ -69,7 +69,7 @@
             var rowNum=this.textRows.length,
                 y=this.padding+this.lineV,
                 x=this.padding;
-            for(let b=0;b<rowNum;b++){
+            for(var b=0;b<rowNum;b++){
                 ctx.fillText(this.textRows[b],x,y);//每行字体y坐标间隔20
                 y+=this.lineV;
             }
@@ -78,12 +78,12 @@
             var w=this.width- (this.padding * 2),h=this.height- (this.padding * 2);
             return [w,h];
         },
-        drawText(ctx,t,w){
+        drawText:function(ctx,t,w){
             //参数说明
             //ctx：canvas的 2d 对象，t：绘制的文字，x,y:文字坐标，w：文字最大宽度
             var chr = t.split("");
-            var temp = ""
-            for (let a = 0; a<chr.length;a++){
+            var temp = "";
+            for (var a = 0; a<chr.length;a++){
                 if( ctx.measureText(temp).width < w && ctx.measureText(temp+(chr[a])).width <= w){
                     temp += chr[a];
                 }else{

@@ -21,7 +21,7 @@
             return new Point(this.max.x,this.min.y);
         },
         getSize:function(){
-            return this.max.subtract(this.this.min);
+            return this.max.subtract(this.min);
         },
         contains:function(p0){
             var min,max;
@@ -63,7 +63,7 @@
             return new Bounds(toPoint(minx),toPoint(miny));
         }
         return new Bounds(toPoint(minx,miny),toPoint(maxx,maxy));
-    }
+    };
 
     geomap.Bounds=Bounds;
     geomap.util.toBounds=toBounds;

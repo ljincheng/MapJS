@@ -23,8 +23,8 @@
 
     function createHiDPICanvas(canvas,w, h, ratio) {
 
-      const PIXEL_RATIO = (function () {
-        const c = document.createElement("canvas"),
+      var PIXEL_RATIO = (function () {
+        var c = document.createElement("canvas"),
           ctx = c.getContext("2d"),
           dpr = window.devicePixelRatio || 1,
           bsr = ctx['webkitBackingStorePixelRatio'] ||
@@ -67,11 +67,11 @@
     }
 }
 
-const formToJson = function (form) {
+function formToJson(form) {
   var json = new Object();
   var inputs = form.getElementsByTagName("input"); // 取得所有DOM
   for (var index = 0; index < inputs.length; index++) { // 遍历DOM获取值
-    const element = inputs[index];
+    var element = inputs[index];
     var key = element.name;
     var value="";
    
@@ -93,27 +93,27 @@ const formToJson = function (form) {
       } 
     }else if(element.type != 'button' && element.type != 'submit'){
       value = element.value;
-      json[key] = value
+      json[key] = value;
     }
         //checkbox应根据需求赋值为true/false或 1/0
     // json[key] = value // 利用 ES6 计算属性名为对象创建属性
   }
 
-  var selectEl = form.getElementsByTagName("select") // 取得所有DOM
+  var selectEl = form.getElementsByTagName("select"); // 取得所有DOM
   for (var index = 0; index < selectEl.length; index++) {
-    const element = selectEl[index];
+    var element = selectEl[index];
     var key = element.name;
     var i = element.selectedIndex;
     value = element.options[i].value;
     json[key] = value;
   }
-  var textareas = form.getElementsByTagName("textarea") // 思路同上
+  var textareas = form.getElementsByTagName("textarea"); // 思路同上
   for (var index = 0; index < textareas.length; index++) {
-    const element = textareas[index];
+    var element = textareas[index];
     json[element.name] = element.value;
   }
 
-  console.log(JSON.stringify(json));
+  // console.log(JSON.stringify(json));
   return json;
 } 
 

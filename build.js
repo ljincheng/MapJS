@@ -11,25 +11,24 @@ buildArgs.forEach(function(arg) {
 
   buildArgsAsObject[key] = value;
 });
-
+var outputFile='geomap.js';
 var modulesToInclude = buildArgsAsObject.modules ? buildArgsAsObject.modules.split(',') : [];
 var modulesToExclude = buildArgsAsObject.exclude ? buildArgsAsObject.exclude.split(',') : [];
 
-var distributionPath = buildArgsAsObject.dest || '../dist/';
+var distributionPath = buildArgsAsObject.dest || 'dist/';
 var minifier = buildArgsAsObject.minifier || 'yui';
 var mininfierCmd;
 
 var noStrict = 'no-strict' in buildArgsAsObject;
-var noSVGExport = 'no-svg-export' in buildArgsAsObject;
 var requirejs = 'requirejs' in buildArgsAsObject ? 'requirejs' : false;
 var sourceMap = 'sourcemap' in buildArgsAsObject;
 var buildFast = 'fast' in buildArgsAsObject;
 // set amdLib var to encourage later support of other AMD systems
 var amdLib = requirejs;
 
-var sourceMapFlags = '';
+
 if (minifier === 'yui') {
-    mininfierCmd = 'java -jar ' + rootPath + '/lib/yuicompressor-2.4.6.jar geomap.js -o geomap.min.js';
+    mininfierCmd = 'java -jar ' + rootPath + '/lib/yuicompressor-2.4.6.jar  geomap.js -o geomap.min.js';
   }
   else {
     mininfierCmd = 'java -jar ' + rootPath + '/lib/google_closure_compiler.jar --js geomap.js --js_output_file geomap.min.js' + sourceMapFlags;
@@ -40,7 +39,6 @@ var distFileContents =
     modulesToInclude.join(',') +
     (modulesToExclude.length ? (' exclude=' + modulesToExclude.join(',')) : '') +
     (noStrict ? ' no-strict' : '') +
-    (noSVGExport ? ' no-svg-export' : '') +
     (requirejs ? ' requirejs' : '') +
     (sourceMap ? ' sourcemap' : '') +
     ' minifier=' + minifier +
@@ -69,29 +67,52 @@ function appendFileContents(fileNames, callback) {
       if (noStrict) {
         strData = strData.replace(/"use strict";?\n?/, '');
       }
-      if (noSVGExport) {
-        strData = strData.replace(/\/\* _TO_SVG_START_ \*\/[\s\S]*?\/\* _TO_SVG_END_ \*\//g, '');
-      }
-      if (noSVGImport) {
-        strData = strData.replace(/\/\* _FROM_SVG_START_ \*\/[\s\S]*?\/\* _FROM_SVG_END_ \*\//g, '');
-      }
       distFileContents += ('\n' + strData + '\n');
       readNextFile();
     });
 
   })();
 }
-
+ 
 var filesToInclude = [
-    'HEADER.js',
-    'globalGeomap.js',
-    'lib/event.js'
+    'src/HEADER.js',
+    'src/globalGeomap.js',
+    'src/lib/event.js',
+    'src/core/Observable.js',
+    'src/core/util.js',
+    'src/core/CommonMethods.js',
+    'src/core/util_object.js',
+    'src/core/util_element.js',
+    'src/core/util_event.js',
+    'src/core/Class.js',
+    'src/core/Animation.js',
+    'src/core/Image.js',
+    'src/core/Request.js',
+    'src/geo/Point.js',
+    'src/geo/Transformtion.js',
+    'src/event/Event.js',
+    //-----
+   'src/geo/Bounds.js',
+    'src/geo/Model.js',
+    'src/geo/Caliper.js',
+    'src/geo/MapEvent.js',
+    'src/geo/MapRectSelect.js',
+    'src/geo/layer/FrameLayer.js',
+    'src/geo/Map.js',
+    'src/geometry/Geometry.js',
+    'src/geometry/Path.js',
+    'src/geometry/Polygon.js',
+    'src/geometry/Marker.js',
+    'src/geo/Layer.js',
+    'src/geo/layer/TileLayer.js',
+    'src/geo/layer/VectorLayer.js',
+    'src/geo/layer/PaletteLayer.js'
   ];
 
   process.chdir(distributionPath);
 
   appendFileContents(filesToInclude, function() {
-    fs.writeFile('fabric.js', distFileContents, function (err) {
+    fs.writeFile('geomap.js', distFileContents, function (err) {
       if (err) {
         console.log(err);
         throw err;
@@ -114,9 +135,9 @@ var filesToInclude = [
         }
         console.log('Minified using', minifier, 'to ' + distributionPath + 'geomap.min.js');
 
-        if (sourceMapFlags) {
-          console.log('Built sourceMap to ' + distributionPath + 'geomap.min.js.map');
-        }
+        // if (sourceMapFlags) {
+        //   console.log('Built sourceMap to ' + distributionPath + 'geomap.min.js.map');
+        // }
 
         exec('gzip -c geomap.min.js > geomap.min.js.gz', function (error, output) {
           console.log('Gzipped to ' + distributionPath + 'geomap.min.js.gz');
