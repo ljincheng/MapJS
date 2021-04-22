@@ -4,7 +4,39 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="../../dist/geomap.js"></script>
-        <script type="text/javascript" src="js/ccwmap.js"></script>
+        <!-- <script type="text/javascript" src="../HEADER.js"></script>
+        <script type="text/javascript" src="../globalGeomap.js"></script>
+        <script type="text/javascript" src="../lib/event.js"></script>
+        <script type="text/javascript" src="../core/Observable.js"></script>
+        <script type="text/javascript" src="../core/util.js"></script>
+        <script type="text/javascript" src="../core/CommonMethods.js"></script>
+        <script type="text/javascript" src="../core/util_object.js"></script>
+        <script type="text/javascript" src="../core/util_element.js"></script>
+        <script type="text/javascript" src="../core/util_event.js"></script>
+        <script type="text/javascript" src="../core/Class.js"></script>
+        <script type="text/javascript" src="../core/Animation.js"></script>
+        <script type="text/javascript" src="../core/Image.js"></script>
+        <script type="text/javascript" src="../core/Request.js"></script>
+        <script type="text/javascript" src="../geo/Point.js"></script>
+        <script type="text/javascript" src="../geo/Transformtion.js"></script>
+        <script type="text/javascript" src="../event/Event.js"></script>
+        <script type="text/javascript" src="../geo/Bounds.js"></script>
+        <script type="text/javascript" src="../geo/Model.js"></script>
+        <script type="text/javascript" src="../geo/Caliper.js"></script>
+        <script type="text/javascript" src="../geo/MapEvent.js"></script>
+        <script type="text/javascript" src="../geo/MapRectSelect.js"></script>
+        <script type="text/javascript" src="../geo/layer/FrameLayer.js"></script>
+        <script type="text/javascript" src="../geo/Map.js"></script>
+        
+        <script type="text/javascript" src="../geometry/Geometry.js"></script>
+        <script type="text/javascript" src="../geometry/Path.js"></script>
+        <script type="text/javascript" src="../geometry/Polygon.js"></script>
+        <script type="text/javascript" src="../geometry/Marker.js"></script>
+        <script type="text/javascript" src="../geo/Layer.js"></script>
+        <script type="text/javascript" src="../geo/layer/TileLayer.js"></script>
+        <script type="text/javascript" src="../geo/layer/VectorLayer.js"></script>
+        <script type="text/javascript" src="../geo/layer/PaletteLayer.js"></script> -->
+        <script type="text/javascript" src="js/index.js"></script>
         <style>
             .infoTable{
                  border: 1px solid #2196f3;font-size:12px;width:100%;
@@ -60,51 +92,19 @@ var szPoint=[114.02262568473816,11.574944257736206];
     // map=new geomap.Map(mapPane,{maxZoom:20,zoom:1});
     
     var ccw_config={ 
-           project:"http://master.cn/ccw/wms/map/project/{mapId}",
-           tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
-           parkingAdd:"http://master.cn/ccw/wms/parking/add/{mapId}",
-           parkingQuery:"http://master.cn/ccw/wms/parking/query/{mapId}",
-           parkingDelete:"http://master.cn/ccw/wms/parking/delete/{mapId}",
-           forms:[{name:"车位",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
-                ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+           project:"http://master.cn/apps/wms/map/project/{mapId}",
+           tile:"http://master.cn/apps/wms/map/image/{mapId}/{z}/{x}/{y}.png",
+           parkingAdd:"http://master.cn/apps/wms/parking/add/{mapId}",
+           parkingQuery:"http://master.cn/apps/wms/parking/query/{mapId}",
+           parkingDelete:"http://master.cn/apps/wms/parking/delete/{mapId}",
+           forms:[{name:"车位",properties:[{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
                 ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
                 ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
                 ,{id:"sale_status",type:"radio",title:"销售状态",value:"",option:{"1":"已售","2":"未售"},required:true}
             ]}],
-           code:{ok:0,fail:1},
+           code:{ok:1,fail:0},
        };
-    //    var ccw_config={ 
-    //        project:"http://master.cn/ccw/wms/map/project/{mapId}",
-    //        tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
-    //        parkingAdd:"http://master.cn/ccw/wms/building/add/{mapId}",
-    //        parkingQuery:"http://master.cn/ccw/wms/building/queryParking/{mapId}?saleStatus=1",
-    //        parkingDelete:"http://master.cn/ccw/wms/building/delete/{mapId}",
-    //        forms:[{name:"车位",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}
-    //             ,{id:"project_id",type:"text",title:"项目ID",value:"",required:false}
-    //             ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-    //         ]}],
-    //        code:{ok:0,fail:1},
-    //    };
-       var mapId=geomap.util.getUrlParam("mapId");
-       var layer=geomap.util.getUrlParam("layer");
-       var saleStatus=geomap.util.getUrlParam("saleStatus");
-       console.log("====mapId:"+mapId);
-       if(mapId===''){
-           mapId="example";
-       }
-       if(layer=== 'building' || layer === 'building2'){
-            ccw_config.parkingAdd="http://master.cn/ccw/wms/building/add/{mapId}";
-            ccw_config.parkingQuery="http://master.cn/ccw/wms/building/query/{mapId}?saleStatus="+saleStatus;
-            ccw_config.parkingDelete="http://master.cn/ccw/wms/building/delete/{mapId}";
-            ccw_config.forms=[{name:"车位",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}
-                ,{id:"project_id",type:"text",title:"项目ID",value:"",required:false}
-                ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-            ]}];
-            if(layer === 'building2'){
-                ccw_config.parkingQuery="http://master.cn/ccw/wms/building/queryParking/{mapId}?saleStatus="+saleStatus;
-            }
-       } 
-    map=CCWMAP.Map.create("mapPane",ccw_config,mapId);
+    map=CCWMAP.Map.create("mapPane",ccw_config,"example");
     map.on("map_complete",projectMapDataChange);
     map.on("coord_query_change",function(featureCollection){
               setEditContent(featureCollection);
@@ -193,7 +193,7 @@ function setEditContent(featureData){
                 for(var item in rows[i]){
                     rowHtml+="<td>"+rows[i][item]+"</td>";
                 }
-                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].parking_id+"')\">删除</a></td>";
+                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].id+"')\">删除</a></td>";
                 rowHtml+"</tr>";
                 html+=rowHtml;
             }

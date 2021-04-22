@@ -57,6 +57,12 @@ function cancelAnimFrame(id) {
 	}
 };
 
+function getUrlParam (name) {
+  name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+      results = regex.exec(window.location.search);
+  return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+};
 
     geomap.util = {
  
@@ -81,7 +87,8 @@ function cancelAnimFrame(id) {
         });
       },
       requestAnimFrame:requestAnimFrame,
-      cancelAnimFrame:cancelAnimFrame
+      cancelAnimFrame:cancelAnimFrame,
+      getUrlParam:getUrlParam
        
 
     };

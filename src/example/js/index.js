@@ -192,14 +192,7 @@ else if (typeof define === 'function' && define.amd) {
         },
         parkingRequestCallback:function(geomText,properties,self){
             var url=this.getParkingAddUrl(this.mapId);
-            var featureId="";
-            for(var key in properties){
-                if(key === 'id'){
-                    featureId=properties[key];
-                    delete properties[key];
-                }
-            }
-            Request(url,{method:"JSON",body:{geometry:geomText,properties:properties,id:featureId},header:REQ_HEADER,onComplete:function(xhr){
+            Request(url,{method:"JSON",body:{geometry:geomText,properties:properties},header:REQ_HEADER,onComplete:function(xhr){
                 var body=xhr.response,status=xhr.status; 
                 geomap.debug("body="+body);
                 if(status==200){ 
