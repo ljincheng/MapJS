@@ -60,30 +60,34 @@
           },
           dragingSpeed:function(time){
               var ltime=time - this._lastTime ;
-            if (ltime> 10) {
+            if (ltime > 20) {
                 this._lastTime =time;
                 var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
                 var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
                 this._drag_speed.push([directionX,directionY]);
                 this._drag_speed.shift();
-                var totalSpeed=[0,0];
-                var num=this._drag_speed.length;
-                for(var i=0;i<num;i++){
-                    totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
-                    totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
-                }
-                var speedX=Math.round(totalSpeed[0]/num);
-                var speedY=Math.round(totalSpeed[1]/num);
-                this._inertia_speed=[speedX,speedY];
+               
                 //this._drag_lastpos=this._drag_nowpos;
                 //geomap.debug("######  inertia_speed="+speedX+","+speedY);
+            }else{
+                this._drag_speed.push( [0,0]);
+                this._drag_speed.shift();
             }
+            var totalSpeed=[0,0];
+            var num=this._drag_speed.length;
+            for(var i=0;i<num;i++){
+                totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
+                totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
+            }
+            var speedX=Math.round(totalSpeed[0]/num);
+            var speedY=Math.round(totalSpeed[1]/num);
+            this._inertia_speed=[speedX,speedY];
             this._drag_lastpos=this._drag_nowpos;
           },
           handle:function(event,self){ 
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
-              event._inertia=this._inertia;
+               event.openInertia=this._inertia;
               if(self.state == 'down'){
                   this._draging=true;
                   this._moved=false;

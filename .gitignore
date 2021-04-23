@@ -159,4 +159,5 @@ fabric.properties
 .vscode
 example/ccw
 example/ccw/**
+dist/geomap.min.js.gz
 application-ljc.yml

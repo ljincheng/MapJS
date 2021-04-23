@@ -2887,7 +2887,8 @@ return selectObj;
       ctx.drawImage(this._element,this.x,this.y);
     },
     onLoad:function(img,isOk){
-        var e={img:img,target:this};
+      var other=this;
+        var e={img:img,target:other};
         this.fire("onload",e);
     },
     setSrc:function(url){ 
@@ -3253,30 +3254,34 @@ return selectObj;
           },
           dragingSpeed:function(time){
               var ltime=time - this._lastTime ;
-            if (ltime> 10) {
+            if (ltime > 20) {
                 this._lastTime =time;
                 var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
                 var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
                 this._drag_speed.push([directionX,directionY]);
                 this._drag_speed.shift();
-                var totalSpeed=[0,0];
-                var num=this._drag_speed.length;
-                for(var i=0;i<num;i++){
-                    totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
-                    totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
-                }
-                var speedX=Math.round(totalSpeed[0]/num);
-                var speedY=Math.round(totalSpeed[1]/num);
-                this._inertia_speed=[speedX,speedY];
+               
                 //this._drag_lastpos=this._drag_nowpos;
                 //geomap.debug("######  inertia_speed="+speedX+","+speedY);
+            }else{
+                this._drag_speed.push( [0,0]);
+                this._drag_speed.shift();
             }
+            var totalSpeed=[0,0];
+            var num=this._drag_speed.length;
+            for(var i=0;i<num;i++){
+                totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
+                totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
+            }
+            var speedX=Math.round(totalSpeed[0]/num);
+            var speedY=Math.round(totalSpeed[1]/num);
+            this._inertia_speed=[speedX,speedY];
             this._drag_lastpos=this._drag_nowpos;
           },
           handle:function(event,self){ 
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
-              event._inertia=this._inertia;
+               event.openInertia=this._inertia;
               if(self.state == 'down'){
                   this._draging=true;
                   this._moved=false;
@@ -3831,8 +3836,10 @@ return selectObj;
                     this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
                     this._animMoveFn.on("end",function(){ 
                         // geomap.debug("###======dragend=====");
-                        this.other.fire("dragend",this.args);
-                        this.other.__bounds_changed=true;
+                        var _map=this.other;
+                        var fireEvent=this.arg;
+                        _map.fire("dragend",fireEvent);
+                        _map.__bounds_changed=true;
                     }.bind({other:this,args:arg}));
                 }
                 var startP=arg.point; 
@@ -3850,7 +3857,7 @@ return selectObj;
             },
             dragEnd:function(e,p){
                 //this.__bounds_changed= !e.ctrlKey;
-                if(e._inertia){
+                if(e.openInertia){
                     this.dragEndWithInertiaSpeed({event:e,point:p,boundsChanged:this.__bounds_changed});
                 }else{
                     this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
@@ -5105,26 +5112,26 @@ return selectObj;
         var tableKey=cell+"-"+row;
         var tileKey=z+"-"+x+"-"+y;
         var tileImg=this._tileImageMap[tableKey];
-        if(!tileImg){
+        // if(!tileImg){
           tileImg=new geomap.Image(geomap.window.document.createElement("img"));
           tileImg.tileKey=tileKey;
           tileImg.tableKey=tableKey;
           tileImg.on("onload",this._imageLoad.bind(this));
           this._tileImageMap[tableKey]=tileImg;
-        }else{
-          for(var tkey in this._tileImageMap){
-            var tileImgObj=this._tileImageMap[tkey];
-            var _tableKey=tileImgObj.tableKey;
-            var _tileKey=tileImgObj.tileKey;
-            if(_tileKey === tileKey){
-              tileImgObj.tableKey=tableKey;
-              tileImg.tableKey=_tableKey;
-              this._tileImageMap[tableKey]=tileImgObj;
-              this._tileImageMap[_tableKey]=tileImg;
-              return tileImgObj;
-            }
-          }
-        }
+        // }else{
+        //   for(var tkey in this._tileImageMap){
+        //     var tileImgObj=this._tileImageMap[tkey];
+        //     var _tableKey=tileImgObj.tableKey;
+        //     var _tileKey=tileImgObj.tileKey;
+        //     if(_tileKey === tileKey){
+        //       tileImgObj.tableKey=tableKey;
+        //       tileImg.tableKey=_tableKey;
+        //       this._tileImageMap[tableKey]=tileImgObj;
+        //       this._tileImageMap[_tableKey]=tileImg;
+        //       return tileImgObj;
+        //     }
+        //   }
+        // }
         return tileImg;
       },
       loadTile:function(cell,row,left,top,z,x,y){

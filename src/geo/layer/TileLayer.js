@@ -93,26 +93,26 @@
         var tableKey=cell+"-"+row;
         var tileKey=z+"-"+x+"-"+y;
         var tileImg=this._tileImageMap[tableKey];
-        if(!tileImg){
+        // if(!tileImg){
           tileImg=new geomap.Image(geomap.window.document.createElement("img"));
           tileImg.tileKey=tileKey;
           tileImg.tableKey=tableKey;
           tileImg.on("onload",this._imageLoad.bind(this));
           this._tileImageMap[tableKey]=tileImg;
-        }else{
-          for(var tkey in this._tileImageMap){
-            var tileImgObj=this._tileImageMap[tkey];
-            var _tableKey=tileImgObj.tableKey;
-            var _tileKey=tileImgObj.tileKey;
-            if(_tileKey === tileKey){
-              tileImgObj.tableKey=tableKey;
-              tileImg.tableKey=_tableKey;
-              this._tileImageMap[tableKey]=tileImgObj;
-              this._tileImageMap[_tableKey]=tileImg;
-              return tileImgObj;
-            }
-          }
-        }
+        // }else{
+        //   for(var tkey in this._tileImageMap){
+        //     var tileImgObj=this._tileImageMap[tkey];
+        //     var _tableKey=tileImgObj.tableKey;
+        //     var _tileKey=tileImgObj.tileKey;
+        //     if(_tileKey === tileKey){
+        //       tileImgObj.tableKey=tableKey;
+        //       tileImg.tableKey=_tableKey;
+        //       this._tileImageMap[tableKey]=tileImgObj;
+        //       this._tileImageMap[_tableKey]=tileImg;
+        //       return tileImgObj;
+        //     }
+        //   }
+        // }
         return tileImg;
       },
       loadTile:function(cell,row,left,top,z,x,y){

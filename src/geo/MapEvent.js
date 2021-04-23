@@ -134,8 +134,10 @@
                     this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
                     this._animMoveFn.on("end",function(){ 
                         // geomap.debug("###======dragend=====");
-                        this.other.fire("dragend",this.args);
-                        this.other.__bounds_changed=true;
+                        var _map=this.other;
+                        var fireEvent=this.arg;
+                        _map.fire("dragend",fireEvent);
+                        _map.__bounds_changed=true;
                     }.bind({other:this,args:arg}));
                 }
                 var startP=arg.point; 
@@ -153,7 +155,7 @@
             },
             dragEnd:function(e,p){
                 //this.__bounds_changed= !e.ctrlKey;
-                if(e._inertia){
+                if(e.openInertia){
                     this.dragEndWithInertiaSpeed({event:e,point:p,boundsChanged:this.__bounds_changed});
                 }else{
                     this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
