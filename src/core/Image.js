@@ -95,7 +95,8 @@
       ctx.drawImage(this._element,this.x,this.y);
     },
     onLoad:function(img,isOk){
-        var e={img:img,target:this};
+      var other=this;
+        var e={img:img,target:other};
         this.fire("onload",e);
     },
     setSrc:function(url){ 

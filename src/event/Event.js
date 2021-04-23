@@ -60,7 +60,7 @@
           },
           dragingSpeed:function(time){
               var ltime=time - this._lastTime ;
-            if (ltime> 10) {
+            if (ltime > 20) {
                 this._lastTime =time;
                 var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
                 var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
@@ -83,7 +83,7 @@
           handle:function(event,self){ 
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
-              event._inertia=this._inertia;
+               event.openInertia=this._inertia;
               if(self.state == 'down'){
                   this._draging=true;
                   this._moved=false;
