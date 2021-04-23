@@ -3251,32 +3251,28 @@ return selectObj;
       Drag.prototype={
           addEvent:function(element){
               eventjs.add(element,"drag",this.handle.bind(this));
+              if(this.dragingSpeedTimeId === undefined){
+              this.dragingSpeedTimeId=this.dragingSpeed.bind(this);
+              this._map.on("looptime",this.dragingSpeedTimeId);
+              }
           },
-          dragingSpeed:function(time){
-              var ltime=time - this._lastTime ;
-            if (ltime > 20) {
-                this._lastTime =time;
+          dragingSpeed:function(){
+              if(this._drag_speed){
                 var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
                 var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
                 this._drag_speed.push([directionX,directionY]);
                 this._drag_speed.shift();
-               
-                //this._drag_lastpos=this._drag_nowpos;
-                //geomap.debug("######  inertia_speed="+speedX+","+speedY);
-            }else{
-                this._drag_speed.push( [0,0]);
-                this._drag_speed.shift();
+                var totalSpeed=[0,0];
+                var num=this._drag_speed.length;
+                for(var i=0;i<num;i++){
+                    totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
+                    totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
+                }
+                var speedX=Math.round(totalSpeed[0]/num);
+                var speedY=Math.round(totalSpeed[1]/num);
+                this._inertia_speed=[speedX,speedY];
+                this._drag_lastpos=this._drag_nowpos;
             }
-            var totalSpeed=[0,0];
-            var num=this._drag_speed.length;
-            for(var i=0;i<num;i++){
-                totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
-                totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
-            }
-            var speedX=Math.round(totalSpeed[0]/num);
-            var speedY=Math.round(totalSpeed[1]/num);
-            this._inertia_speed=[speedX,speedY];
-            this._drag_lastpos=this._drag_nowpos;
           },
           handle:function(event,self){ 
             if(!self.fingers || self.fingers ==1){
@@ -3288,12 +3284,14 @@ return selectObj;
                   if(this._inertia){
                     var p0= [0,0];
                       this._drag_speed=[p0,p0,p0,p0,p0,p0]; 
-                      this._positions=[];
+                    //   this._positions=[];
                       this._inertia_speed=[0,0];
                       this._drag_lastpos=[self.x,self.y];
                       this._drag_nowpos=[self.x,self.y];
                     //   this._times = [];
-                      this._lastTime = +new Date();
+                    //   this._lastTime = +new Date();
+                    //   this.dragingSpeed(this._lastTime );
+                      
                   }
                   return ;
               }else if(self.state == 'up'){
@@ -3319,9 +3317,9 @@ return selectObj;
                   }
                   if(this._inertia){
                       //TODO 惯性操作
-                       var time= +new Date();
+                    //    var time= +new Date();
                      this._drag_nowpos=[self.x,self.y];
-                     this.dragingSpeed(time);
+                    //  this.dragingSpeed(time);
                  }
                  var pos=new Point(self.x,self.y);
                  this._map.dragChange(event,pos);
