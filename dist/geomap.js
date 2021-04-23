@@ -3320,7 +3320,7 @@ return selectObj;
               }
           },
           dragingSpeed:function(){
-              if(this._drag_speed){
+              if(this._drag_speed && this._draging){
                 var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
                 var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
                 this._drag_speed.push([directionX,directionY]);
@@ -3335,6 +3335,21 @@ return selectObj;
                 var speedY=Math.round(totalSpeed[1]/num);
                 this._inertia_speed=[speedX,speedY];
                 this._drag_lastpos=this._drag_nowpos;
+            }else{
+                var mEventSpeed=this._inertia_speed, s=mEventSpeed;
+                if(Math.abs(s[0])<0 )
+                	{
+                        mEventSpeed[0]=0;
+		                 
+                	}
+                if(Math.abs(s[1])<0)
+                	{
+                	  
+		                mEventSpeed[1]=0;
+                	}
+                    mEventSpeed[0]=s[0]*0.97;
+                    mEventSpeed[1]=s[1]*0.97;
+                    this._inertia_speed=mEventSpeed;
             }
           },
           handle:function(event,self){ 
@@ -3346,7 +3361,7 @@ return selectObj;
                   this._moved=false;
                   if(this._inertia){
                     var p0= [0,0];
-                      this._drag_speed=[p0,p0,p0,p0,p0,p0]; 
+                      this._drag_speed=[p0,p0,p0,p0,p0,p0,p0,p0]; 
                     //   this._positions=[];
                       this._inertia_speed=[0,0];
                       this._drag_lastpos=[self.x,self.y];
@@ -3366,7 +3381,8 @@ return selectObj;
                   this._traging=false; 
                   var newevent=event;
                   newevent.inertiaSpeed= this._inertia_speed;
-                  this._map.dragEnd(newevent,new Point(self.x,self.y));
+                  var pos=new Point(self.x,self.y);
+                  this._map.dragEnd(newevent,pos);
                   return this;
               }else{
                   if(!this._draging  || this._map._touchZoomStatus){
@@ -3376,7 +3392,7 @@ return selectObj;
                   if(!this._moved ){
                       this._map.dragStart(event,new Point(self.x,self.y));
                       this._moved=true;
-                      return ;
+                      return this;
                   }
                   if(this._inertia){
                       //TODO 惯性操作
