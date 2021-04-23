@@ -3,35 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="src/HEADER.js"></script>
-        <script type="text/javascript" src="src/globalGeomap.js"></script>
-        <script type="text/javascript" src="src/lib/event.js"></script>
-        <script type="text/javascript" src="src/core/Observable.js"></script>
-        <script type="text/javascript" src="src/core/util.js"></script>
-        <script type="text/javascript" src="src/core/CommonMethods.js"></script>
-        <script type="text/javascript" src="src/core/util_object.js"></script>
-        <script type="text/javascript" src="src/core/util_element.js"></script>
-        <script type="text/javascript" src="src/core/util_event.js"></script>
-        <script type="text/javascript" src="src/core/Class.js"></script>
-        <script type="text/javascript" src="src/core/Animation.js"></script>
-        <script type="text/javascript" src="src/core/Image.js"></script>
-        <script type="text/javascript" src="src/core/Request.js"></script>
-        <script type="text/javascript" src="src/geo/Point.js"></script>
-        <script type="text/javascript" src="src/geo/Transformtion.js"></script>
-        <script type="text/javascript" src="src/event/Event.js"></script>
-        <script type="text/javascript" src="src/geo/Bounds.js"></script>
-        <!-- <script type="text/javascript" src="src/geo/geomap_coord.js"></script> -->
-        <script type="text/javascript" src="src/geo/Model.js"></script>
-        <script type="text/javascript" src="src/geo/Caliper.js"></script>
-        <script type="text/javascript" src="src/geo/MapEvent.js"></script>
-        <script type="text/javascript" src="src/geo/Map.js"></script>
-        
-        <script type="text/javascript" src="src/geometry/Geometry.js"></script>
-        <script type="text/javascript" src="src/geometry/Path.js"></script>
-        <script type="text/javascript" src="src/geometry/Polygon.js"></script>
-        <script type="text/javascript" src="src/geo/Layer.js"></script>
-        <script type="text/javascript" src="src/geo/layer/TileLayer.js"></script>
-        <script type="text/javascript" src="src/geo/layer/PaletteLayer.js"></script>
+        <script type="text/javascript" src="dist/geomap.js"></script>
         
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
@@ -95,13 +67,13 @@ var szPoint=[114.02262568473816,11.574944257736206];
     // map.on("click",clickMapFn);
     
     // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
-    eventjs.add(document.body, 'touchmove', eventjs.prevent);
+    eventjs.add(mapDiv, 'touchmove', eventjs.prevent);
 
     /// Prevent right-click on desktops.
-    eventjs.add(document.body, 'contextmenu', eventjs.prevent);
+    eventjs.add(mapDiv, 'contextmenu', eventjs.prevent);
 
     /// Prevent elastic scrolling.
-    eventjs.add(document, 'touchstart', eventjs.prevent);
+    eventjs.add(mapDiv, 'touchstart', eventjs.prevent);
  }
 
  function winResize(){

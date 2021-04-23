@@ -126,10 +126,40 @@
                 this.fire("drag",{event:e,point:p,boundsChanged:this.__bounds_changed});
                 this.__startPos=p;
             },
+            dragEndWithInertiaSpeed:function(arg){
+                var event=arg.event;
+                if(this._animMoveFn){
+                    this._animMoveFn.stop();
+                }else{
+                    this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
+                    this._animMoveFn.on("end",function(){ 
+                        // geomap.debug("###======dragend=====");
+                        this.other.fire("dragend",this.args);
+                        this.other.__bounds_changed=true;
+                    }.bind({other:this,args:arg}));
+                }
+                var startP=arg.point; 
+                var d_e=new Point(arg.event.inertiaSpeed[0],arg.event.inertiaSpeed[1]);
+                // var res=this._map.resolution(this._map.zoom);
+                this._animMoveFn.run(this,function(pos,e){ 
+                    this.other.panScreen(pos); 
+                    var p=this.startP.add(pos);
+                    this.startP=p;
+                    var arg=this.arg;
+                    arg.point=p;
+                    // geomap.debug("##[[[point="+p.toString());
+                    this.other.fire("drag",arg);
+                },[d_e,new Point(0,0)],0.4,{startP:startP,other:this,arg:arg});
+            },
             dragEnd:function(e,p){
                 //this.__bounds_changed= !e.ctrlKey;
-                this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
-                this.__bounds_changed=true;
+                if(e._inertia){
+                    this.dragEndWithInertiaSpeed({event:e,point:p,boundsChanged:this.__bounds_changed});
+                }else{
+                    this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
+                    this.__bounds_changed=true;
+                }
+                
             },
             touchZoomStart:function(e,p){
                     this.__touch_point=p;
@@ -137,7 +167,7 @@
                    // geomap.debug("(touchZoomStart2) point="+p.toString());
                 this.fire("touchzoomstart",{event:e,point: this.__touch_point});
             },
-        touchZoom:function(e,p,scale){
+            touchZoom:function(e,p,scale){
                // geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
                     var s1=r0 * scale;

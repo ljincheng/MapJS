@@ -3243,22 +3243,52 @@ return selectObj;
   
       function Drag(map){
           this._map=map;
-          this._inertia=false;
+          this._inertia=true;
+          this._inertia_speed=[0,0];
       };
   
       Drag.prototype={
           addEvent:function(element){
               eventjs.add(element,"drag",this.handle.bind(this));
           },
+          dragingSpeed:function(time){
+              var ltime=time - this._lastTime ;
+            if (ltime> 10) {
+                this._lastTime =time;
+                var  directionX =this._drag_nowpos[0] - this._drag_lastpos[0];
+                var  directionY =this._drag_nowpos[1] - this._drag_lastpos[1];
+                this._drag_speed.push([directionX,directionY]);
+                this._drag_speed.shift();
+                var totalSpeed=[0,0];
+                var num=this._drag_speed.length;
+                for(var i=0;i<num;i++){
+                    totalSpeed[0]=totalSpeed[0]+this._drag_speed[i][0];
+                    totalSpeed[1]=totalSpeed[1]+this._drag_speed[i][1];
+                }
+                var speedX=Math.round(totalSpeed[0]/num);
+                var speedY=Math.round(totalSpeed[1]/num);
+                this._inertia_speed=[speedX,speedY];
+                //this._drag_lastpos=this._drag_nowpos;
+                //geomap.debug("######  inertia_speed="+speedX+","+speedY);
+            }
+            this._drag_lastpos=this._drag_nowpos;
+          },
           handle:function(event,self){ 
             if(!self.fingers || self.fingers ==1){
               eventjs.cancel(event);
+              event._inertia=this._inertia;
               if(self.state == 'down'){
                   this._draging=true;
                   this._moved=false;
                   if(this._inertia){
-                      this._times=[];
+                    var p0= [0,0];
+                      this._drag_speed=[p0,p0,p0,p0,p0,p0]; 
                       this._positions=[];
+                      this._inertia_speed=[0,0];
+                      this._drag_lastpos=[self.x,self.y];
+                      this._drag_nowpos=[self.x,self.y];
+                    //   this._times = [];
+                      this._lastTime = +new Date();
                   }
                   return ;
               }else if(self.state == 'up'){
@@ -3268,7 +3298,9 @@ return selectObj;
                       return this;
                   }
                   this._traging=false; 
-                  this._map.dragEnd(event,new Point(self.x,self.y));
+                  var newevent=event;
+                  newevent.inertiaSpeed= this._inertia_speed;
+                  this._map.dragEnd(newevent,new Point(self.x,self.y));
                   return this;
               }else{
                   if(!this._draging  || this._map._touchZoomStatus){
@@ -3282,10 +3314,9 @@ return selectObj;
                   }
                   if(this._inertia){
                       //TODO 惯性操作
-                      // var time=this._lastTime = +new Date(),
-                      // pos=this._lastPos=new Point(self.x,self.y);
-                      // this._positions.push(pos);
-                      // this._times.push(time);
+                       var time= +new Date();
+                     this._drag_nowpos=[self.x,self.y];
+                     this.dragingSpeed(time);
                  }
                  var pos=new Point(self.x,self.y);
                  this._map.dragChange(event,pos);
@@ -3345,10 +3376,10 @@ return selectObj;
                           this._zooming=false;
                           return this;
                   }
-                  if(this._timer){
-                      clearTimeout(this._timer);
-                      this._timer=null;
-                  }
+                //   if(this._timer){
+                //       clearTimeout(this._timer);
+                //       this._timer=null;
+                //   }
                   this._map.wheelZoomEnd(event,new Point(event.offsetX,event.offsetY),delta);
               }else{
                   if(!this._zooming ){
@@ -3792,10 +3823,40 @@ return selectObj;
                 this.fire("drag",{event:e,point:p,boundsChanged:this.__bounds_changed});
                 this.__startPos=p;
             },
+            dragEndWithInertiaSpeed:function(arg){
+                var event=arg.event;
+                if(this._animMoveFn){
+                    this._animMoveFn.stop();
+                }else{
+                    this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
+                    this._animMoveFn.on("end",function(){ 
+                        // geomap.debug("###======dragend=====");
+                        this.other.fire("dragend",this.args);
+                        this.other.__bounds_changed=true;
+                    }.bind({other:this,args:arg}));
+                }
+                var startP=arg.point; 
+                var d_e=new Point(arg.event.inertiaSpeed[0],arg.event.inertiaSpeed[1]);
+                // var res=this._map.resolution(this._map.zoom);
+                this._animMoveFn.run(this,function(pos,e){ 
+                    this.other.panScreen(pos); 
+                    var p=this.startP.add(pos);
+                    this.startP=p;
+                    var arg=this.arg;
+                    arg.point=p;
+                    // geomap.debug("##[[[point="+p.toString());
+                    this.other.fire("drag",arg);
+                },[d_e,new Point(0,0)],0.4,{startP:startP,other:this,arg:arg});
+            },
             dragEnd:function(e,p){
                 //this.__bounds_changed= !e.ctrlKey;
-                this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
-                this.__bounds_changed=true;
+                if(e._inertia){
+                    this.dragEndWithInertiaSpeed({event:e,point:p,boundsChanged:this.__bounds_changed});
+                }else{
+                    this.fire("dragend",{event:e,point:p,boundsChanged:this.__bounds_changed});
+                    this.__bounds_changed=true;
+                }
+                
             },
             touchZoomStart:function(e,p){
                     this.__touch_point=p;
@@ -3803,7 +3864,7 @@ return selectObj;
                    // geomap.debug("(touchZoomStart2) point="+p.toString());
                 this.fire("touchzoomstart",{event:e,point: this.__touch_point});
             },
-        touchZoom:function(e,p,scale){
+            touchZoom:function(e,p,scale){
                // geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
                     var s1=r0 * scale;
@@ -4814,7 +4875,7 @@ return selectObj;
         this._map=map;
         this.cacheTime= +new Date();
         var canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
-        const canvasCtx=canvas.getContext("2d");
+        var canvasCtx=canvas.getContext("2d");
         this.canvas=canvas;
         this.canvasCtx=canvasCtx;
         this.OnResize();
@@ -4887,7 +4948,7 @@ return selectObj;
           this.fire("drawCanvas");
         }
       },
-      OnDragEnd:function(arg){ 
+      OnDragEnd:function(e){ 
        this._dragOffset = null;
        this.ViewReset();
       },
