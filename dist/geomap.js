@@ -2863,44 +2863,107 @@ return selectObj;
         type: 'image',
         x:0,
         y:0,
+        z:0,
+        left:0,
+        top:0,
+        cacheTime:0,
         lockKey:1,
         tileKey:null,
         tableKey:null,
-    initialize: function(element, options) {
+        image:null,
+        loaded:false,
+        ctx:undefined,
+        tag:0,
+    initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
-         this.setElement(element);
+          this.image=window.document.createElement('img');
+          this._onloadHandle=this.onLoad.bind(this);
+          this.image.onload=this._onloadHandle;
+       //  this.setElement(element);
     },
-    setElement:function(img){
-      this._element=img;
-      this._onloadHandle=this.onLoad.bind(this);
-      this._element.onload=this._onloadHandle;
+    isTile:function(tile){
+      return (tile.x === this.x && tile.y === this.y && tile.z === this.z && tile.cacheTime == this.cacheTime);
     },
-    getElement:function(){
-      if(!this._element){
-        var img=geomap.window.document.createElement('img');
-        this.setElement(img);
+    getTileUrl:function(url,tile){
+      var imgUrl=geomap.util.template(url+ (/\?/.test(url) ? '&' : '?')+"cacheTime={cacheTime}",tile);
+      return imgUrl;
+    },
+    loadTile:function(url,tile){
+      this._setOptions(tile);  
+      var imgSrc=this.getTileUrl(url,tile);
+      if(this.getSrc() === imgSrc){
+          this.drawCanvas();
+        }else{
+          this.setSrc(imgSrc);
+        }
+    },
+    drawCanvas:function(){
+      if(this.loaded && this.ctx !=undefined){
+        this.ctx.drawImage(this.image,this.left,this.top);
+        var other=this;
+        this.fire("drawend",this);
       }
-      return this._element;
     },
+    // setElement:function(img){
+    //   this._element=img;
+    //   this._onloadHandle=this.onLoad.bind(this);
+    //   this._element.onload=this._onloadHandle;
+    // },
+    // getElement:function(){
+    //   if(!this._element){
+    //     var img=geomap.window.document.createElement('img');
+    //     this.setElement(img);
+    //   }
+    //   return this._element;
+    // },
     draw:function(ctx){
-      ctx.drawImage(this._element,this.x,this.y);
+      if(this.loaded){
+        ctx.drawImage(this.image,this.x,this.y);
+        if(this.drawCallback){
+          var other=this;
+          this.drawCallback(other);
+        }
+      }
     },
-    onLoad:function(img,isOk){
-      var other=this;
-        var e={img:img,target:other};
-        this.fire("onload",e);
+    onLoad:function(event){ 
+      this.loaded=true;
+      this.drawCanvas();
+    //   var other=this;
+    //   var img=this.image;
+    //     var e={img:img,target:other};
+        this.fire("onload");
     },
     setSrc:function(url){ 
-      this.getElement().src=url;
+      // if(this.loaded && this.image.src === url){
+      //   this.onLoad(this.image);
+      // }else{
+        this.loaded=false;
+        this.image.src=url;
+      // this.loaded=false;
+      // }
+      //this.getElement().src=url;
     },
-    fromURL:function(url){ 
-      if(this.getElement().src == url)
-      {
-        this.onLoad(this._element);
+    getSrc:function(){
+      return this.image.src;
+    },
+    fromURL:function(url,x,y){
+      if(x!=undefined && y != undefined){
+        this.x=x;
+        this.y=y;
+      } 
+      if(this.loaded && this.image.src === url){
+        this.onLoad(this.image);
       }else{
-        this.setSrc(url);
+        // this.loaded=false;
+        this.image.src=url;
       }
+      // if(this.getElement().src == url)
+      // {
+      //   this.onLoad(this._element);
+      // }else{
+      //   this.setSrc(url);
+      // }
         
     }
 	 
@@ -5039,9 +5102,11 @@ return selectObj;
         cache:true,
         _canvas_map_size:new Point(0,0),
         _mapSize:null,
+        _tiles:{},
        initialize: function( options) {
         this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
+        this._drawCallbackID=this.drawCallback.bind(this);
       }, 
       OnInitLayer:function(){
        
@@ -5095,54 +5160,74 @@ return selectObj;
                 if( x>=0 && y>=0 ){
                     // var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
-                    this.loadTile(c,r,l,t,z,x,y);
+                    // this.loadTile(c,r,l,t,z,x,y);
+                    var tileId="cr-"+c+"-"+r;
+                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId};
+                    if(this._tiles[tileId]){
+                      delete this._tiles[tileId];
+                    }
+                    this._tiles[tileId]=tile;
                 }
           }
         }
-
-
-        this.fire("drawCanvas");
+        this.loadTileSource();
+        // this.fire("drawCanvas");
       },
-      getTileImage:function(cell,row,z,x,y){
+      loadTileSource:function(){
         if(!this._tileImageMap){
-          this._tileImageMap={};
+          this._tileImageMap=[];
         }
-        var tableKey=cell+"-"+row;
-        var tileKey=z+"-"+x+"-"+y;
-        var tileImg=this._tileImageMap[tableKey];
-        // if(!tileImg){
-          tileImg=new geomap.Image(geomap.window.document.createElement("img"));
-          tileImg.tileKey=tileKey;
-          tileImg.tableKey=tableKey;
-          tileImg.on("onload",this._imageLoad.bind(this));
-          this._tileImageMap[tableKey]=tileImg;
-        // }else{
-        //   for(var tkey in this._tileImageMap){
-        //     var tileImgObj=this._tileImageMap[tkey];
-        //     var _tableKey=tileImgObj.tableKey;
-        //     var _tileKey=tileImgObj.tileKey;
-        //     if(_tileKey === tileKey){
-        //       tileImgObj.tableKey=tableKey;
-        //       tileImg.tableKey=_tableKey;
-        //       this._tileImageMap[tableKey]=tileImgObj;
-        //       this._tileImageMap[_tableKey]=tileImg;
-        //       return tileImgObj;
-        //     }
-        //   }
-        // }
-        return tileImg;
+        for(var i=0,k=this._tileImageMap.length;i<k;i++){
+          var img=this._tileImageMap[i];
+            img.tag=0;
+        }
+        //=== 第一次匹配成功
+        this._tileImageMap2=[];
+        for(var tileId in this._tiles){
+          var tile=this._tiles[tileId];
+          for(var i=0,k=this._tileImageMap.length;i<k;i++){
+            var img=this._tileImageMap[i];
+            if(img.isTile(tile)){
+              img.loadTile(this.url,tile,this._drawCallbackID);
+              img.tag=1;
+              tile.tag=1;
+              i=k;
+            }
+          } 
+        }
+        for(var tileId in this._tiles){
+          var tile=this._tiles[tileId];
+        　if(tile.tag==0){
+
+          for(var i=0,k=this._tileImageMap.length;i<k;i++){
+            var img=this._tileImageMap[i];
+              if(img.tag==0){
+                img.on("drawend",this._drawCallbackID);
+                img.loadTile(this.url,tile);
+                img.tag=1;
+                tile.tag=1;
+                i=k;
+              }
+          }
+
+          if(tile.tag==0){
+            var img=new geomap.Image(tile);
+            img.on("drawend",this._drawCallbackID);
+            img.loadTile(this.url,tile);
+            tile.tag=1;
+            img.tag=1;
+            this._tileImageMap.push(img);
+          }
+          }
+        }
       },
-      loadTile:function(cell,row,left,top,z,x,y){
-        var image=this.getTileImage(cell,row,z,x,y);
-        image.tileKey=z+"-"+x+"-"+y;
-          image.x=left,image.y=top;
-        var imgUrl=geomap.util.template(this.url+ (/\?/.test(this.url) ? '&' : '?')+"cacheTime={cacheTime}",{z:z,x:x,y:y,cacheTime:this.cacheTime});
-        image.fromURL(imgUrl);
-      },
-      _imageLoad:function(e){
-        // this.canvasCtx.drawImage(e.img,e.target.x,e.target.y);
-        e.target.draw(this.canvasCtx);
+      drawCallback:function (tileImg){
         this.fire("drawCanvas");
+        var tile=this._tiles[tileImg.tileId];
+        if(tile){
+          delete this._tiles[tileImg.tileId];
+          geomap.debug("###=====delete tileImg="+tileImg.tileId);
+        }
       },
       OriginTileInfo:function(res,min){
         var map=this._map,o=map.origin,tsize=map.tileSize;
