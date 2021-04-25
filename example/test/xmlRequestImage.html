@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script>
+        
+    </head>
+<body onload="winLoad()"  style="margin: 0px; padding:0px;">
+ <img id="mapImg"/>
+ <br>
+ <canvas id="canvasTest" style="width:500px; height:300px;"></canvas>
+ <br>
+ <div id="mapText"></div>
+ <div id="dbText"></div>
+ <script type="text/javascript">
+function winLoad(){
+    var url="https://c.tile.openstreetmap.org/1/0/0.png?cacheTime=1619191877795";
+//     geomap.request(url,{method:"GET",body:"",onComplete:function(xhr){
+//         var body=xhr.response,status=xhr.status; 
+//             geomap.debug("url="+url+",status="+status);
+//             var blob = new Blob([body], {type: 'application/octet-stream'}); 
+//             var url = URL.createObjectURL(blob);
+// document.getElementById("mapImg").src=url;
+//     }});
+
+var canvasImg=document.getElementById("canvasTest");
+var ctx=canvasImg.getContext("2d");
+    var oReq = new XMLHttpRequest();
+        oReq.onload = function(e) {
+        var arraybuffer = oReq.response; // 不是 responseText ！
+        /* ... */
+        var blob = new Blob([arraybuffer], {type: 'application/octet-stream'}); 
+            var url = URL.createObjectURL(blob);
+            document.getElementById("mapImg").src=url;
+            ctx.drawImage(blob,0,0);
+            // var text = await (new Response(blob)).text();
+            document.getElementById("mapText").innerText=blob.text();
+        }
+        oReq.open("GET", url);
+        oReq.responseType = "arraybuffer";
+        oReq.send();
+        testDB();
+ }  
+
+ function dbopt(){
+
+    var note=document.getElementById("dbText");
+        var DBOpenRequest = window.indexedDB.open("toDoList", 4);
+        DBOpenRequest.onerror = function(event) {
+            note.innerHTML += '<li>Error loading database.</li>';
+            };
+
+    DBOpenRequest.onsuccess = function(event) {
+    note.innerHTML += '<li>Database initialised.</li>';
+
+    // store the result of opening the database in the db variable. This is used a lot later on, for opening transactions and suchlike.
+    var db = DBOpenRequest.result;
+    var trans1 = db.transaction("toDoList", "readwrite");
+    var objectStore1 = trans1.objectStore("toDoList")
+        objectStore1.put("1", "key");
+        objectStore1.add("1", "key");
+        objectStore1.onsuccess = function(event) {
+            // report the success of our new item going into the database
+            note.innerHTML += '<li>New item added to database.</li>';
+        };
+    };
+ }
+
+ function testDB(){
+    var note=document.getElementById("dbText");
+    var DBOpenRequest = window.indexedDB.open("toDoList", 4);
+
+DBOpenRequest.onsuccess = function(event) {
+  note.innerHTML += '<li>Database initialised.</li>';
+
+  // store the result of opening the database in the db variable. This is used a lot below
+  db = DBOpenRequest.result;
+
+  // Run the addData() function to add the data to the database
+  addData();
+};
+
+function addData() {
+  // Create a new object ready for being inserted into the IDB
+  var newItem = [ { taskTitle: "Walk dog", hours: 19, minutes: 30, day: 24, month: "December", year: 2013, notified: "no" } ];
+
+  // open a read/write db transaction, ready for adding the data
+  var transaction = db.transaction(["toDoList"], "readwrite");
+
+  // report on the success of opening the transaction
+  transaction.oncomplete = function(event) {
+    note.innerHTML += '<li>Transaction completed: database modification finished.</li>';
+  };
+
+
+  transaction.onerror = function(event) {
+  note.innerHTML += '<li>Transaction not opened due to error. Duplicate items not allowed.</li>';
+  };
+
+  // create an object store on the transaction
+  var objectStore = transaction.objectStore("toDoList");
+
+  // add our newItem object to the object store
+  var objectStoreRequest = objectStore.add(newItem[0]);
+
+  objectStoreRequest.onsuccess = function(event) {
+    // report the success of our new item going into the database
+    note.innerHTML += '<li>New item added to database.</li>';
+  };
+};
+ }
+</script>   
+</body>
+</html>
