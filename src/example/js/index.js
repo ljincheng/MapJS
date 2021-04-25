@@ -173,14 +173,14 @@ else if (typeof define === 'function' && define.amd) {
             var mapId=myself.mapId;
              
             var formTemplate=myself.conf.forms;
-             var tplObj=geomap.util.element.tplToFormHtml(formTemplate,"车位");
+             var tplObj=geomap.element.tplToFormHtml(formTemplate,"车位");
              var formId= ""+ new Date();
              var closeFrameCallback=function(event,self) {
                  this.paletteLayer.clearGeometry();
              }.bind(this);
              var parkingAddUrl=this.getParkingAddUrl(mapId);
              var okFrameCallback=function(event,self) {
-                var obj=geomap.util.element.formToJson(document.getElementById(this.formId));
+                var obj=geomap.element.formToJson(document.getElementById(this.formId));
                 var geomText=this.geometry;
                 this.other.parkingRequestCallback.call(this.other,geomText,obj,self);
              }.bind({other:myself,geometry:geometry.getText(),formId:formId,url:parkingAddUrl});

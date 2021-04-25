@@ -145,6 +145,7 @@
         this.fire("drawCanvas");
         var tile=this._tiles[tileImg.tileId];
         if(tile){
+          this._tiles[tileImg.tileId]=null;
           delete this._tiles[tileImg.tileId];
           geomap.debug("###=====delete tileImg="+tileImg.tileId);
         }

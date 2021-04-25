@@ -63,9 +63,5 @@
      */
     get: function(property) {
       return this[property];
-    },
-
-    getOptions:function(){
-        return this;
     }
   };

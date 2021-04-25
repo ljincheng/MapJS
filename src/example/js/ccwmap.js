@@ -73,7 +73,7 @@ else if (typeof define === 'function' && define.amd) {
             if( this.projectMap &&  this.projectMap.length > index){
                 var mapInfo=  this.projectMap[index];
                 this.loadMapInfo(mapInfo);
-                this._map.fire("map_chage",mapInfo);
+                this._map.fire("projectmap_change",mapInfo);
             } 
         },
         loadMapInfo: function(mapInfo){
@@ -172,22 +172,32 @@ else if (typeof define === 'function' && define.amd) {
             }
             var mapId=myself.mapId;
              
-            var formTemplate=myself.conf.forms;
-             var tplObj=geomap.util.element.tplToFormHtml(formTemplate,"车位");
-             var formId= ""+ new Date();
+            var bodyForm=myself.conf.forms[0];
+             var formId= bodyForm.id;
+            //  if(!bodyForm.buttons){
              var closeFrameCallback=function(event,self) {
                  this.paletteLayer.clearGeometry();
              }.bind(this);
              var parkingAddUrl=this.getParkingAddUrl(mapId);
              var okFrameCallback=function(event,self) {
-                var obj=geomap.util.element.formToJson(document.getElementById(this.formId));
+                var obj=geomap.element.formToJson(document.getElementById(this.formId));
                 var geomText=this.geometry;
                 this.other.parkingRequestCallback.call(this.other,geomText,obj,self);
+                this.other.paletteLayer.clearGeometry();
              }.bind({other:myself,geometry:geometry.getText(),formId:formId,url:parkingAddUrl});
-             var body="<form id='"+formId+"'>"+tplObj.html;
-            //  body+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;'>&nbsp;</span><input  type='button' class='btn' value='确定' onclick='addParkingGeom(\""+formId+"\")' /></form>"
-             var frameObj=map.frameLayer.open({title:tplObj.form.name,body:body,offset:"rb",closeCallback:closeFrameCallback,okBtn:true,okCallback:okFrameCallback});
-         //    window._addParkingGeometry.push({formId:formId,geometry:geometry.getText(),frameObj:frameObj});
+
+             bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:okFrameCallback}];
+            // }
+
+             window.FRAMES = window.FRAMES ||{};
+
+            if(window.FRAMES.editGeomFrame){
+                window.FRAMES.editGeomFrame.setData("表单信息设置",bodyForm,{w:400,h:250});
+                window.FRAMES.editGeomFrame.show();
+            }else{
+                window.FRAMES.editGeomFrame=new geomap.FrameLayer(document.body,{title:"表单信息设置", body:bodyForm,w:400,h:250,closeType:2,pos:"rc"});
+                window.FRAMES.editGeomFrame.on("close",closeFrameCallback);
+            }
 
         },
         parkingRequestCallback:function(geomText,properties,self){
@@ -209,7 +219,8 @@ else if (typeof define === 'function' && define.amd) {
                         // this.paletteLayer.clearGeometry();
                         this.parkingLayer.refreshCache();
                        // editGeom.frameObj.fire("close");
-                       self.closeFn();
+                    //    self.closeFn();
+                    window.FRAMES.editGeomFrame.hide();
                         // geomap.closeFrame(editGeom.frameObj);
                     }
                 }

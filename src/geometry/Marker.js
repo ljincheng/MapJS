@@ -23,9 +23,9 @@
         } 
         this._setOptions(options); 
         this._type=0;
-        var canvas=geomap.util.element.create("canvas");
+        var canvas=geomap.element.create("canvas");
         var ctx=canvas.getContext("2d");
-        geomap.util.element.createHiDPICanvas(canvas,this.width,this.height,this.ratio);
+        geomap.element.createHiDPICanvas(canvas,this.width,this.height,this.ratio);
         this.canvas=canvas;
         this.ctx=ctx;
         this.point=new Point(100,100);

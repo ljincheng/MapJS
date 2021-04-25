@@ -4,40 +4,16 @@
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="../../dist/geomap.js"></script>
-        <!-- <script type="text/javascript" src="../HEADER.js"></script>
-        <script type="text/javascript" src="../globalGeomap.js"></script>
-        <script type="text/javascript" src="../lib/event.js"></script>
-        <script type="text/javascript" src="../core/Observable.js"></script>
-        <script type="text/javascript" src="../core/util.js"></script>
-        <script type="text/javascript" src="../core/CommonMethods.js"></script>
-        <script type="text/javascript" src="../core/util_object.js"></script>
-        <script type="text/javascript" src="../core/util_element.js"></script>
-        <script type="text/javascript" src="../core/util_event.js"></script>
-        <script type="text/javascript" src="../core/Class.js"></script>
-        <script type="text/javascript" src="../core/Animation.js"></script>
-        <script type="text/javascript" src="../core/Image.js"></script>
-        <script type="text/javascript" src="../core/Request.js"></script>
-        <script type="text/javascript" src="../geo/Point.js"></script>
-        <script type="text/javascript" src="../geo/Transformtion.js"></script>
-        <script type="text/javascript" src="../event/Event.js"></script>
-        <script type="text/javascript" src="../geo/Bounds.js"></script>
-        <script type="text/javascript" src="../geo/Model.js"></script>
-        <script type="text/javascript" src="../geo/Caliper.js"></script>
-        <script type="text/javascript" src="../geo/MapEvent.js"></script>
-        <script type="text/javascript" src="../geo/MapRectSelect.js"></script>
-        <script type="text/javascript" src="../geo/layer/FrameLayer.js"></script>
-        <script type="text/javascript" src="../geo/Map.js"></script>
-        
-        <script type="text/javascript" src="../geometry/Geometry.js"></script>
-        <script type="text/javascript" src="../geometry/Path.js"></script>
-        <script type="text/javascript" src="../geometry/Polygon.js"></script>
-        <script type="text/javascript" src="../geometry/Marker.js"></script>
-        <script type="text/javascript" src="../geo/Layer.js"></script>
-        <script type="text/javascript" src="../geo/layer/TileLayer.js"></script>
-        <script type="text/javascript" src="../geo/layer/VectorLayer.js"></script>
-        <script type="text/javascript" src="../geo/layer/PaletteLayer.js"></script> -->
-        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript" src="js/ccwmap.js"></script>
         <style>
+            body {
+font-size: 12px;
+overflow: hidden;
+            }
+            .headBar{
+                font-size: 14px;
+                font-weight: bold;
+            }
             .infoTable{
                  border: 1px solid #2196f3;font-size:12px;width:100%;
             }
@@ -46,33 +22,32 @@
                 background-color: #101010c7; font-size:12px;
                 color:#fff;
             }
-            #editInfoPane{
-                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
-                background-color: #101010c7; 
-                color:#fff;
-                overflow: scroll;
-            }
-            #editInfoPane .closeBtn{
-                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
-            }
             .iconBtn{
-                margin: 0 10px;
+                margin-left: 10px;
                 cursor: pointer;
             }
+            .btn{
+                background-color: #3992ff; /* Green */
+                /* border-radius: 6px; */
+                border: none;
+                color: white;
+                padding:4px 16px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 14px;
+            }
+          
         </style>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
     <div id="toolPane"  >
    
     <a onclick="tool_show_referenceLine()" class="iconBtn">参考线</a>
-    <a onclick="frame_show()" class="iconBtn">消息框</a>
     <span id="toolContainer"></span>
     </div>
    
-    <div id="editInfoPane">
-    <div class="closeBtn"><a onclick="editContentPane_close()" id="editWinBtn">隐藏</a></div>
-    <div id="editMain"></div>
-    </div>
+ 
 <div id="mapPane" style="z-index:1;border:0px solid blue;"></div>
  
  <script type="text/javascript">
@@ -97,30 +72,53 @@ var szPoint=[114.02262568473816,11.574944257736206];
            parkingAdd:"http://master.cn/apps/wms/parking/add/{mapId}",
            parkingQuery:"http://master.cn/apps/wms/parking/query/{mapId}",
            parkingDelete:"http://master.cn/apps/wms/parking/delete/{mapId}",
-           forms:[{name:"车位",properties:[{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+           forms:[{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
+                ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
                 ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
                 ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-                ,{id:"sale_status",type:"radio",title:"销售状态",value:"",option:{"1":"已售","2":"未售"},required:true}
+                ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
+                
             ]}],
-           code:{ok:1,fail:0},
+           code:{ok:0,fail:1},
        };
-    map=CCWMAP.Map.create("mapPane",ccw_config,"example");
+    //    var ccw_config={ 
+    //        project:"http://master.cn/ccw/wms/map/project/{mapId}",
+    //        tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
+    //        parkingAdd:"http://master.cn/ccw/wms/building/add/{mapId}",
+    //        parkingQuery:"http://master.cn/ccw/wms/building/queryParking/{mapId}?saleStatus=1",
+    //        parkingDelete:"http://master.cn/ccw/wms/building/delete/{mapId}",
+    //        forms:[{name:"车位",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}
+    //             ,{id:"project_id",type:"text",title:"项目ID",value:"",required:false}
+    //             ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+    //         ]}],
+    //        code:{ok:0,fail:1},
+    //    };
+       var mapId=geomap.util.getUrlParam("mapId");
+       var layer=geomap.util.getUrlParam("layer");
+       var saleStatus=geomap.util.getUrlParam("saleStatus");
+       console.log("====mapId:"+mapId);
+       if(mapId===''){
+           mapId="example";
+       }
+       if(layer=== 'building' || layer === 'building2'){
+            ccw_config.parkingAdd="http://master.cn/ccw/wms/building/add/{mapId}";
+            ccw_config.parkingQuery="http://master.cn/ccw/wms/building/query/{mapId}?saleStatus="+saleStatus;
+            ccw_config.parkingDelete="http://master.cn/ccw/wms/building/delete/{mapId}";
+            ccw_config.forms=[{name:"车位",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}
+                ,{id:"project_id",type:"text",title:"项目ID",value:"",required:false}
+                ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+            ]}];
+            if(layer === 'building2'){
+                ccw_config.parkingQuery="http://master.cn/ccw/wms/building/queryParking/{mapId}?saleStatus="+saleStatus;
+            }
+       } 
+    map=CCWMAP.Map.create("mapPane",ccw_config,mapId);
     map.on("map_complete",projectMapDataChange);
+    map.on("projectmap_change",projectMapChange)
     map.on("coord_query_change",function(featureCollection){
-              setEditContent(featureCollection);
-              editContentPane_show();
-                   
+              setEditContent(featureCollection);  
     });
-    // map=CCWMAP.Map.create("mapPane","example2");
-     
-    // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
-    // eventjs.add(mapPane, 'touchmove', eventjs.prevent);
-    // /// Prevent right-click on desktops.
-    // eventjs.add(mapPane, 'contextmenu', eventjs.prevent);
-    // /// Prevent elastic scrolling.
-    // eventjs.add(mapPane, 'touchstart', eventjs.prevent);
-
-    // CCWMAP.Map.create(mapPane,"T20210308-001");
+ 
  }
 
  function winResize(){
@@ -136,26 +134,10 @@ var szPoint=[114.02262568473816,11.574944257736206];
 function tool_show_referenceLine(){
     map.project.paletteLayer.toggleReferenceLine();
 }
-
-function editContentPane_close(){
-    var editPaneObj=window.document.getElementById("editInfoPane");
-    var mw = editPaneObj.clientWidth;
-    var closeRightPos= "-"+mw+"px";
-    if(editPaneObj.style.right == closeRightPos){
-        editPaneObj.style.right=0+"px";
-    }else{
-        editPaneObj.style.right=closeRightPos;
-    }
-   
-    console.log("mv="+mw);
-}
-function editContentPane_show(){
-    var editPane=document.getElementById("editInfoPane");
-        editPane.style.right=0+"px";
-}
+ 
 
 function setEditContent(featureData){ 
-            var rows=[];
+            var rows=[],html="";
     if(featureData.type=="FeatureCollection"){
             var geomNum=featureData.features.length;
             for(var i=0;i<geomNum;i++){
@@ -181,7 +163,7 @@ function setEditContent(featureData){
             rows.push(properties);
         }
         if(rows.length>0){
-            var html="<table class=\"infoTable\">";
+              html="<table class=\"infoTable\">";
             var header="<tr>";
             for(var item in rows[0]){
                 header+="<th>"+item+"</th>";
@@ -193,21 +175,33 @@ function setEditContent(featureData){
                 for(var item in rows[i]){
                     rowHtml+="<td>"+rows[i][item]+"</td>";
                 }
-                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].id+"')\">删除</a></td>";
+                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].parking_id+"')\">删除</a></td>";
                 rowHtml+"</tr>";
                 html+=rowHtml;
             }
-            html+="</table>"; 
-            document.getElementById("editMain").innerHTML=html;
-        } else{
-            document.getElementById("editMain").innerHTML="";
+            html+="</table>";  
+        } 
+        if(window.infoFrame){
+            window.infoFrame.setData("记录信息",html,{w:500,h:400});
+            window.infoFrame.show();
+        }else{
+            window.infoFrame=new geomap.FrameLayer(document.body,{title:"记录信息",body:html,w:500,h:400,closeType:2});
         }
+        
 }
 
 function deleteFeature(fid){
     console.log("fid="+fid);
     map.project.deleteFeature(fid);
   
+}
+
+function projectMapChange(){
+    map.project.paletteLayer.clearGeometry()
+    map.project.vectorLayer.clearData();
+    if(window.infoFrame){
+            window.infoFrame.hide();
+    }
 }
 
 function projectMapDataChange(map){
@@ -222,10 +216,6 @@ function projectMapDataChange(map){
     }
     document.getElementById("toolContainer").innerHTML=mapsHtml;
 
-}
-function frame_show(){
-    map.frameLayer.open({title:"Test",body:"你好：<input type='text' value=''/>"});
-}
+} 
 </script>   
-</body>
 </html>

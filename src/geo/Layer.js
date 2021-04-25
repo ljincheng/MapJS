@@ -32,7 +32,7 @@
         this._drawLock=1;
         this._map=map;
         this.cacheTime= +new Date();
-        var canvas=geomap.util.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
+        var canvas=geomap.element.create("canvas",{},{zIndex:2,border:"1px solid blue",backgroundColor:"#e4e4e4",position:"absolute",top:"0px"});
         var canvasCtx=canvas.getContext("2d");
         this.canvas=canvas;
         this.canvasCtx=canvasCtx;
@@ -144,7 +144,7 @@
         options || (options = { }); 
         this._setOptions(options);
       },
-      drawingCanvas:function(ctx){
+      drawingCanvas:function(ctx,opt){
         
         var map=this._map,zeroP=new Point(0,0),
         size=this.getCanavsSize(),

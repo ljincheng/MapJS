@@ -91,7 +91,6 @@ var filesToInclude = [
     'src/geo/Point.js',
     'src/geo/Transformtion.js',
     'src/event/Event.js',
-    //-----
    'src/geo/Bounds.js',
     'src/geo/Model.js',
     'src/geo/Caliper.js',
@@ -135,13 +134,9 @@ var filesToInclude = [
         }
         console.log('Minified using', minifier, 'to ' + distributionPath + 'geomap.min.js');
 
-        // if (sourceMapFlags) {
-        //   console.log('Built sourceMap to ' + distributionPath + 'geomap.min.js.map');
-        // }
-
-        exec('gzip -c geomap.min.js > geomap.min.js.gz', function (error, output) {
-          console.log('Gzipped to ' + distributionPath + 'geomap.min.js.gz');
-        });
+        // exec('gzip -c geomap.min.js > geomap.min.js.gz', function (error, output) {
+        //   console.log('Gzipped to ' + distributionPath + 'geomap.min.js.gz');
+        // });
       });
 
     });

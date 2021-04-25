@@ -6,6 +6,14 @@
         <script type="text/javascript" src="../../dist/geomap.js"></script>
         <script type="text/javascript" src="js/ccwmap.js"></script>
         <style>
+            body {
+font-size: 12px;
+overflow: hidden;
+            }
+            .headBar{
+                font-size: 14px;
+                font-weight: bold;
+            }
             .infoTable{
                  border: 1px solid #2196f3;font-size:12px;width:100%;
             }
@@ -14,33 +22,32 @@
                 background-color: #101010c7; font-size:12px;
                 color:#fff;
             }
-            #editInfoPane{
-                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
-                background-color: #101010c7; 
-                color:#fff;
-                overflow: scroll;
-            }
-            #editInfoPane .closeBtn{
-                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
-            }
             .iconBtn{
-                margin: 0 10px;
+                margin-left: 10px;
                 cursor: pointer;
             }
+            .btn{
+                background-color: #3992ff; /* Green */
+                /* border-radius: 6px; */
+                border: none;
+                color: white;
+                padding:4px 16px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 14px;
+            }
+          
         </style>
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
     <div id="toolPane"  >
    
     <a onclick="tool_show_referenceLine()" class="iconBtn">参考线</a>
-    <a onclick="frame_show()" class="iconBtn">消息框</a>
     <span id="toolContainer"></span>
     </div>
    
-    <div id="editInfoPane">
-    <div class="closeBtn"><a onclick="editContentPane_close()" id="editWinBtn">隐藏</a></div>
-    <div id="editMain"></div>
-    </div>
+ 
 <div id="mapPane" style="z-index:1;border:0px solid blue;"></div>
  
  <script type="text/javascript">
@@ -65,11 +72,12 @@ var szPoint=[114.02262568473816,11.574944257736206];
            parkingAdd:"http://master.cn/ccw/wms/parking/add/{mapId}",
            parkingQuery:"http://master.cn/ccw/wms/parking/query/{mapId}",
            parkingDelete:"http://master.cn/ccw/wms/parking/delete/{mapId}",
-           forms:[{name:"车位",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
+           forms:[{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
                 ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
                 ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
                 ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-                ,{id:"sale_status",type:"radio",title:"销售状态",value:"",option:{"1":"已售","2":"未售"},required:true}
+                ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
+                
             ]}],
            code:{ok:0,fail:1},
        };
@@ -106,21 +114,11 @@ var szPoint=[114.02262568473816,11.574944257736206];
        } 
     map=CCWMAP.Map.create("mapPane",ccw_config,mapId);
     map.on("map_complete",projectMapDataChange);
+    map.on("projectmap_change",projectMapChange)
     map.on("coord_query_change",function(featureCollection){
-              setEditContent(featureCollection);
-              editContentPane_show();
-                   
+              setEditContent(featureCollection);  
     });
-    // map=CCWMAP.Map.create("mapPane","example2");
-     
-    // map.moveTo(new geomap.Point(114.02262568473816,-11.574944257736206),15);
-    // eventjs.add(mapPane, 'touchmove', eventjs.prevent);
-    // /// Prevent right-click on desktops.
-    // eventjs.add(mapPane, 'contextmenu', eventjs.prevent);
-    // /// Prevent elastic scrolling.
-    // eventjs.add(mapPane, 'touchstart', eventjs.prevent);
-
-    // CCWMAP.Map.create(mapPane,"T20210308-001");
+ 
  }
 
  function winResize(){
@@ -136,26 +134,10 @@ var szPoint=[114.02262568473816,11.574944257736206];
 function tool_show_referenceLine(){
     map.project.paletteLayer.toggleReferenceLine();
 }
-
-function editContentPane_close(){
-    var editPaneObj=window.document.getElementById("editInfoPane");
-    var mw = editPaneObj.clientWidth;
-    var closeRightPos= "-"+mw+"px";
-    if(editPaneObj.style.right == closeRightPos){
-        editPaneObj.style.right=0+"px";
-    }else{
-        editPaneObj.style.right=closeRightPos;
-    }
-   
-    console.log("mv="+mw);
-}
-function editContentPane_show(){
-    var editPane=document.getElementById("editInfoPane");
-        editPane.style.right=0+"px";
-}
+ 
 
 function setEditContent(featureData){ 
-            var rows=[];
+            var rows=[],html="";
     if(featureData.type=="FeatureCollection"){
             var geomNum=featureData.features.length;
             for(var i=0;i<geomNum;i++){
@@ -181,7 +163,7 @@ function setEditContent(featureData){
             rows.push(properties);
         }
         if(rows.length>0){
-            var html="<table class=\"infoTable\">";
+              html="<table class=\"infoTable\">";
             var header="<tr>";
             for(var item in rows[0]){
                 header+="<th>"+item+"</th>";
@@ -197,17 +179,29 @@ function setEditContent(featureData){
                 rowHtml+"</tr>";
                 html+=rowHtml;
             }
-            html+="</table>"; 
-            document.getElementById("editMain").innerHTML=html;
-        } else{
-            document.getElementById("editMain").innerHTML="";
+            html+="</table>";  
+        } 
+        if(window.infoFrame){
+            window.infoFrame.setData("记录信息",html,{w:500,h:400});
+            window.infoFrame.show();
+        }else{
+            window.infoFrame=new geomap.FrameLayer(document.body,{title:"记录信息",body:html,w:500,h:400,closeType:2});
         }
+        
 }
 
 function deleteFeature(fid){
     console.log("fid="+fid);
     map.project.deleteFeature(fid);
   
+}
+
+function projectMapChange(){
+    map.project.paletteLayer.clearGeometry()
+    map.project.vectorLayer.clearData();
+    if(window.infoFrame){
+            window.infoFrame.hide();
+    }
 }
 
 function projectMapDataChange(map){
@@ -222,10 +216,7 @@ function projectMapDataChange(map){
     }
     document.getElementById("toolContainer").innerHTML=mapsHtml;
 
-}
-function frame_show(){
-    map.frameLayer.open({title:"Test",body:"你好：<input type='text' value=''/>"});
-}
+} 
 </script>   
 </body>
 </html>

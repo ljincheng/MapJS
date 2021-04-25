@@ -173,7 +173,7 @@ return selectObj;
 
 }
 
-    geomap.util.element = {
+    geomap.element = {
       create: create,
       setStyle: setStyle,
       setOptions:setOptions,

@@ -57,7 +57,6 @@
         // this._element = element;
         this._container=container;
         this._initElement();
-        this.InitFrameLayer();
        // this._drawlayer();
         this.on("drawmap",this.OnDrawMap.bind(this));
         this.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
@@ -80,9 +79,9 @@
         // this._container.style.height=this.height+"px";
         var size=this.getSize();
         var width=size.x,height=size.y;
-        var el_canvas=geomap.util.element.create("canvas",{id:"_map_canvas",width:width,height:height},{zIndex:2,border:"0px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
-        geomap.util.element.createHiDPICanvas(el_canvas,width,height,this.canvasRatio);
-        var bgCanvas=geomap.util.element.create("canvas",{width:width,height:height},{backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
+        var el_canvas=geomap.element.create("canvas",{id:"_map_canvas",width:width,height:height},{zIndex:2,border:"0px solid red",backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
+        geomap.element.createHiDPICanvas(el_canvas,width,height,this.canvasRatio);
+        var bgCanvas=geomap.element.create("canvas",{width:width,height:height},{backgroundColor:"#e4e4e4",position:"absolute",width:width+"px",height:height+"px"});
         this.bgCanvas=bgCanvas;
         this.bgCanvasCtx=bgCanvas.getContext("2d");
         this._container.appendChild(el_canvas);
@@ -126,16 +125,6 @@
           var arg={event:event,point:point};
           this.fire("mouseup",arg);
         }.bind(this));
-      },
-      InitFrameLayer:function(){
-        var frameRoot=document.createElement("div");
-        var size=this.getSize();
-        var styles={position:"absolute",zIndex:1000,left:"0px",top:"0px"};
-        for(var item in styles){
-          frameRoot.style[item]=styles[item];
-        } 
-        this.frameLayer=new geomap.FrameLayer(frameRoot,{map:this});
-        this._container.appendChild(frameRoot);
       },
       _limitZoom:function(z){
         if(this.maxZoom<z){
@@ -269,8 +258,8 @@
         //  this.canvas.height=size.y;
         //  this.canvas.style.width=size.x+"px";
         //  this.canvas.style.height=size.y+"px";
-         geomap.util.element.createHiDPICanvas(this.canvas,size.x,size.y,this.canvasRatio);
-         geomap.util.element.createHiDPICanvas(this.bgCanvas,size.x,size.y,this.canvasRatio);
+         geomap.element.createHiDPICanvas(this.canvas,size.x,size.y,this.canvasRatio);
+         geomap.element.createHiDPICanvas(this.bgCanvas,size.x,size.y,this.canvasRatio);
          this._boundsChanged=true;
          this._redrawing=true;
          this.fire("resize");
