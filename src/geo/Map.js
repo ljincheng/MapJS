@@ -3,13 +3,7 @@
 (function(global) {
 
     'use strict';
-  
-    
-    var Util=geomap.util;
-    var extend = Util.object.extend;
-    var Point=geomap.Point;
-    var toPoint=geomap.util.toPoint;
-  
+   
     if (!global.geomap) {
       global.geomap = { };
     }
@@ -19,6 +13,12 @@
       return;
     }
    
+    
+    var Util=geomap.util;
+    var extend = Util.object.extend;
+    var Point=geomap.Point;
+    var toPoint=geomap.util.toPoint;
+ 
     geomap.Map = geomap.Class(geomap.CommonMethods, geomap.Observable, geomap.Model,
       geomap.MapEvent, geomap.Caliper,geomap.MapRectSelect, {
       type: 'object',
@@ -41,7 +41,6 @@
       model:undefined,
       loopTime:40,
       canvasRatio:1,
-      frameLayer:null,
       initialize: function(container, options) {
         options || (options = { });  
         this._setOptions(options);  

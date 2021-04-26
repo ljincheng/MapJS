@@ -68,6 +68,10 @@
         var top=startTile.top;
   
         this._drawLock=lock; 
+        for(var key in this._tiles){
+          this._tiles[key]=null;
+        }
+        this._tiles={};
         this.canvasCtx.clearRect(0,0,canvasSize.x,canvasSize.y);
         // for(var c=-cells,k=cells*2;c<k;c++){
           // for(var r=-rows,k2=rows*2;r<k2;r++){
@@ -84,6 +88,7 @@
                     var tileId="cr-"+c+"-"+r;
                     var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId};
                     if(this._tiles[tileId]){
+                      this._tiles[tileId]=null;
                       delete this._tiles[tileId];
                     }
                     this._tiles[tileId]=tile;
@@ -147,7 +152,7 @@
         if(tile){
           this._tiles[tileImg.tileId]=null;
           delete this._tiles[tileImg.tileId];
-          geomap.debug("###=====delete tileImg="+tileImg.tileId);
+          //geomap.debug("###=====delete tileImg="+tileImg.tileId);
         }
       },
       OriginTileInfo:function(res,min){

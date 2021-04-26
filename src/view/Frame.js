@@ -4,7 +4,7 @@
     var extend = geomap.util.object.extend;
     var Point =geomap.Point;
     
-    geomap.FrameLayer= geomap.Class(geomap.CommonMethods, geomap.Observable,  {
+    geomap.view.Frame= geomap.Class(geomap.CommonMethods, geomap.Observable,  {
       type: 'BaseFrame',
       container:undefined,
       headBar:undefined,
@@ -28,7 +28,7 @@
       showBody:true,
       canHeadDblClick:true,
       boxShadow:"2px 2px 4px #888888",
-      background:"rgba(255,255,255,0.9)",
+      background:"rgba(255,255,255,0.97)",
       closeIcon:'<svg t="1619335973042" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1119" width="20" height="20"><path d="M391.68 667.306667a34.133333 34.133333 0 0 1-24.132267-58.2656L464.571733 512l-97.024-97.041067a34.133333 34.133333 0 1 1 48.264534-48.264533l97.041066 97.041067 96.187734-96.170667a34.133333 34.133333 0 1 1 48.264533 48.264533l-96.1024 96.1024 96.017067 95.3344a34.133333 34.133333 0 1 1-48.093867 48.4352l-96.187733-95.505066-97.109334 97.109333c-6.673067 6.656-15.4112 10.001067-24.149333 10.001067z" p-id="1120"></path></svg>',
       initialize: function(container,options) {
         options || (options = { }); 
@@ -204,8 +204,8 @@
           this.bodyBar.innerHTML=this.body;
         }else{
           this.bodyBar.innerHTML="";
-          this.bodyBar.appendChild(body);
-          //this.setFormJson(this.body);
+          this.bodyBar.appendChild(this.body);
+          // this.setFormJson(this.body);
         }
       
         if(this._loadBody){
@@ -213,112 +213,6 @@
         } 
         this._loadBody=true;
         return this;
-      },
-      jsonToForm:function(form){
-        var formId=form.id || ("form_"+ new Date());
-        var root=geomap.element.create("form",{"id":formId},{"marginTop":"10px"});
-        if(form.properties){
-          // var form=formObj.form;
-          var rowStyle={"height":"30px"};
-          for(var j=0,jn=form.properties.length;j<jn;j++){
-            var pro=form.properties[j];
-            if(pro.type === "text"){
-              var div=geomap.element.create("div",{},rowStyle);
-              var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-              layer.innerText=pro.title;
-              var input=geomap.element.create("input",{"type":"text","name":pro.id});
-              input.value=pro.value;
-              div.appendChild(layer);
-              div.appendChild(input);
-              root.appendChild(div);
-            }else if(pro.type === 'hidden'){
-              var input=geomap.element.create("input",{"type":"hidden","name":pro.id});
-              input.value=pro.value;
-              root.appendChild(input);
-            }else if(pro.type === 'radio' || pro.type==='checkbox'){
-              var div=geomap.element.create("div",{},rowStyle);
-              var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-              layer.innerText=pro.title;
-              div.appendChild(layer);
-              for(var option in pro.option){
-                  var label=geomap.element.create("label");
-                  var radio=geomap.element.create("input",{"type":pro.type,"name":pro.id});
-                  radio.value=option;
-                  var labelTxt=geomap.element.create("a");
-                  labelTxt.innerText=pro.option[option];
-                  label.appendChild(radio);
-                  label.appendChild(labelTxt);
-                  div.appendChild(label);
-                if(pro.value === option){
-                  radio.checked=true;
-                } 
-              }
-              root.appendChild(div); 
-            }else if(pro.type==='select'){
-              var div=geomap.element.create("div",{},rowStyle);
-              var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-              layer.innerText=pro.title;
-              var selectObj=geomap.element.create("select",{"name":pro.id});
-              for(var option in pro.option){
-                  var selOpt=geomap.element.create("option",{"type":'checkbox',"name":pro.id});
-                  selOpt.value=option;
-                  selOpt.innerText=pro.option[option]; 
-                  selectObj.appendChild(selOpt); 
-                if(pro.value === pro.option[option]){
-                  radio.selected=true;
-                } 
-              }
-              div.appendChild(layer);
-              div.appendChild(selectObj);
-              root.appendChild(div); 
-            }else if(pro.type === 'button'){
-              var div=geomap.element.create("div",{},rowStyle);
-              var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-              layer.innerHTML="&nbsp;";
-              div.appendChild(layer);
-              var btn=geomap.element.create("input",{"type":"button","className":"btn","name":pro.id});
-              btn.value=pro.value;
-              div.appendChild(btn);
-              root.appendChild(div);
-              if(pro.click){
-                eventjs.add(btn,"click",pro.click);
-              }
-            }else if(pro.type === 'buttons'){
-              var div=geomap.element.create("div",{},rowStyle);
-              var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-              layer.innerHTML="&nbsp;";
-              div.appendChild(layer);
-              for(var i=0,k=pro.group.length;i<k;i++){
-                var groupBtn=pro.group[i];
-                var btn=geomap.element.create("input",{"type":"button","className":"btn","name":groupBtn.id});
-                btn.value=groupBtn.value;
-                div.appendChild(btn);
-                if(groupBtn.click){
-                  eventjs.add(btn,"click",groupBtn.click);
-                }
-              }
-              root.appendChild(div);
-            }
-          }
-        }
-        if(form.buttons){
-          var div=geomap.element.create("div",{},rowStyle);
-          var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
-          layer.innerHTML="&nbsp;";
-          div.appendChild(layer);
-          for(var i=0,k=form.buttons.length;i<k;i++){
-            var groupBtn=form.buttons[i];
-            var btn=geomap.element.create("input",{"type":"button","className":"btn","name":groupBtn.id});
-            btn.value=groupBtn.value;
-            div.appendChild(btn);
-            if(groupBtn.click){
-              eventjs.add(btn,"click",groupBtn.click);
-            }
-          }
-          root.appendChild(div); 
-        }
-        // this.bodyBar.appendChild(root);
-        return root;
       },
       setData:function(title,body,options){
         this.setTitle(title);this.setBody(body);
@@ -368,6 +262,7 @@
       }
       
     });
-    
+   
+  
   })();
   

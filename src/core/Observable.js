@@ -14,13 +14,13 @@
         eventListener[eventListener.indexOf(handler)] = false;
       }
       else {
-        fabric.util.array.fill(eventListener, false);
+        geomap.util.array.fill(eventListener, false);
       }
     }
   
     /**
      * Observes specified event
-     * @memberOf fabric.Observable
+     * @memberOf geomap.Observable
      * @alias on
      * @param {String|Object} eventName Event name (eg. 'after:render') or object with key/value pairs (eg. {'after:render': handler, 'selection:cleared': handler})
      * @param {Function} handler Function that receives a notification when an event of the specified type occurs
@@ -49,7 +49,7 @@
     /**
      * Stops event observing for a particular event handler. Calling this method
      * without arguments removes all handlers for all events
-     * @memberOf fabric.Observable
+     * @memberOf geomap.Observable
      * @alias off
      * @param {String|Object} eventName Event name (eg. 'after:render') or object with key/value pairs (eg. {'after:render': handler, 'selection:cleared': handler})
      * @param {Function} handler Function to be deleted from EventListeners
@@ -81,7 +81,7 @@
   
     /**
      * Fires event with an optional options object
-     * @memberOf fabric.Observable
+     * @memberOf Observable
      * @param {String} eventName Event name to fire
      * @param {Object} [options] Options object
      * @return {Self} thisArg
@@ -105,12 +105,7 @@
       });
       return this;
     }
-  
-    /**
-     * @namespace fabric.Observable
-     * @tutorial {@link http://fabricjs.com/fabric-intro-part-2#events}
-     * @see {@link http://fabricjs.com/events|Events demo}
-     */
+ 
     geomap.Observable = {
       fire: fire,
       on: on,

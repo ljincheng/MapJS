@@ -46,14 +46,14 @@
 
 	_animate: function () {
 		// this._animId = geomap.util.requestAnimFrame(this._animate, this);
-		console.log("[Animation.js]_animate=========");
+		// console.log("[Animation.js]_animate=========");
 		this._step();
 	},
 
 	_step: function (round) {
 		var elapsed = (+new Date()) - this._startTime,
 		    duration = this._duration * 1000;
-			console.log("[Animation.js]_step=========");
+			// console.log("[Animation.js]_step=========");
 		if (elapsed < duration) {
 			this._runFrame(this._easeOut(elapsed / duration), round);
 		} else {
@@ -69,7 +69,7 @@
 			pos._round();
 		}
 		var e={animationTarget:this,step: _stepProgress,offset:this._offset,progress:progress,pos:this._pos};
-		console.log("[Animation.js]_runFrame=========");
+		// console.log("[Animation.js]_runFrame=========");
 		// this._fn.call(this._fnContext,pos,e);
 		this._callback.call(this._callbackContext,pos,e);
         // this._fn(pos,e);   

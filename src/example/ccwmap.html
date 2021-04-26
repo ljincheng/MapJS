@@ -185,7 +185,7 @@ function setEditContent(featureData){
             window.infoFrame.setData("记录信息",html,{w:500,h:400});
             window.infoFrame.show();
         }else{
-            window.infoFrame=new geomap.FrameLayer(document.body,{title:"记录信息",body:html,w:500,h:400,closeType:2});
+            window.infoFrame=new geomap.view.Frame(document.body,{title:"记录信息",body:html,w:500,h:400,closeType:2});
         }
         
 }
@@ -207,7 +207,6 @@ function projectMapChange(){
 function projectMapDataChange(map){
     var mapsHtml="";
     var projectMap=map.project.projectMap;
-    console.info("=======================com===");
     if(projectMap != undefined && projectMap.length>0){
         for(var i=0,k=projectMap.length;i<k;i++){
             var mapInfo=projectMap[i];

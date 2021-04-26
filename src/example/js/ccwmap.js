@@ -195,7 +195,7 @@ else if (typeof define === 'function' && define.amd) {
                 window.FRAMES.editGeomFrame.setData("表单信息设置",bodyForm,{w:400,h:250});
                 window.FRAMES.editGeomFrame.show();
             }else{
-                window.FRAMES.editGeomFrame=new geomap.FrameLayer(document.body,{title:"表单信息设置", body:bodyForm,w:400,h:250,closeType:2,pos:"rc"});
+                window.FRAMES.editGeomFrame=new geomap.view.Frame(document.body,{title:"表单信息设置", body:bodyForm,w:400,h:250,closeType:2,pos:"rc"});
                 window.FRAMES.editGeomFrame.on("close",closeFrameCallback);
             }
 

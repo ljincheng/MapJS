@@ -56,7 +56,7 @@
   
       Drag.prototype={
           addEvent:function(element){
-              eventjs.add(element,"drag",this.handle.bind(this));
+              eventjs.add(element,"drag gesture",this.handle.bind(this));
               if(this.dragingSpeedTimeId === undefined){
               this.dragingSpeedTimeId=this.dragingSpeed.bind(this);
               this._map.on("looptime",this.dragingSpeedTimeId);

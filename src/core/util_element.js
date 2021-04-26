@@ -117,61 +117,112 @@ function formToJson(form) {
   return json;
 } 
 
-function tplToFormHtml(tpl,selected){
-  var html="",selectObj={};
-for(var i=0,k=tpl.length;i<k;i++){
-    var form=tpl[i];
-    if(form.name === selected){
-      selectObj.form=form;
+function parseToForm(form){
+  var formId=form.id || ("form_"+ new Date());
+  var root=geomap.element.create("form",{"id":formId},{"marginTop":"10px"});
+  if(form.properties){
+    // var form=formObj.form;
+    var rowStyle={"height":"30px"};
     for(var j=0,jn=form.properties.length;j<jn;j++){
-    var pro=form.properties[j];
+      var pro=form.properties[j];
       if(pro.type === "text"){
-          html+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;'>"+pro.title+"</span><input type='text' name='"+pro.id +"' value='"+ pro.value+"' />" ;
-      }else if(pro.type === "hidden"){
-          html+="<input type='hidden' name='"+pro.id +"' value='"+ pro.value+"' />" ;
-      }else if(pro.type === "radio"){
-          html+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;' >"+pro.title+"</span>";
-          for(var option in pro.option){
-              if(pro.value === pro.option[option]){
-                  html+="<label><input type='radio' checked='checked' name='"+pro.id +"' value='"+option+"' >" +pro.option[option]+"</label>";
-              }else{
-                  html+="<label><input type='radio' name='"+pro.id +"' value='"+option+"' >" +pro.option[option]+"</label>";
-              }
+        var div=geomap.element.create("div",{},rowStyle);
+        var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+        layer.innerText=pro.title;
+        var input=geomap.element.create("input",{"type":"text","name":pro.id});
+        input.value=pro.value;
+        div.appendChild(layer);
+        div.appendChild(input);
+        root.appendChild(div);
+      }else if(pro.type === 'hidden'){
+        var input=geomap.element.create("input",{"type":"hidden","name":pro.id});
+        input.value=pro.value;
+        root.appendChild(input);
+      }else if(pro.type === 'radio' || pro.type==='checkbox'){
+        var div=geomap.element.create("div",{},rowStyle);
+        var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+        layer.innerText=pro.title;
+        div.appendChild(layer);
+        for(var option in pro.option){
+            var label=geomap.element.create("label");
+            var radio=geomap.element.create("input",{"type":pro.type,"name":pro.id});
+            radio.value=option;
+            var labelTxt=geomap.element.create("a");
+            labelTxt.innerText=pro.option[option];
+            label.appendChild(radio);
+            label.appendChild(labelTxt);
+            div.appendChild(label);
+          if(pro.value === option){
+            radio.checked=true;
+          } 
+        }
+        root.appendChild(div); 
+      }else if(pro.type==='select'){
+        var div=geomap.element.create("div",{},rowStyle);
+        var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+        layer.innerText=pro.title;
+        var selectObj=geomap.element.create("select",{"name":pro.id});
+        for(var option in pro.option){
+            var selOpt=geomap.element.create("option",{"type":'checkbox',"name":pro.id});
+            selOpt.value=option;
+            selOpt.innerText=pro.option[option]; 
+            selectObj.appendChild(selOpt); 
+          if(pro.value === pro.option[option]){
+            radio.selected=true;
+          } 
+        }
+        div.appendChild(layer);
+        div.appendChild(selectObj);
+        root.appendChild(div); 
+      }else if(pro.type === 'button'){
+        var div=geomap.element.create("div",{},rowStyle);
+        var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+        layer.innerHTML="&nbsp;";
+        div.appendChild(layer);
+        var btn=geomap.element.create("input",{"type":"button","className":"btn","name":pro.id});
+        btn.value=pro.value;
+        div.appendChild(btn);
+        root.appendChild(div);
+        if(pro.click){
+          eventjs.add(btn,"click",pro.click);
+        }
+      }else if(pro.type === 'buttons'){
+        var div=geomap.element.create("div",{},rowStyle);
+        var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+        layer.innerHTML="&nbsp;";
+        div.appendChild(layer);
+        for(var i=0,k=pro.group.length;i<k;i++){
+          var groupBtn=pro.group[i];
+          var btn=geomap.element.create("input",{"type":"button","className":"btn","name":groupBtn.id});
+          btn.value=groupBtn.value;
+          div.appendChild(btn);
+          if(groupBtn.click){
+            eventjs.add(btn,"click",groupBtn.click);
           }
-          
-      }else if(pro.type === "checkbox"){
-          html+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;' >"+pro.title+"</span>";
-          for(var option in pro.option){
-              if(pro.value === pro.option[option]){
-                  html+="<label><input type='checkbox' checked='checked' name='"+pro.id +"' value='"+option+"' >" +pro.option[option]+"</label>";
-              }else{
-                  html+="<label><input type='checkbox' name='"+pro.id +"' value='"+option+"' >" +pro.option[option]+"</label>";
-              }
-          }
-          
-      }else if(pro.type === "select"){
-          html+="<br><span style='min-width:100px;display: inline-block;text-align: right;padding: 4px;' >"+pro.title+"</span>";
-          html+="<select name='"+pro.id+"'>";
-          if(pro.hasEmptyOption){
-              html+="<option value='' >请选择</option>";
-          }
-          for(var option in pro.option){
-              if(pro.value === pro.option[option]){
-                  html+="<option selected='selected' value='"+option +"' >" +pro.option[option]+"</option>";
-              }else{
-                  html+="<option value='"+option +"' >" +pro.option[option]+"</option>";
-              }
-          }
-          html+="</select>";
+        }
+        root.appendChild(div);
       }
-        
     }
   }
+  if(form.buttons){
+    var div=geomap.element.create("div",{},rowStyle);
+    var layer=geomap.element.create("span",{},{"minWidth":"100px","display": "inline-block","textAlign":"right"});
+    layer.innerHTML="&nbsp;";
+    div.appendChild(layer);
+    for(var i=0,k=form.buttons.length;i<k;i++){
+      var groupBtn=form.buttons[i];
+      var btn=geomap.element.create("input",{"type":"button","className":"btn","name":groupBtn.id});
+      btn.value=groupBtn.value;
+      div.appendChild(btn);
+      if(groupBtn.click){
+        eventjs.add(btn,"click",groupBtn.click);
+      }
+    }
+    root.appendChild(div); 
+  }
+  return root;
 }
-selectObj.html=html;
-return selectObj;
-
-}
+ 
 
     geomap.element = {
       create: create,
@@ -181,7 +232,7 @@ return selectObj;
       addClass:addClass,
       removeClass:removeClass,
       formToJson:formToJson,
-      tplToFormHtml:tplToFormHtml,
+      parseToForm:parseToForm,
       createHiDPICanvas:createHiDPICanvas
     };
    
