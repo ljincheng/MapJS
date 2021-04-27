@@ -103,9 +103,9 @@
         }else{
           if(this._status_drag){
             var p=new Point(self.x,self.y);
-            geomap.debug("#=====p0:"+p.toString()+",sp:"+this._start_point.toString());
+            // geomap.debug("#=====p0:"+p.toString()+",sp:"+this._start_point.toString());
             p._subtract(this._start_point);
-            geomap.debug("#=====p1:"+p.toString());
+            // geomap.debug("#=====p1:"+p.toString());
             var left=this.x+p.x,top=this.y+p.y;
             if(left<(this.closeBtnSize-this.w)){
               left=(this.closeBtnSize-this.w);
