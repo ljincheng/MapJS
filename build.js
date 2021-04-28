@@ -110,7 +110,14 @@ var filesToInclude = [
     'src/geo/Layer.js',
     'src/geo/layer/TileLayer.js',
     'src/geo/layer/VectorLayer.js',
-    'src/geo/layer/PaletteLayer.js'
+    'src/geo/layer/PaletteLayer.js',
+    //---- ProjectMap ------
+    'src/project/MapProject.js',
+    'src/project/LayerInfo.js',
+    'src/project/Menu.js',
+    'src/project/MapQuery.js',
+    'src/project/MapDraw.js'
+   
   ];
 
   process.chdir(distributionPath);

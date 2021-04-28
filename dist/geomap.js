@@ -5881,3 +5881,941 @@ function parseToForm(form){
   
   })(typeof exports !== 'undefined' ? exports : this);
   
+
+
+var MapProject = MapProject || { version: '1.0.0' };
+if (typeof exports !== 'undefined') {
+  exports.MapProject = MapProject;
+} 
+
+else if (typeof define === 'function' && define.amd) {
+  define([], function() { return MapProject; });
+}
+
+(function(global) {
+
+  'use strict';
+   
+    if (!global.MapProject) {
+      global.MapProject = { };
+    }
+  
+    if (global.MapProject.Map) {
+      geomap.warn('MapProject.Map is already defined.');
+      return;
+    }
+   
+    
+    var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.toPoint;
+    var extend = Util.object.extend;
+    var Point=geomap.Point;
+ 
+    MapProject.Map = geomap.Class(geomap.Map, {
+      mapId:undefined,
+      server:{project:"",
+              mapInfo:"",
+              display:"",
+              tile:"",
+              addLayer:"",
+              deleteLayer:"",
+              orderChange:"",
+              addParking:"",
+              queryParking:"",
+              deleteParking:"",
+              },
+      _server:{},
+      _server_layers:[],
+      codeOk:0,
+      reqHead:"",
+      _mapInfo:{},
+      _projectMap:[],
+      _init_map_status:false,
+      drawType:"Rect",
+      initialize: function(container, options) {
+        var mapContainer;
+        if(typeof container === 'string'){
+             mapContainer=document.getElementById(container)
+        }else{
+             mapContainer=container;
+        }
+        this.callSuper('initialize',mapContainer,options); 
+        this._init_reqcb();
+        this._init_fireEv();
+        this._reset_map_conf();
+        this.loadProject();
+      },
+      _init_reqcb:function(){
+        this._clearDrawGeometry=this.clearDrawGeometry.bind(this);
+        this._drawMapGeom=this.__drawMapGeom.bind(this);
+        this._queryCoordData=this.__queryCoordData.bind(this);
+        this._reqcb_queryCoordData=this.__reqcb_queryCoordData.bind(this);
+        this._reqcb_loadProject=this.__reqcb_loadProject.bind(this);
+        this._reqcb_loadServerLayers=this.__reqcb_loadServerLayers.bind(this);
+      },
+      _init_fireEv:function(){
+        this.on("req_project_ok",this._reqcb_loadProject_ok.bind(this));
+      },
+      loadProject:function(){
+        Request(this._server.project,{method:"POST",header:this.reqHead,onComplete:this._reqcb_loadProject});
+        this.loadServerLayers();
+      },
+      __reqcb_loadProject:function(xhr){
+        var status=xhr.status;
+        if(status==200){ 
+          var result=JSON.parse(xhr.response);
+          if(result.code === this.codeOk){
+            var  rdata=result.data;
+              
+              if(rdata.projectMap){
+                this._projectMap=rdata.projectMap;
+              }
+              if(rdata.mapInfo){
+                this._mapInfo=rdata.mapInfo;
+                this.fire("req_project_ok",rdata.mapInfo);
+                return ;
+              }
+          }
+          this.fire("req_project_fail");
+        }else{
+          this.fire("req_error",xhr);
+        }
+      },
+      _reqcb_loadProject_ok:function(){
+        this.loadMapInfo(this._mapInfo);
+      },
+      _reset_server:function(){
+        var mapId=this.mapId;
+        for(var key in this.server){
+          var url=this.server[key];
+          this._server[key]=Template(url,{mapId:mapId}); 
+       }
+      },
+      __queryCoordData:function(p){
+        this.vectorLayer.clearData();
+        if(this.mapQuery){
+          var url=Template(this.mapQuery.url,{mapId:this.mapId});
+          Request(url,{method:"POST",body:"p="+p,header:this.reqHead,onComplete:this._reqcb_queryCoordData});
+        }
+      },
+      __reqcb_queryCoordData:function(xhr){
+        var res=xhr.response,status=xhr.status; 
+        this.vectorLayer.clearData();
+        if( status==200 && res.length>0 && res.indexOf("{")==0){ 
+           
+            if(this.mapQuery){
+
+              var featureCollection=JSON.parse(res);
+              this.mapQuery.fire("coord_data",featureCollection);
+            }
+           if(featureCollection.type="FeatureCollection"){
+            this.vectorLayer.addData(featureCollection,{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]});
+            this.fire("drawmap");
+           }
+        }
+      },
+      __drawMapGeom:function(geo){
+        if(this.mapDraw){
+          var myself=this;
+          var arg={geometry:geo,layer:this.paletteLayer,clearDraw:this._clearDrawGeometry,map:myself};
+          this.mapDraw.fire("geom_data",arg);
+        }
+      },
+      clearDrawGeometry:function(){
+        this.paletteLayer.clearGeometry();
+      },
+      _reset_map_conf:function(){
+        this._reset_server();
+         if(!this._init_map_status){
+           this._init_map_status=true;
+           var parkingLayer=new geomap.TileLayer({url:this._server.tile});
+           this.parkingLayer=parkingLayer;
+           var vectorLayer=new geomap.VectorLayer();
+           this.vectorLayer=vectorLayer;
+           var paletteLayer=new geomap.PaletteLayer({drawType:this.drawType});
+           this.paletteLayer=paletteLayer;
+          //  var drawCallbackFn=function(geo){
+          //   this.fire("geometry_change",geo);
+          //  }.bind(this);
+           paletteLayer.on("geometry_change",this._drawMapGeom);;
+           this.addLayer(parkingLayer);
+           this.addLayer(vectorLayer);
+           this.addLayer(paletteLayer);
+           var queryCallback=this._queryCoordData;
+           this.on("pointcoord",function(e){
+               var p=e.coord.x+","+e.coord.y;
+               queryCallback(p);});
+           this.on("rectcoord",function(e){
+               var p=e.minx+","+e.miny+","+e.maxx+","+e.maxy;
+               queryCallback(p);
+              // console.log("[ccwmap.js]rectcoord="+e.minx+","+e.miny+","+e.maxx+","+e.maxy);
+           });
+           
+         }else{
+          this.parkingLayer.url=this._server.tile;
+          this.parkingLayer.refreshCache();
+          this.vectorLayer.clearData();
+          this.fire("drawmap");
+         }
+         this.fire("map_complete",this);
+
+      },
+      loadServerLayers:function(){
+        Request(this._server.mapInfo,{method:"POST",header:this.reqHead,onComplete:this._reqcb_loadServerLayers});
+      },
+      __reqcb_loadServerLayers:function(xhr){
+        var status=xhr.status;
+        if(status==200){ 
+          var result=JSON.parse(xhr.response);
+          if(result.code === this.codeOk){
+            var  rdata=result.data;
+              if(rdata.layers){
+                this._server_layers=rdata.layers;
+                this.fire("server_layer_ok",this._server_layers);
+                return ;
+              }
+          }
+          this.fire("req_project_fail");
+        }else{
+          this.fire("req_error",xhr);
+        }
+      },
+      loadMapInfo:function(mapInfo){
+        if(mapInfo){
+          this._mapInfo=mapInfo;
+          this.mapId=mapInfo.mapId;
+          this._reset_map_conf();
+        }
+      },
+      mapChange:function(index){ 
+        if(this._projectMap &&  this._projectMap.length > index){
+            var mapInfo=  this._projectMap[index];
+            this.loadMapInfo(mapInfo); 
+            this.loadProject();
+        } 
+    },
+    orderChangeFn:function (oldIndex,newIndex) {
+      var myself=this;
+      Request(this._server.orderChange,{method:"JSON",body:{oldIndex:oldIndex,newIndex:newIndex},onComplete:function(xhr){
+          var body=xhr.response,status=xhr.status; 
+          if(status==200){ 
+              myself.refresh();
+          }
+      }});
+  },
+    displayServerLayer:function (layerId,display) {
+      var myself=this;
+      Request(this._server.displayLayer,{method:"JSON",body:{layerId:layerId,display:display},onComplete:function(xhr){
+          var body=xhr.response,status=xhr.status; 
+          if(status==200){ 
+              myself.refresh();
+          }
+      }}); 
+  },
+  deleteServerLayer:function (layerId) {
+    var myself=this;
+    Request(this._server.deleteLayer,{method:"JSON",body:{id:layerId},onComplete:function(xhr){
+        var body=xhr.response,status=xhr.status; 
+        if(status==200){ 
+            myself.refresh();
+        }
+    }}); 
+},
+addServerLayer:function (param) {
+  var myself=this;
+  Request(this._server.addLayer,{method:"JSON",body:param,onComplete:function(xhr){
+      var body=xhr.response,status=xhr.status; 
+      if(status==200){ 
+          myself.refresh();
+      }
+  }}); 
+},
+setMapQuery:function(mq){
+  this.mapQuery=mq;
+},
+setMapDraw:function(md){
+  this.mapDraw=md;
+  this.paletteLayer.setType(this.mapDraw.drawType,this.mapDraw.fill);
+},
+jsonReq:function(url,data,fn){
+  var mapurl=Template(url,{mapId:this.mapId}); 
+  Request(mapurl,{method:"JSON",body:data,header:this.reqHead,onComplete:fn}); 
+},
+      toggleReferenceLine:function(){
+        this.paletteLayer.toggleReferenceLine();
+      },
+      refresh:function(){
+        this.loadProject(); 
+      }
+    });
+
+})(typeof exports !== 'undefined' ? exports : this);
+
+
+(function(global) {
+
+    'use strict';
+         
+    if (!global.MapProject) {
+    global.MapProject = { };
+    }
+    
+    if (global.MapProject.LayerInfo) {
+    geomap.warn('MapProject.Menu is already defined.');
+    return;
+    }
+         
+           
+    var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.toPoint,Element=geomap.element;
+    var extend = Util.object.extend;
+    var Point=geomap.Point;
+     
+    MapProject.LayerInfo = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+        map:undefined,
+        root:undefined, 
+        toolBar:undefined,
+        tbOpt:{"className":"toolBar"},
+        tbStyle:{"width":"100%","height":"50px"},
+        layers:[],
+        menu:undefined,
+        title:"图层信息",
+        initialize: function(options) {
+            options || (options = { });  
+            this._setOptions(options);
+            this.root=Element.create("div");
+            this.toolBar=Element.create("div",this.tbOpt,this.tbStyle);
+            this.tableDiv=Element.create("div");
+            this.detailDiv=Element.create("div",{},{"padding":"20px"});
+            this.root.appendChild(this.toolBar);
+            this.root.appendChild(this.tableDiv);
+            this.root.appendChild(this.detailDiv);
+            this.addToolBar();
+            if(this.map!=undefined){
+                this.setMap(this.map);
+            }
+        },
+        setMap:function(map){
+            this.map=map; 
+            this.createMapLayerTable();
+            this.map.on("server_layer_ok",this._loadMapLayer.bind(this));
+        },
+        addToMenu:function(menu){
+            this.menu=menu;
+            this.menu.on("menu_click",this.menuClick.bind(this));
+            this.menu.addMenu({mapMenu:true,type:"serverLayerInfo",text:this.title,id:"map_server_layer_info"});
+        },
+        menuClick:function(arg){
+            var menu=arg.menu,menuItem=menu.data;
+            if(menuItem.mapMenu && menuItem.type=== 'serverLayerInfo'){
+                if(this.viewFrame){
+                    this.viewFrame.show();
+                }else{
+                    this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.getElement(),w:600,h:450,closeType:2});
+                }
+            }
+        },
+        getElement:function(){
+            return this.root;
+        },
+        addToolBar:function(){
+            var editFormFn=this.editForm.bind(this);
+            var addBtn=Element.create("input",{"value":"添加","type":"button","className":"btn"});
+            eventjs.add(addBtn,"click",editFormFn); 
+            this.toolBar.appendChild(addBtn);
+        },
+        _loadMapLayer:function(){
+            this.layers=this.map._server_layers;
+            this.createMapLayerTable();
+        },
+        createMapLayerTable:function(){ 
+            var extHead={opt:"操作"};
+            var extBody=[{"text":"删除","tag":"a","id":"delete","style":{"cursor": "pointer"}},{"text":"显隐","tag":"a","id":"display"}];
+            var headV={layerOrder:"序号",layerType:"类型",display:"状态",title:"图层说明",layerSource:"图层源"};
+            var thead=document.createElement("thead");
+            {
+                var tr=document.createElement("tr");
+                for(var key in headV){
+                    var td=document.createElement("td");
+                    td.innerText=headV[key];
+                    tr.appendChild(td);
+                }
+                for(var key in extHead){
+                    var td=document.createElement("td");
+                    td.innerText=extHead[key];
+                    tr.appendChild(td);
+                }
+                thead.appendChild(tr);
+            }
+            var tbody=document.createElement("tbody");
+            if(this.layers!=undefined && this.layers.length>0){
+                for(var i=0,k=this.layers.length;i<k;i++){
+                    var layer=this.layers[i];
+                    var tr=document.createElement("tr");
+                    for(var key in headV){
+                        var td=document.createElement("td");
+                        td.innerText=layer[key];
+                        tr.appendChild(td);
+                    }
+                    if(extBody.length>0){
+                        var td=document.createElement("td");
+                        tr.appendChild(td);
+                        for(var j=0,jk=extBody.length;j<jk;j++){
+                            var item=extBody[j];
+                            var el=Element.create(item.tag,{},item.style||{"paddingLeft":"10px","cursor": "pointer"});
+                            el.innerText=item.text;
+                            el._rowIndex=i;
+                            el._data=item;
+                            el._myself=this;
+                            eventjs.add(el,"click",function(event,self){ 
+                                eventjs.cancel(event);
+                                this.eventFn(event,self);
+                            }.bind(this));
+                            td.appendChild(el);
+                        }
+                    }
+                    
+                    tbody.appendChild(tr);
+                    
+                }
+            }
+            
+            if(!this.table){
+                this.table=document.createElement("table");
+                //=== 测试
+                eventjs.add(this.table,"drag",this.dragTableEvent.bind(this));
+                eventjs.add(this.table,"mouseOver",this.mouseOverEvent.bind(this));
+                this.tableDiv.appendChild(this.table);
+            }
+            this.table.innerHTML="";
+            this.table.appendChild(thead);
+            this.table.appendChild(tbody); 
+        },
+        dragTableEvent:function(event,self){
+            var target1=self.target,target2=event.target;
+            if(self.state === 'down'){
+                eventjs.cancel(event);
+                var trEl=target2;
+                if(target2.nodeName =='TD'){
+                    trEl=target2.parentElement || target2.parentNode;
+                    this._drag_tr=trEl;
+                    this._drag_rowIndex=trEl.rowIndex;
+    
+                }
+            }else if(self.state === 'up'){
+                if(this._drag_on_tr && this._drag_tr!=undefined){
+                    if(this._drag_on_tr.rowIndex ==this._drag_rowIndex){
+                    //  geomap.debug("原来位置了－－－");
+                    }else　if(this._drag_tr.querySelectorAll){
+                        var cells=this._drag_tr.querySelectorAll("td");
+                        
+                        this.table.deleteRow(this._drag_rowIndex);
+                        var row=null;
+                        var oldIndex=this._drag_rowIndex;
+                        var newIndex=this._drag_on_tr.rowIndex;
+                        if(this._drag_rowIndex < this._drag_on_tr.rowIndex){
+                            newIndex+=1;
+                            row=this.table.insertRow(newIndex);
+                        }else{
+                            row=this.table.insertRow(newIndex);
+                        }
+                        for(var i=0,k=cells.length;i<k;i++){
+                            row.appendChild(cells[i]);
+                        } 
+                        this.orderChangeFn(oldIndex-1,newIndex-1);
+                        // geomap.debug("放到=="+this._drag_on_tr.rowIndex);
+                    }
+                }
+                this._drag_tr=undefined;
+           
+            }
+        },
+        mouseOverEvent:function (event,self) {
+            var target2=event.target; 
+                var trEl=target2;
+                if(target2.nodeName =='TD'){
+                    trEl=target2.parentElement || target2.parentNode;
+                    this._drag_on_tr=trEl;
+                    var tr_arrary=this.table.querySelectorAll("tr.selected");
+                    for(var i=0,k=tr_arrary.length;i<k;i++){
+                        var tr=tr_arrary[i];
+                        Element.removeClass(tr,"selected");
+                    }
+                    if(this._drag_tr){
+                    Element.addClass(this._drag_on_tr,"selected");
+                    } 
+                }
+          
+        },
+        editForm:function () {
+            var addLayerFn=this.addLayerFn.bind(this);
+           var forms={name:"车位",id:"form_edit_parking",properties:[{id:"title",type:"text",title:"图层说明",value:"",required:false}
+                ,{id:"layerSource",type:"text",title:"图层源",value:"",required:false}
+                ,{id:"layerType",type:"radio",title:"类型",value:"POLYGON",option:{"POLYGON":"面","POINT":"点","RASTER":"栅格图    "},required:false}
+                ,{id:"display",type:"radio",title:"状态",value:"1",option:{"1":"可见","2":"不可见"},required:true}
+                ,{id:"styleId",type:"radio",title:"样式",value:"parking_polygon",option:{"parking_polygon":"车位面","parking_point":"车位点","line_dash":"楼栋边界线"},required:true}
+            ],buttons:[{title:"确定",type:"button",value:"确定",click:addLayerFn}]};
+            var formEl=Element.parseToForm(forms);
+            this.addFormEl=formEl;
+            this.detailDiv.innerHTML="";
+            this.detailDiv.appendChild(formEl);
+        },
+        orderChangeFn:function (oldIndex,newIndex) {
+            var myself=this;
+            myself.map.orderChangeFn(oldIndex,newIndex);
+        },
+        addLayerFn:function(){
+            var obj=Element.formToJson(this.addFormEl);
+            var myself=this;
+            myself.map.addServerLayer(obj);
+        },
+        eventFn:function (event,self) {
+            var el=self.target,myself=el._myself,data=el._data,index=el._rowIndex;
+            if(data.id =='delete'){
+                var i=typeof index ==='string' ?Number(index):index;
+                if(myself.layers.length>i){
+                    var layer=myself.layers[i];
+                    myself.map.deleteServerLayer(layer.id);
+                }
+            }else if(data.id=="display"){
+                var i=typeof index ==='string' ?Number(index):index;
+                if(myself.layers.length>i){
+                    var layer=myself.layers[i];
+                    var display=layer.display==1?0:1; 
+                    myself.map.displayServerLayer(layer.id,display);
+                }
+            }
+            // myself.detail(tr._rowIndex); 
+        },
+        
+    });
+    
+       
+    
+    })(typeof exports !== 'undefined' ? exports : this);
+
+
+(function(global) {
+
+'use strict';
+     
+if (!global.MapProject) {
+global.MapProject = { };
+}
+
+if (global.MapProject.Menu) {
+geomap.warn('MapProject.Menu is already defined.');
+return;
+}
+     
+       
+var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.toPoint,Element=geomap.element;
+var extend = Util.object.extend;
+var Point=geomap.Point;
+ 
+MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+    map:undefined,
+    container:undefined,
+    toolBar:undefined,
+    tbOpt:{"className":"menu-nav"},
+    tbStyle:{},
+    memuOpt:{"className":"menu-item"},
+    menu:[],
+    mapmenu:[{mapMenu:true,type:"reference_line",text:"参考线",id:"map_reference_Line"}],
+    _mapmenu:[],
+    initialize: function(container, options) {
+        options || (options = { });  
+        this._setOptions(options);
+        if(typeof container === 'string'){
+                this.container=document.getElementById(container)
+        }else{
+            this.container=container;
+        } 
+        this.toolBar=Element.create("ul",this.tbOpt,this.tbStyle);
+        eventjs.add(this.toolBar,"click",this._ev_menu_item);
+        this.container.appendChild(this.toolBar);
+        this._init_handle_ev();
+        if(this.map!=undefined){
+            this.setMap(this.map);
+        }
+        this._init_menu();
+    },
+    _init_handle_ev:function(){
+        this._init_map_menu=this.__init_map_menu.bind(this);
+    },
+    setMap:function(map){
+        this.map=map;
+        this.__init_map_menu();
+        this.map.on("map_complete",this._init_map_menu);
+    },
+    addMenu:function(menuItem){
+        this.menu.push(menuItem);
+        this.__init_map_menu();
+    },
+    __init_map_menu:function(){
+        this._mapmenu=[];
+        var m=this.mapmenu;
+        for(var i=0,k=m.length;i<k;i++){
+            var item=m[i]; 
+            this._mapmenu.push(item);
+        }
+        if(this.map && this.map._projectMap){
+            var pmap=this.map._projectMap;
+            for(var i=0,k=pmap.length;i<k;i++){
+                var mapInfo=pmap[i];
+                var menuId="map_"+i;
+                this._mapmenu.push({mapMenu:true,type:"layer",id:menuId,text:mapInfo.subTitle,layerIndex:i});
+            } 
+        }
+        this._init_menu();
+    },
+    _init_menu:function(){
+        this.toolBar.innerHTML="";
+        for(var i=0,k=this._mapmenu.length;i<k;i++){
+            var item=this._mapmenu[i];
+            var el=this._create_menu_item(item);
+            this.toolBar.appendChild(el);
+        }
+        for(var i=0,k=this.menu.length;i<k;i++){
+            var item=this.menu[i];
+            var el=this._create_menu_item(item);
+            this.toolBar.appendChild(el);
+        }
+    },
+    _create_menu_item:function(item){
+        var li=Element.create("li",this.memuOpt);
+        var label=Element.create("a");
+        if(item.icon!=undefined && item.icon !=''){
+            label.innerHTML=item.icon +"&nbsp;"+ item.text;
+        }else{
+            label.innerText=item.text;
+        }
+        
+        var myself=this;
+        li.__menu_item=true;
+        li._data={data:item,target:myself};
+        li.appendChild(label);
+       
+        return li;
+    },
+    _ev_menu_item:function (event,self) {
+        var obj=event.target;
+        if(obj != undefined){
+            var mel=obj;
+            while(mel.__menu_item == undefined && mel.nodeName != 'BODY'){
+                mel=mel.parentElement || mel.parentNode;
+            }
+            if(mel._data && mel._data.target &&  mel._data.target._ev_menu_map(mel._data)){
+                var myself=mel._data.target;
+                var newEvent={event:event,self:self,menu:{target:mel,data:mel._data.data,self:myself}};
+                myself.fire("menu_click",newEvent);
+             }
+
+        }
+    },
+    _ev_menu_map:function(arg){
+        var result=true,myself=arg.target,data=arg.data;
+        if(myself && myself.map && data.id ){
+            if(data.mapMenu){
+                if(data.type=== "layer"){
+                    if(data.layerIndex !=undefined){
+                        myself.map.mapChange(data.layerIndex);
+                        result=false;
+                    }
+                    
+                }else if(data.type==='reference_line'){
+                    myself.map.toggleReferenceLine();
+                    result=false;
+                }
+            }
+            
+        }
+        return result;
+    }
+
+});
+
+   
+
+})(typeof exports !== 'undefined' ? exports : this);
+
+
+(function(global) {
+
+    'use strict';
+         
+    if (!global.MapProject) {
+    global.MapProject = { };
+    }
+    
+    if (global.MapProject.MapQuery) {
+    geomap.warn('MapProject.MapQuery is already defined.');
+    return;
+    }
+         
+           
+    var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.toPoint,Element=geomap.element;
+    var extend = Util.object.extend;
+    var Point=geomap.Point;
+     
+    MapProject.MapQuery = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+        url:undefined,
+        root:undefined,
+        title:"查询结果",
+        width:600,
+        height:400,
+        tbOpt:{},
+        tbStyle:{width:"100%"},
+        map:undefined,
+        table:undefined,
+        buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"}}],
+        initialize: function( options) {
+            options || (options = { });  
+            this._setOptions(options);
+            this.root=Element.create("div");
+            this._eventFn=this.eventFn.bind(this);
+            this.on("coord_data",this.coord_data.bind(this));
+        },
+        coord_data:function(data){
+            this.viewData(data);
+            this.showFrame();
+        },
+        viewData:function(featureData){
+            var rows=[];
+            if(!this.table){
+                this.table=Element.create("table",this.tbOpt,this.tbStyle);
+                this.root.appendChild(this.table);
+            }
+            this.table.innerHTML="";
+            if(featureData.type=="FeatureCollection"){
+                    var geomNum=featureData.features.length;
+                    for(var i=0;i<geomNum;i++){
+                        var feature=featureData.features[i];
+                        var properties=feature.properties;
+                        var fid=feature.id.split(".");
+                        if(fid.length>1){
+                            properties.id=fid[1]
+                        }else{
+                            properties.id=feature.id;
+                        }
+                        
+                        rows.push(properties);
+                    }
+                }else if(featureData.type=="Feature"){
+                    var properties=featureData.properties;
+                    var fid=featureData.id.split(".");
+                        if(fid.length>1){
+                            properties.id=fid[1]
+                        }else{
+                            properties.id=featureData.id;
+                        }
+                    rows.push(properties);
+                }
+                if(rows.length>0){
+                    
+                    var table=this.table;
+                    var thead=Element.create("thead");
+                    
+                    table.appendChild(thead);
+                    var thead_tr=Element.create("tr");
+                    thead.appendChild(thead_tr);
+                    for(var item in rows[0]){
+                        var th=Element.create("th");
+                        th.innerText=item;
+                        thead_tr.appendChild(th);
+                    }
+                    if(this.buttons.length>0){
+                        var th_opt=Element.create("th");
+                        th_opt.innerText="操作";
+                        thead_tr.appendChild(th_opt);
+                    }
+                    var tbody=Element.create("tbody");
+                    table.appendChild(tbody);
+                    for(var i=0,k=rows.length;i<k;i++){
+                        var tr=Element.create("tr");
+                        tbody.appendChild(tr);
+                        for(var item in rows[i]){
+                            var th=Element.create("td");
+                            th.innerText=rows[i][item];
+                            tr.appendChild(th);
+                        }
+                        if(this.buttons.length>0){
+                            var td=Element.create("td");
+                            tr.appendChild(td);
+                            for(var j=0,jk=this.buttons.length;j<jk;j++){
+                                var button=this.buttons[j];
+                                var el=Element.create(button.tag,button.opt|| {},button.style ||{});
+                                el.innerText=button.text;
+                                el._data=rows[i];
+                                el.self=button;
+                                eventjs.add(el, "click",this._eventFn);
+                                td.appendChild(el);
+                            }
+                        }
+                       
+                    }
+                } 
+               
+        },
+        eventFn:function(event,self){
+            var td=self.target,data=td._data,button=td.self;
+            console.log("td===,id="+data.parking_id);
+            if(button && button.fn){
+                var newself={data:data,self:button,target:td};
+                button.fn(event,newself);
+            }
+        },
+        removeRow:function(el){
+            var tr=el;
+            while(tr && tr.tagName.toString() != "TR" && tr.tagName.toString() != "tr"){
+                tr=tr.parentElement || tr.parentNode;
+            }
+            if(tr && tr.tagName == 'TR'){
+                tr.remove();
+            }
+        },
+        showFrame:function(){
+            if(this.viewFrame){
+                this.viewFrame.show();
+            }else{
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2});
+            }
+        }
+    
+    });
+    
+       
+    
+    })(typeof exports !== 'undefined' ? exports : this);
+
+
+(function(global) {
+
+    'use strict';
+         
+    if (!global.MapProject) {
+    global.MapProject = { };
+    }
+    
+    if (global.MapProject.MapDraw) {
+    geomap.warn('MapProject.MapDraw is already defined.');
+    return;
+    }
+         
+           
+    var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.toPoint,Element=geomap.element;
+    var extend = Util.object.extend;
+    var Point=geomap.Point;
+     
+    MapProject.MapDraw = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+        url:undefined,
+        root:undefined,
+        title:"结果",
+        width:600,
+        height:400,
+        tbOpt:{},
+        tbStyle:{width:"100%"},
+        map:undefined,
+        table:undefined,
+        drawType:"Rect",
+        fill:true,
+        buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"}}],
+        form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
+        ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+        ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
+        ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+        ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
+        
+    ]},
+        initialize: function( options) {
+            options || (options = { });  
+            this._setOptions(options);
+            this._saveGeomEv=this.saveGeomEv.bind(this);
+            this._closeFrameEv=this.closeFrameEv.bind(this);
+            this.root=Element.create("div");
+            this.on("geom_data",this.geomDataCallback.bind(this));
+        },
+        closeFrameEv:function(event,self){
+            this.map.clearDrawGeometry();
+        },
+        saveGeomEv:function(){
+            if(this.form && this.form.id && this._data_geom){
+                var properties=Element.formToJson(document.getElementById(this.form.id));
+                var geomText=this._data_geom.getText();
+                var featureId="";
+                for(var key in properties){
+                    if(key === 'id'){
+                        featureId=properties[key];
+                        delete properties[key];
+                    }
+                }
+                var myself=this;
+                myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
+                    myself.map.refresh();
+                    myself.hideFrame();
+                });
+                 
+            }
+        },
+        getViewForm:function(){
+            var bodyForm=this.form;
+            var formId= bodyForm.id;
+            bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
+            var form=Element.parseToForm(bodyForm);
+            return form;
+        },
+        geomDataCallback:function(arg){
+            var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
+            var myself=this;
+            this._data_geom=geometry;
+            if(clearDraw){clearDraw();}
+            if(geometry._coordinates.length<1){
+                return;
+            }
+            this.showFrame();
+            // var mapId=arg.map.mapId;
+             
+            // var bodyForm=this.form;
+            //  var formId= bodyForm.id;
+            // //  if(!bodyForm.buttons){
+            // //  var closeFrameCallback=function(event,self) {
+            // //      this.paletteLayer.clearGeometry();
+            // //  }.bind(this);
+            // //  var parkingAddUrl=this.getParkingAddUrl(mapId);
+            // //  var okFrameCallback=function(event,self) {
+            // //     var obj=geomap.element.formToJson(document.getElementById(this.formId));
+            // //     // var geomText=geometry;
+            // //     // this.other.parkingRequestCallback.call(this.other,geomText,obj,self);
+            // //     // this.other.paletteLayer.clearGeometry();
+            // //  }.bind({other:myself,geometry:geometry.getText(),formId:formId,url:parkingAddUrl});
+
+            //  bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
+            // // }
+
+            //  window.FRAMES = window.FRAMES ||{};
+            //  var form=Element.parseToForm(bodyForm);
+            // if(window.FRAMES.editGeomFrame){
+            //     window.FRAMES.editGeomFrame.setData("表单信息设置",form,{w:400,h:250});
+            //     window.FRAMES.editGeomFrame.show();
+            // }else{
+            //     window.FRAMES.editGeomFrame=new geomap.view.Frame(document.body,{title:"表单信息设置", body:form,w:400,h:250,closeType:2,pos:"rc"});
+            //     window.FRAMES.editGeomFrame.on("close",this._closeFrameEv);
+            // }
+
+        },
+        showFrame:function(){
+            if(this.viewFrame){
+                this.viewFrame.show();
+            }else{
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.getViewForm(),w:this.width,h:this.height,closeType:2});
+            }
+        },
+        hideFrame:function(){
+            if(this.viewFrame){
+                this.viewFrame.hide();
+            }
+        }
+    
+    });
+    
+       
+    
+    })(typeof exports !== 'undefined' ? exports : this);
