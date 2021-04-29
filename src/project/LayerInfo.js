@@ -1,4 +1,3 @@
-
 (function(global) {
 
     'use strict';
@@ -26,8 +25,13 @@
         layers:[],
         menu:undefined,
         title:"图层信息",
+        type:"layerInfo",
+        id:0,
+        icon:null,
         initialize: function(options) {
             options || (options = { });  
+            this.id= +new Date();
+            this.icon=MapProject.Icons.layerInfo;
             this._setOptions(options);
             this.root=Element.create("div");
             this.toolBar=Element.create("div",this.tbOpt,this.tbStyle);
@@ -49,11 +53,11 @@
         addToMenu:function(menu){
             this.menu=menu;
             this.menu.on("menu_click",this.menuClick.bind(this));
-            this.menu.addMenu({mapMenu:true,type:"serverLayerInfo",text:this.title,id:"map_server_layer_info"});
+            this.menu.addMenu({mapMenu:true,type:this.type,text:this.title,icon:this.icon,id:this.id});
         },
         menuClick:function(arg){
             var menu=arg.menu,menuItem=menu.data;
-            if(menuItem.mapMenu && menuItem.type=== 'serverLayerInfo'){
+            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.id){
                 if(this.viewFrame){
                     this.viewFrame.show();
                 }else{

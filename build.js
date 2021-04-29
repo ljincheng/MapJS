@@ -112,6 +112,8 @@ var filesToInclude = [
     'src/geo/layer/VectorLayer.js',
     'src/geo/layer/PaletteLayer.js',
     //---- ProjectMap ------
+
+    'src/project/Icon.js',
     'src/project/MapProject.js',
     'src/project/LayerInfo.js',
     'src/project/Menu.js',

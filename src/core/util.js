@@ -64,6 +64,22 @@ function getUrlParam (name) {
   return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 };
 
+function coordCenter(coords){
+  if(coords && coords.length>0){
+    var minx=coords[0][0],miny=coords[0][1],maxx=minx,maxy=miny;
+    for(var i=0,k=coords.length;i<k;i++){
+      var coord=coords[i];
+        minx=Math.min(minx,coord[0]);
+        maxx=Math.max(maxx,coord[0]);
+        miny=Math.min(miny,coord[1]);
+        maxy=Math.max(maxy,coord[1]);
+    }
+    var x=(minx+maxx)/2,y=(miny+maxy)/2;
+    return [x,y];
+  }
+  return null;
+}
+
     geomap.util = {
  
       formatNum: function(num,digits){
@@ -88,7 +104,8 @@ function getUrlParam (name) {
       },
       requestAnimFrame:requestAnimFrame,
       cancelAnimFrame:cancelAnimFrame,
-      getUrlParam:getUrlParam
+      getUrlParam:getUrlParam,
+      coordCenter:coordCenter
        
 
     };

@@ -1,7 +1,5 @@
 (function() {
 
-     
-     
     
     geomap.Geometry=geomap.Class(geomap.CommonMethods, geomap.Observable ,{
         _coordinates:[],

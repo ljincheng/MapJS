@@ -64,7 +64,9 @@
         // this.closeBtn.click=closeFn;
       }, 
       rootFrameClickEv:function(event,self){
-        eventjs.cancel(event);
+        if(event){
+          eventjs.cancel(event);
+        }
         if(geomap._FrameLayerZIndex){
           geomap._FrameLayerZIndex+=1;
           this.rootFrame.style.zIndex= geomap._FrameLayerZIndex;
@@ -240,6 +242,7 @@
           this.rootFrame.style.display="";
           this.fire("show"); 
         }
+        this.rootFrameClickEv();
         return this;
       },
       hide:function(){

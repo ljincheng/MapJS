@@ -18,9 +18,13 @@
     var Point=geomap.Point;
      
     MapProject.MapDraw = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+        type:"MapDraw",
+        id:0,
+        title:"绘图",
+        icon:null,
+        onlyIcon:false,
         url:undefined,
         root:undefined,
-        title:"结果",
         width:600,
         height:400,
         tbOpt:{},
@@ -30,20 +34,27 @@
         drawType:"Rect",
         fill:true,
         buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"}}],
-        form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
-        ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
-        ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
-        ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-        ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
-        
-    ]},
+        form:{},
+        menu:undefined,
         initialize: function( options) {
             options || (options = { });  
+            this.set("id",+new Date());
             this._setOptions(options);
             this._saveGeomEv=this.saveGeomEv.bind(this);
             this._closeFrameEv=this.closeFrameEv.bind(this);
             this.root=Element.create("div");
             this.on("geom_data",this.geomDataCallback.bind(this));
+        },
+        addToMenu:function(menu){
+            this.menu=menu;
+            this.menu.on("menu_click",this.menuClick.bind(this));
+            this.menu.addMenu({mapMenu:true,type:this.type,text:this.title,icon:this.icon,onlyIcon:this.onlyIcon,id:this.id});
+        },
+        menuClick:function(arg){
+            var menu=arg.menu,menuItem=menu.data;
+            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.id){
+               this.map.setMapDraw(this);
+            }
         },
         closeFrameEv:function(event,self){
             this.map.clearDrawGeometry();

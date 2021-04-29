@@ -17,6 +17,14 @@ var Util=geomap.util,Request=geomap.request,Template=Util.template,toPoint=Util.
 var extend = Util.object.extend;
 var Point=geomap.Point;
  
+/**
+ *  一、空菜单
+ *      var menu=new MapProject.Menu("toolPane",{map:map}); 
+        menu.on("menu_click",mapProjectMenuEvent);
+    二、有菜单项
+        var menu=new MapProject.Menu("toolPane",{map:map,menu:[{text:'菜单名',icon:'图标html',mapMenu:false,type:'分类',id:1,onlyIcon:false}]}); 
+        menu.on("menu_click",mapProjectMenuEvent);
+ */
 MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
     map:undefined,
     container:undefined,
@@ -25,7 +33,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
     tbStyle:{},
     memuOpt:{"className":"menu-item"},
     menu:[],
-    mapmenu:[{mapMenu:true,type:"reference_line",text:"参考线",id:"map_reference_Line"}],
+    mapmenu:[{mapMenu:true,type:"reference_line",icon:MapProject.Icons.refLine,text:"参考线",id:"map_reference_Line"}],
     _mapmenu:[],
     initialize: function(container, options) {
         options || (options = { });  
@@ -89,11 +97,14 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
     _create_menu_item:function(item){
         var li=Element.create("li",this.memuOpt);
         var label=Element.create("a");
+        var txt="";
         if(item.icon!=undefined && item.icon !=''){
-            label.innerHTML=item.icon +"&nbsp;"+ item.text;
-        }else{
-            label.innerText=item.text;
+            txt=item.icon;
+        } 
+        if(!item.onlyIcon){
+            txt+=("&nbsp;"+ item.text);
         }
+        label.innerHTML=txt;
         
         var myself=this;
         li.__menu_item=true;

@@ -47,6 +47,9 @@ else if (typeof define === 'function' && define.amd) {
       _projectMap:[],
       _init_map_status:false,
       drawType:"Rect",
+      mapQuery:null,
+      mapDraw:null,
+      title:"",
       initialize: function(container, options) {
         var mapContainer;
         if(typeof container === 'string'){
@@ -108,32 +111,38 @@ else if (typeof define === 'function' && define.amd) {
       },
       __queryCoordData:function(p){
         this.vectorLayer.clearData();
-        if(this.mapQuery){
-          var url=Template(this.mapQuery.url,{mapId:this.mapId});
+        var mq=this.get("mapQuery");
+        if(mq){
+          var url=Template(mq.url,{mapId:this.mapId});
           Request(url,{method:"POST",body:"p="+p,header:this.reqHead,onComplete:this._reqcb_queryCoordData});
         }
       },
       __reqcb_queryCoordData:function(xhr){
         var res=xhr.response,status=xhr.status; 
         this.vectorLayer.clearData();
-        if( status==200 && res.length>0 && res.indexOf("{")==0){ 
-           
-            if(this.mapQuery){
-
-              var featureCollection=JSON.parse(res);
-              this.mapQuery.fire("coord_data",featureCollection);
-            }
-           if(featureCollection.type="FeatureCollection"){
-            this.vectorLayer.addData(featureCollection,{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]});
-            this.fire("drawmap");
-           }
+        if( status==200   ){ 
+          var mq=this.get("mapQuery");
+          var featureCollection=null;
+          if(res.length>0 && res.indexOf("{")==0)
+          {
+             featureCollection=JSON.parse(res);
+          }
+          if(mq){  
+            mq.fire("coord_data",featureCollection);
+          }
+            
+          //  if(featureCollection && featureCollection.type=="FeatureCollection"){
+          //   this.vectorLayer.addData(featureCollection,{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]});
+          //   this.fire("drawmap");
+          //  }
         }
       },
       __drawMapGeom:function(geo){
-        if(this.mapDraw){
+        var md=this.get("mapDraw");
+        if(md){
           var myself=this;
           var arg={geometry:geo,layer:this.paletteLayer,clearDraw:this._clearDrawGeometry,map:myself};
-          this.mapDraw.fire("geom_data",arg);
+          md.fire("geom_data",arg);
         }
       },
       clearDrawGeometry:function(){
@@ -199,8 +208,10 @@ else if (typeof define === 'function' && define.amd) {
         if(mapInfo){
           this._mapInfo=mapInfo;
           this.mapId=mapInfo.mapId;
+          this.set("title",mapInfo.title);
           this._reset_map_conf();
         }
+        this.fire("loadmapinfo_end",mapInfo);
       },
       mapChange:function(index){ 
         if(this._projectMap &&  this._projectMap.length > index){
@@ -246,11 +257,15 @@ addServerLayer:function (param) {
   }}); 
 },
 setMapQuery:function(mq){
-  this.mapQuery=mq;
+  this.set("mapQuery",mq);
 },
 setMapDraw:function(md){
-  this.mapDraw=md;
-  this.paletteLayer.setType(this.mapDraw.drawType,this.mapDraw.fill);
+  this.set("mapDraw",md);
+  this.paletteLayer.setType(md.drawType,md.fill);
+},
+drawGeom:function(data,option){
+  this.vectorLayer.addData(data,option);
+  this.fire("drawmap");
 },
 jsonReq:function(url,data,fn){
   var mapurl=Template(url,{mapId:this.mapId}); 
