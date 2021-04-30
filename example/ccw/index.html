@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script> 
+        <script type="text/javascript" src="js/index.js"></script>
+        <style>
+            .infoTable{
+                 border: 1px solid #2196f3;font-size:12px;width:100%;
+            }
+            #toolPane{
+                z-index: 10; position: absolute; top:0px;  right: 0px; width:260px; height:18px; padding: 4px;
+                background-color: #101010c7; font-size:12px;
+                color:#fff;
+            }
+            #editInfoPane{
+                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
+                background-color: #101010c7; 
+                color:#fff;
+                overflow: scroll;
+            }
+            #editInfoPane .closeBtn{
+                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
+            }
+            .iconBtn{
+                margin: 0 10px;
+                cursor: pointer;
+            }
+            .loginFrame{
+                width: 600px;
+                height: 400px;
+                vertical-align: middle; 
+                padding: 100px;
+            }
+        </style>
+    </head>
+<body   style="margin: 0px; padding:0px;">
+    <center>
+    <div　class="loginFrame">
+        <form id="loginForm">
+        <input type="text" name="userName" placeholder="用户名">
+        <br>
+        <input type="password" name="password"　placeholder="密码">
+        <br>
+        <input type="text" name="captcha"　placeholder="验证码">
+        <br>
+        <input type="hidden" name="uuid" value="1111-666666">
+        <img id="captchaImg" src="http://master.cn/ccw/captcha?uuid=1111-666666" onclick="reloadCaptcha()">
+    </form>
+        <input type="button" value="登录" onclick="login()">
+    </div>
+</center>
+    <script type="text/javascript">
+    function login(){ 
+        var obj=geomap.util.element.formToJson(document.getElementById("loginForm"));
+        var url="http://master.cn/ccw/login";
+        geomap.request(url,{method:"JSON",body:obj,header:CCW.header,onComplete:function(xhr){
+            var res=xhr.response,status=xhr.status; 
+                console.log("url="+url+",body="+res);
+                if( status==200 ){ 
+                    var result=JSON.parse(res);
+                    if(result.code==0){
+                        var auth=result.data;
+                        CCW.auth=auth;
+                        var token=auth.ssoToken.token;
+                        CCW.header= ("token="+token);
+                        window.sessionStorage.setItem("token",token);
+                    }
+                }
+            }
+        });
+
+    }
+    function reloadCaptcha(){
+
+        document.getElementById("captchaImg").src="http://master.cn/ccw/captcha?uuid=1111-666666&r="+new Date();
+    }
+    </script>
+</body>
+</html>

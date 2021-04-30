@@ -157,8 +157,8 @@ fabric.properties
 
 .factorypath
 .vscode
-ccw/**
-example/ccw
-example/ccw/**
+#ccw/**
+#example/ccw
+#example/ccw/**
 dist/geomap.min.js.gz
 application-ljc.yml

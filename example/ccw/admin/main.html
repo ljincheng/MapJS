@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../../dist/geomap.js"></script> 
+        <script type="text/javascript" src="../js/index.js"></script>
+        <style>
+            .infoTable{
+                 border: 1px solid #2196f3;font-size:12px;width:100%;
+            }
+            #toolPane{
+                z-index: 10; position: absolute; top:0px;  right: 0px; width:260px; height:18px; padding: 4px;
+                background-color: #101010c7; font-size:12px;
+                color:#fff;
+            }
+            #editInfoPane{
+                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
+                background-color: #101010c7; 
+                color:#fff;
+                overflow: scroll;
+            }
+            #editInfoPane .closeBtn{
+                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
+            }
+            .iconBtn{
+                margin: 0 10px;
+                cursor: pointer;
+            }
+            .loginFrame{
+                width: 600px;
+                height: 400px;
+                vertical-align: middle; 
+                padding: 100px;
+            }
+        </style>
+    </head>
+<body   style="margin: 0px; padding:0px;">
+    <center>
+    <div　class="loginFrame">
+        <form id="loginForm">
+        <input type="text" id="token" placeholder="Token">
+       
+    </form>
+        <input type="button" value="登录" onclick="login()">
+    </div>
+</center>
+    <script type="text/javascript">
+    function login(){ 
+        
+                        var token=window.sessionStorage.getItem("token");
+                        console.log(token);
+                        document.getElementById("token").value=token;
+                 
+    }
+   
+    </script>
+</body>
+</html>
