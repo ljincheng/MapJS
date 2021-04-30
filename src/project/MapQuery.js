@@ -162,7 +162,7 @@
             if(this.viewFrame){
                 this.viewFrame.show();
             }else{
-                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2});
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:'rc'});
             }
         }
     

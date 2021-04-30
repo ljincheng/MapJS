@@ -3806,6 +3806,7 @@ function parseToForm(form){
         }
         eventjs.add(this.rootFrame,"click touch",this.rootFrameClickEv.bind(this));
         // this.closeBtn.click=closeFn;
+        this.rootFrameClickEv();
       }, 
       rootFrameClickEv:function(event,self){
         if(event){
@@ -5486,7 +5487,7 @@ function parseToForm(form){
                 var y=1*row + r;
                 var l=Math.floor(left+tsize*c)+offsetSize.x;
                 var t=Math.floor(top+tsize*r)+offsetSize.y;
-                if( x>=0 && y>=0 ){
+                // if( x>=0 && y>=0 ){
                     // var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
@@ -5497,7 +5498,7 @@ function parseToForm(form){
                       delete this._tiles[tileId];
                     }
                     this._tiles[tileId]=tile;
-                }
+                // }
           }
         }
         this.loadTileSource();
@@ -6775,7 +6776,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             if(this.viewFrame){
                 this.viewFrame.show();
             }else{
-                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2});
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:'rc'});
             }
         }
     

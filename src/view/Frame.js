@@ -62,6 +62,7 @@
         }
         eventjs.add(this.rootFrame,"click touch",this.rootFrameClickEv.bind(this));
         // this.closeBtn.click=closeFn;
+        this.rootFrameClickEv();
       }, 
       rootFrameClickEv:function(event,self){
         if(event){

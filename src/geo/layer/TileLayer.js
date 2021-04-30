@@ -81,7 +81,7 @@
                 var y=1*row + r;
                 var l=Math.floor(left+tsize*c)+offsetSize.x;
                 var t=Math.floor(top+tsize*r)+offsetSize.y;
-                if( x>=0 && y>=0 ){
+                // if( x>=0 && y>=0 ){
                     // var imgUrl=geomap.util.template(this.url,{z:z,x:x,y:y});
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
@@ -92,7 +92,7 @@
                       delete this._tiles[tileId];
                     }
                     this._tiles[tileId]=tile;
-                }
+                // }
           }
         }
         this.loadTileSource();
