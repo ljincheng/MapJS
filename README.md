@@ -7,4 +7,6 @@
 
 node build.js modules=ALL
 
+dist是打包之后的存放目录
+
  
