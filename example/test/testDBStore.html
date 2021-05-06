@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script>
+        
+    </head>
+<body onload="winLoad()"  style="margin: 0px; padding:0px;">
+ <img id="elephant"/>
+ <br>
+ <canvas id="canvasTest" style="width:500px; height:300px; border: 1px solid red;"></canvas>
+   
+<script type="text/javascript">
+    var testImgUrl="https://c.tile.openstreetmap.org/1/0/0.png?cacheTime=1619191877795";
+    
+   
+   function winLoad(){
+     var dbStore=new geomap.DBStore({dbName:"elephants",dbFile:"elephantFiles"});
+    
+     var res=dbStore.openStore();
+     if(res!=null){
+        res.then(function(resolve,reject){
+            dbStore.openStoreSuccess(null);
+           dbStore.getStore(testImgUrl).then( function(event){
+               var imgFile = event.target.result;
+               var URL = window.URL || window.webkitURL;
+           var imgURL = URL.createObjectURL(imgFile); 
+           var imgElephant = document.getElementById("elephant");
+           imgElephant.src=imgURL;
+           });
+        },function(event){
+            dbStore.openStoreError(event);
+        });
+        //  res.then(resolve =>{
+        //    dbStore.openStoreSuccess(null);
+        //    dbStore.getStore(testImgUrl).then( function(event){
+        //        var imgFile = event.target.result;
+        //        var URL = window.URL || window.webkitURL;
+        //    var imgURL = URL.createObjectURL(imgFile); 
+        //    var imgElephant = document.getElementById("elephant");
+        //    imgElephant.src=imgURL;
+        //    });
+        //  },reject=>{
+        //    dbStore.openStoreError(null);
+        //  })
+     }
+   
+   }
+    
+</script>  
+</body>
+</html>
