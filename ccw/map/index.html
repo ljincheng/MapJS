@@ -156,7 +156,7 @@ function loadMap(){
 
         var dbStore=geomap.GlobalDBStore(["ccw"],"ccw").dbStore;
         dbStore.on("open_success",function(event){
-            geomap.GlobalDBStore(["ccw"],"ccw").dbStore.getStore("ccw","token").then(function(event){
+            dbStore.getStore("ccw","token").then(function(event){
               var tokenStr = event.target.result;
                 if(tokenStr!=undefined){
                     token=tokenStr;
