@@ -24,10 +24,12 @@
             dbStore.openStoreSuccess(null);
            dbStore.getStore(testImgUrl).then( function(event){
                var imgFile = event.target.result;
+               if(imgFile !=undefined){
                var URL = window.URL || window.webkitURL;
-           var imgURL = URL.createObjectURL(imgFile); 
-           var imgElephant = document.getElementById("elephant");
-           imgElephant.src=imgURL;
+                var imgURL = URL.createObjectURL(imgFile); 
+                var imgElephant = document.getElementById("elephant");
+                imgElephant.src=imgURL;
+               }
            });
         },function(event){
             dbStore.openStoreError(event);

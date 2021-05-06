@@ -20,7 +20,7 @@
         dbFile:"geomapFile",
         dbRequest:null,
         db:null,
-        openStatus:false,
+        
         openSuccess:false,
         openError:false,
         dbInitStatus:false,
@@ -33,17 +33,20 @@
           this.indexedDB=indexedDB;
          // this.openStore();
     },
-    createStore:function(){
+    createStore:function(event){
         console.log("Creating objectStore");
-        this.dbRequest.result.createObjectStore(this.dbName);
+        var db = event.target.result;
+        // if (!db.objecttables.contains(this.dbName)) { //判断数据库中是否已经存在该名称的数据表
+          db.createObjectStore(this.dbName); 
+        // }
+        // this.dbRequest.result.createObjectStore(this.dbName);
         this.dbInitStatus=true;
     },
     openStore:function(){
-        if(this.openStatus)
+        if(this.dbRequest)
         {
             return null;
         }
-        this.openStatus=true;
         var request = this.indexedDB.open(this.dbFile, this.dbVersion);
         this.dbRequest=request;
         // request.onerror = function (event) {
@@ -52,7 +55,7 @@
         //         this.dbInitStatus=true;
         //     }.bind(this);
         // request.onsuccess=this.openStoreSuccess.bind(this);
-        // request.onupgradeneeded = this.createStore.bind(this);
+        request.onupgradeneeded = this.createStore.bind(this);
 
         var other=this;
         var res= new Promise(function(resolve, reject) {
