@@ -86,6 +86,7 @@ var filesToInclude = [
     'src/core/util_element.js',
     'src/core/util_event.js',
     'src/core/Class.js',
+    'src/core/DBStore.js',
     'src/core/Animation.js',
     'src/core/Image.js',
     'src/core/Request.js',
