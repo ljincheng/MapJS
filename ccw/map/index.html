@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script>
+        <link rel="stylesheet" href="../css/map.css">
+    </head>
+<body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
+    <div id="titlePane"><h4 id="mapTitle" style="margin-left: 10px;"></h4></div>
+    <div id="toolPane"></div>
+   
+ 
+<div id="map" style="z-index:1;border:0px solid blue; left: 0px; top:70px;"></div>
+ 
+ <script type="text/javascript">
+  
+var map,mapPane;
+
+    function winLoad(){
+       var winWidth=window.innerWidth,winHeight=window.innerHeight,mapHeight=winHeight;
+        mapPane=document.getElementById("map");
+        geomap.element.setStyle(mapPane,{"width":winWidth+"px","height":mapHeight+"px"});
+        
+        var mapId=geomap.util.getUrlParam("mapId");
+        var layer=geomap.util.getUrlParam("layer");
+        var saleStatus=geomap.util.getUrlParam("saleStatus");
+        console.log("====mapId:"+mapId+",layer="+layer+",saleStatus="+saleStatus);
+        if(mapId===''){
+            mapId="example";
+        }
+        // var ccw_config=ccw_conf(layer,saleStatus);//加载地图配置
+        map=new MapProject.Map(mapPane,{mapId:mapId,
+                                        server:{project:"http://master.cn/ccw/wms/map/project/{mapId}",
+                                                tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
+                                                mapInfo:"http://master.cn/ccw/wms/map/mapinfo/{mapId}",
+                                                orderChange:"http://master.cn/ccw/wms/map/layerOrderChange/{mapId}",
+                                                displayLayer:"http://master.cn/ccw/wms/map/displayLayer/{mapId}",
+                                                deleteLayer:"http://master.cn/ccw/wms/map/deleteLayer/{mapId}",
+                                                addLayer:"http://master.cn/ccw/wms/map/addLayer/{mapId}"
+                                            }});//创建地图
+        // map.on("map_complete",mapComplete);//地图加载完成事件
+        // map.on("projectmap_change",projectMapChange)//地图项目切换事件
+        // map.on("coord_query_change",function(featureCollection){
+        //         setEditContent(featureCollection);  
+        // });//查询点、面坐标返回数据接收
+
+        map.on("loadmapinfo_end",function(mapinfo){
+            document.getElementById("mapTitle").innerText=mapinfo.title;
+        });
+
+       
+        var menu=new MapProject.Menu("toolPane",{map:map,menu:[{"text":"新建地图",type:"CREATEMAP",id:-1}]}); 
+        menu.on("menu_click",mapProjectMenuEvent);
+        var layerInfo=new MapProject.LayerInfo({map:map});
+        layerInfo.addToMenu(menu);
+
+        var geomOption={style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]};
+        //============坐标搜索车位
+        var parkingMapQuery=new MapProject.MapQuery({map:map,id:1,icon:MapProject.Icons.query,title:"查询车位",geomOption:geomOption,url:"http://master.cn/ccw/wms/parking/query/{mapId}",
+            buttons:[{text:"删除",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
+                var data=self.data,el=self.target;
+                map.jsonReq("http://master.cn/ccw/wms/parking/delete/{mapId}",{featureId:data.parking_id},function(xhr){
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        map.refresh();
+                        parkingMapQuery.removeRow(el);
+                    }
+                });
+            }},{text:"定位",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
+                var data=self.data,el=self.target,features=self.features;
+               if(features.geometry && features.geometry.type=='Polygon'){
+                   var coords=features.geometry.coordinates;
+                   if(coords.length>0 && coords[0].length>0){
+                       var cp=geomap.util.coordCenter(coords[0]);
+                       if(cp){
+                       console.log("cp="+cp[0]+","+cp[1]);
+                    //    cp=[0,0];
+                       map.animMove(cp);
+                       }
+                   }
+               }
+            }}]});
+        map.setMapQuery(parkingMapQuery);
+        parkingMapQuery.addToMenu(menu);
+        
+        //============坐标搜索楼盘
+        geomOption={style:{strokeStyle:"red",lineWidth:1},_fill:false,lineDash:[6,3]};
+        var buildingMapQuery=new MapProject.MapQuery({map:map,id:2,icon:MapProject.Icons.query2,title:"查询楼栋",geomOption:geomOption,url:"http://master.cn/ccw/wms/building/query/{mapId}",
+            buttons:[{text:"删除",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
+                var data=self.data,el=self.target;
+                map.jsonReq("http://master.cn/ccw/wms/building/delete/{mapId}",{featureId:data.id},function(xhr){
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        map.refresh();
+                        buildingMapQuery.removeRow(el);
+                    }
+                });
+            }},
+            {text:"定位",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
+                var data=self.data,el=self.target,features=self.features;
+               if(features.geometry && features.geometry.type=='Polygon'){
+                   var coords=features.geometry.coordinates;
+                   if(coords.length>0 && coords[0].length>0){
+                       var cp=geomap.util.coordCenter(coords[0]);
+                       if(cp){
+                       console.log("cp="+cp[0]+","+cp[1]);
+                    //    cp=[0,0];
+                       map.animMove(cp);
+                       }
+                   }
+               }
+            }
+        }]});
+        // map.setMapQuery(buildingMapQuery);
+        buildingMapQuery.addToMenu(menu);
+
+         //============坐标搜索楼盘的车位
+         var  bparkingMapQuery=new MapProject.MapQuery({map:map,id:3,icon:MapProject.Icons.queryRect,title:"查询楼栋的车位",geomOption:geomOption,url:"http://master.cn/ccw/wms/building/queryParking/{mapId}",
+            buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"},fn:function(event,self){
+                var data=self.data,el=self.target;
+                map.jsonReq("http://master.cn/ccw/wms/parking/delete/{mapId}",{featureId:data.parking_id},function(xhr){
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        map.refresh();
+                        bparkingMapQuery.removeRow(el);
+                    }
+                });
+            }}]});
+        // map.setMapQuery(bparkingMapQuery);
+        bparkingMapQuery.addToMenu(menu);
+
+
+
+        var parkingMapDraw=new MapProject.MapDraw({title:"绘制车位",id:1,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/parking/add/{mapId}",
+        form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
+        ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+        ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
+        ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
+        ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
+        
+    ]}
+    });
+    map.setMapDraw(parkingMapDraw);
+        parkingMapDraw.addToMenu(menu);
+
+
+        var buildingMapDraw=new MapProject.MapDraw({title:"绘制楼栋",id:2,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/building/add/{mapId}",
+        form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}]}
+    });
+    buildingMapDraw.addToMenu(menu);
+        // map.setMapDraw(mapDraw);
+      
+ 
+ }
+
+ function mapProjectMenuEvent(arg){
+     console.log("##mapProjectMenuEvent="+arg);
+     if(arg.menu.data.id=== -1){
+        createMap();
+     }
+ }
+
+ function winResize(){
+   var winWidth=window.innerWidth, winHeight=window.innerHeight, mapHeight=winHeight;
+   mapPane=document.getElementById("map");
+    geomap.element.setStyle(mapPane,{"width":winWidth+"px","height":mapHeight+"px"}); 
+    map.resize();
+ }
+ function createMap(){
+    var createMapFn=function createMapFn(){
+        var obj=geomap.element.formToJson( window._createMapForm);
+        map.jsonReq("http://master.cn/ccw/wms/map/create",obj,function(xhr){
+            if(xhr.status==200){
+                alert(xhr.response);
+            }
+        });
+    }
+     var form={name:"创建地图",id:"form_create_map",properties:[{id:"mapId",type:"text",title:"地图ID",value:"",required:true},
+     {id:"projectId",type:"text",title:"项目ID",value:"",required:true}, {id:"title",type:"text",title:"名称",value:"",required:true}, {id:"subTitle",type:"text",title:"楼层名称",value:"",required:true}],buttons:[{title:"确定",type:"button",value:"确定",click:createMapFn}]};
+     window._createMapForm=geomap.element.parseToForm(form);
+      window._FRAMEID_CREATEMAP= new geomap.view.Frame(document.body,{title:form.name, body:window._createMapForm,w:400,h:220});
+
+ }
+
+</script>   
+</body>
+</html>

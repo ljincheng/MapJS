@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script>
+        <script type="text/javascript" src="js/Project.js"></script>
+        <script type="text/javascript" src="js/ccwtools.js"></script>
+        <script type="text/javascript" src="js/ccwmap.js"></script>
+        <script type="text/javascript" src="js/ccwconf.js"></script>
+        <link rel="stylesheet" href="css/map.css">
+    </head>
+<body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
+    <div id="toolPane"></div>
+   
+ 
+<div id="map" style="z-index:1;border:0px solid blue; left: 0px; top:40px;"></div>
+ 
+ <script type="text/javascript">
+  
+var map,mapPane;
+
+    function winLoad(){
+       var winWidth=window.innerWidth,winHeight=window.innerHeight,mapHeight=winHeight;
+        mapPane=document.getElementById("map");
+        geomap.element.setStyle(mapPane,{"width":winWidth+"px","height":mapHeight+"px"});
+        
+        var mapId=geomap.util.getUrlParam("mapId");
+        var layer=geomap.util.getUrlParam("layer");
+        var saleStatus=geomap.util.getUrlParam("saleStatus");
+        console.log("====mapId:"+mapId+",layer="+layer+",saleStatus="+saleStatus);
+        if(mapId===''){
+            mapId="example";
+        }
+        var ccw_config=ccw_conf(layer,saleStatus);//加载地图配置
+        map=CCWMAP.Map.create("map",ccw_config,mapId);//创建地图
+        map.on("map_complete",mapComplete);//地图加载完成事件
+        map.on("projectmap_change",projectMapChange)//地图项目切换事件
+        map.on("coord_query_change",function(featureCollection){
+                setEditContent(featureCollection);  
+        });//查询点、面坐标返回数据接收
+ 
+ }
+
+ function winResize(){
+   var winWidth=window.innerWidth, winHeight=window.innerHeight, mapHeight=winHeight;
+    geomap.element.setStyle(mapPane,{"width":winWidth+"px","height":mapHeight+"px"}); 
+    map.resize();
+ }
+
+
+function tool_show_referenceLine(){
+    map.project.paletteLayer.toggleReferenceLine();
+}
+ 
+
+function setEditContent(featureData){ 
+            var rows=[],html="";
+    if(featureData.type=="FeatureCollection"){
+            var geomNum=featureData.features.length;
+            for(var i=0;i<geomNum;i++){
+                var feature=featureData.features[i];
+                var properties=feature.properties;
+                var fid=feature.id.split(".");
+                if(fid.length>1){
+                    properties.id=fid[1]
+                }else{
+                    properties.id=feature.id;
+                }
+                
+                rows.push(properties);
+            }
+        }else if(featureData.type=="Feature"){
+            var properties=featureData.properties;
+            var fid=featureData.id.split(".");
+                if(fid.length>1){
+                    properties.id=fid[1]
+                }else{
+                    properties.id=featureData.id;
+                }
+            rows.push(properties);
+        }
+        if(rows.length>0){
+              html="<table class=\"infoTable\">";
+            var header="<tr>";
+            for(var item in rows[0]){
+                header+="<th>"+item+"</th>";
+            }
+            header+="<th>操作</th></tr>";
+            html+=header;
+            for(var i=0,k=rows.length;i<k;i++){
+                var rowHtml="<tr>";
+                for(var item in rows[i]){
+                    rowHtml+="<td>"+rows[i][item]+"</td>";
+                }
+                rowHtml+="<td><a onclick=\"deleteFeature('"+rows[i].parking_id+"')\">删除</a></td>";
+                rowHtml+"</tr>";
+                html+=rowHtml;
+            }
+            html+="</table>";  
+        } 
+        if(window.infoFrame){
+            window.infoFrame.setData("记录信息",html,{w:500,h:400});
+            window.infoFrame.show();
+        }else{
+            window.infoFrame=new geomap.view.Frame(document.body,{title:"记录信息",body:html,w:500,h:400,closeType:2});
+        }
+        
+}
+
+function deleteFeature(fid){
+    console.log("fid="+fid);
+    map.project.deleteFeature(fid);
+  
+}
+
+function projectMapChange(){
+    map.project.paletteLayer.clearGeometry()
+    map.project.vectorLayer.clearData();
+    if(window.infoFrame){
+            window.infoFrame.hide();
+    }
+}
+
+function mapComplete(map){
+    var mapsHtml="";
+    var projectMap=map.project.projectMap;
+    var menus=[{id:"1",title:"参考线",icon:'<svg t="1619426142325" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2269" width="12" height="12"><path d="M56.888889 284.444444h910.222222v113.777778H56.888889zM56.888889 625.777778h910.222222v113.777778H56.888889z" fill="#0D1733" p-id="2270"></path><path d="M739.555556 56.888889v910.222222h-113.777778V56.888889zM398.222222 56.888889v910.222222H284.444444V56.888889z" fill="#0D1733" p-id="2271"></path></svg>'}
+    ,{id:"2",title:"图层信息",icon:'<svg t="1619426085418" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1848" width="12" height="12"><path d="M512 78.769231l433.230769 315.076923-433.230769 315.076923L78.769231 393.846154 512 78.769231z m352 492.307692L945.230769 630.153846 512 945.230769 78.769231 630.153846l81.230769-59.076923L512 827.076923l352-256z" fill="#333333" p-id="1849"></path></svg>'}];
+    if(projectMap != undefined && projectMap.length>0){
+        for(var i=0,k=projectMap.length;i<k;i++){
+            var mapInfo=projectMap[i];
+            menus.push({id:"layerChange",title:mapInfo.subTitle,layerIndex:i});
+        }
+    }
+
+    //图层信息
+    // var mapLayerInfo="",layers=map.project.layers;
+    // if(layers && layers.length>0){
+    //     for(var i=0,k=layers.length;i<k;i++){
+    //         var layer=layers[i];
+    //         mapLayerInfo+="<br><span>"+(i+1)+"&nbsp;["+layer.layerType+"]"+layer.layerSource+"</span>";   
+    //     }
+
+    // }
+    var addLayerUrl=geomap.util.template(map.project.conf.addLayer,{mapId:map.mapId});
+    var deleteLayerUrl=geomap.util.template(map.project.conf.deleteLayer,{mapId:map.mapId});
+    var orderChangeUrl=geomap.util.template(map.project.conf.orderChange,{mapId:map.mapId});
+    if(!Project.layerInfo){
+        Project.layerInfo=new Project.MapLayerInfo(map.project,map.project.layers,{layerUrl:{add:addLayerUrl,delete:deleteLayerUrl,order:orderChangeUrl}});
+        Project.layerInfo.addToolBar();
+    }
+    
+    if(Project.defaultMenu == undefined){
+        var toolContainer=document.getElementById("toolPane");
+        var menu=new Project.Menu(toolContainer); 
+        menu.setMenu(menus);
+        Project.defaultMenu=menu;
+        Project.Events.on("menu",MenuEvents);
+    }
+    
+    Project.layerInfo.loadMapInfo();
+    
+
+} 
+function MenuEvents(arg){
+    var event=arg.event,self=arg.self;
+    var target=self.target;
+    if(target._data){
+        var menu=target._data.data;
+        if(menu.id=== '1'){
+            map.project.paletteLayer.toggleReferenceLine();
+        }else if(menu.id=== '2'){
+            var el=geomap.element.create("div");
+            geomap.debug("#====type el="+ (typeof el));
+            if(!Project.Frames.mapLayerInfo){
+
+               Project.Frames.mapLayerInfo=new geomap.view.Frame(document.body,{title:"图层信息", body:Project.layerInfo.getElement(),w:600,h:450,closeType:2});
+            }else{
+                Project.Frames.mapLayerInfo.show();
+            }
+        }else if(menu.id==='layerChange'){
+            map.project.projectMapChange(menu.layerIndex);
+        }
+    }
+}
+</script>   
+</body>
+</html>
