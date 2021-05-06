@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="../../dist/geomap.js"></script> 
+        <script type="text/javascript" src="../dist/geomap.js"></script> 
         <script type="text/javascript" src="js/index.js"></script>
         <style>
             .infoTable{
@@ -52,8 +52,8 @@
     </div>
 </center>
     <script type="text/javascript">
-    function login(){ 
-        var obj=geomap.util.element.formToJson(document.getElementById("loginForm"));
+    function login(){
+        var obj=geomap.element.formToJson(document.getElementById("loginForm"));
         var url="http://master.cn/ccw/login";
         geomap.request(url,{method:"JSON",body:obj,header:CCW.header,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 

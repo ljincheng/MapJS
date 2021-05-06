@@ -23,6 +23,7 @@
         _canvas_map_size:new Point(0,0),
         _mapSize:null,
         _tiles:{},
+        headers:{},
        initialize: function( options) {
         this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
@@ -86,7 +87,7 @@
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
                     var tileId="cr-"+c+"-"+r;
-                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId};
+                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize};
                     if(this._tiles[tileId]){
                       this._tiles[tileId]=null;
                       delete this._tiles[tileId];
@@ -135,7 +136,7 @@
               }
           }
 
-          if(tile.tag==0){
+          if(tile.tag==0){ 
             var img=new geomap.Image(tile);
             img.on("drawend",this._drawCallbackID);
             img.loadTile(this.url,tile);

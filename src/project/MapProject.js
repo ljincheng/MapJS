@@ -152,7 +152,7 @@ else if (typeof define === 'function' && define.amd) {
         this._reset_server();
          if(!this._init_map_status){
            this._init_map_status=true;
-           var parkingLayer=new geomap.TileLayer({url:this._server.tile});
+           var parkingLayer=new geomap.TileLayer({url:this._server.tile,headers:this.reqHead});
            this.parkingLayer=parkingLayer;
            var vectorLayer=new geomap.VectorLayer();
            this.vectorLayer=vectorLayer;

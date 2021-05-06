@@ -3029,6 +3029,8 @@ function parseToForm(form){
         loaded:false,
         ctx:undefined,
         tag:0,
+        tileSize:256,
+        headers:{},
     initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
@@ -3088,20 +3090,67 @@ function parseToForm(form){
     //   var img=this.image;
     //     var e={img:img,target:other};
         this.fire("onload");
+        //缓存图片
+        var strImgData=localStorage.getItem(this.imgSrc);
+        if(!strImgData){
+          var tileSize=this.tileSize;
+          var canvas = document.createElement('canvas');
+          var ctxt = canvas.getContext('2d');
+          canvas.width = tileSize;
+          canvas.height = tileSize;
+          ctxt.drawImage(this.image, 0, 0);
+          var imgAsDataURL = canvas.toDataURL("image/png");
+          localStorage.setItem(this.imgSrc, imgAsDataURL);
+          canvas.remove();
+        }
     },
     setSrc:function(url){ 
       // if(this.loaded && this.image.src === url){
       //   this.onLoad(this.image);
       // }else{
         this.loaded=false;
-        this.image.src=url;
+        this.imgSrc=url;
+        var img=this.image;　
+        var strImgData=localStorage.getItem(url);
+        if(strImgData){
+          this.image.src=strImgData;
+        }else{
+          this.reqImageData(url).then(function(response){
+            var imageURL = window.URL.createObjectURL(response);
+            img.src=imageURL;
+          });
+        }
+        // this.image.src=url;
       // this.loaded=false;
       // }
       //this.getElement().src=url;
     },
     getSrc:function(){
-      return this.image.src;
+      return  this.imgSrc;
+      // return this.image.src;
     },
+ reqImageData:function(url) {
+   var headers=this.headers;
+  return new Promise(function(resolve, reject) {
+    var request = new XMLHttpRequest();
+    request.open('GET', url);
+    request.responseType = 'blob';
+    request.onload = function() {
+      if (request.status === 200) {
+        resolve(request.response);
+      } else {
+        reject(Error('Image didn\'t load successfully; error code:' + request.statusText));
+      }
+    };
+    request.onerror = function() {
+        reject(Error('There was a network error.'));
+    };
+    for(var key in headers){
+      request.setRequestHeader(key,headers[key]);
+    }
+    request.send();
+  });
+},
     fromURL:function(url,x,y){
       if(x!=undefined && y != undefined){
         this.x=x;
@@ -5429,6 +5478,7 @@ function parseToForm(form){
         _canvas_map_size:new Point(0,0),
         _mapSize:null,
         _tiles:{},
+        headers:{},
        initialize: function( options) {
         this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
@@ -5492,7 +5542,7 @@ function parseToForm(form){
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
                     var tileId="cr-"+c+"-"+r;
-                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId};
+                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize};
                     if(this._tiles[tileId]){
                       this._tiles[tileId]=null;
                       delete this._tiles[tileId];
@@ -5541,7 +5591,7 @@ function parseToForm(form){
               }
           }
 
-          if(tile.tag==0){
+          if(tile.tag==0){ 
             var img=new geomap.Image(tile);
             img.on("drawend",this._drawCallbackID);
             img.loadTile(this.url,tile);
@@ -6081,7 +6131,7 @@ else if (typeof define === 'function' && define.amd) {
         this._reset_server();
          if(!this._init_map_status){
            this._init_map_status=true;
-           var parkingLayer=new geomap.TileLayer({url:this._server.tile});
+           var parkingLayer=new geomap.TileLayer({url:this._server.tile,headers:this.reqHead});
            this.parkingLayer=parkingLayer;
            var vectorLayer=new geomap.VectorLayer();
            this.vectorLayer=vectorLayer;

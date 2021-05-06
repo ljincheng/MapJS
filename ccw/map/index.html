@@ -30,7 +30,7 @@ var map,mapPane;
             mapId="example";
         }
         // var ccw_config=ccw_conf(layer,saleStatus);//加载地图配置
-        map=new MapProject.Map(mapPane,{mapId:mapId,
+        map=new MapProject.Map(mapPane,{mapId:mapId,reqHead:{token:'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE2MjAyNjgzNjQsIm9hR3VpZCI6ImVhYjU4OTYwLTViOTItMTFlYS04ZjU2LTlkY2UwYTMyZTEzYyIsInVzZXJOYW1lIjoibGluamluY21mIiwiZXhwIjoxNjIwMjg5OTY0LCJ1c2VySWQiOiIxMDAwMDAwIiwiaWF0IjoxNjIwMjY4MzY0fQ==.228328e3946e054ed201f1031b4e5f472b3e3559bd7e4b8e458524d03b931020'},
                                         server:{project:"http://master.cn/ccw/wms/map/project/{mapId}",
                                                 tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
                                                 mapInfo:"http://master.cn/ccw/wms/map/mapinfo/{mapId}",
