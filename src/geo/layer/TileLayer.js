@@ -69,6 +69,7 @@
         var top=startTile.top;
   
         this._drawLock=lock; 
+        var mylayer=this;
         for(var key in this._tiles){
           this._tiles[key]=null;
         }
@@ -87,7 +88,7 @@
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
                     var tileId="cr-"+c+"-"+r;
-                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize};
+                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize,lockKey:lock,layer:mylayer};
                     if(this._tiles[tileId]){
                       this._tiles[tileId]=null;
                       delete this._tiles[tileId];

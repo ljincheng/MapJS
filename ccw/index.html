@@ -35,7 +35,7 @@
             }
         </style>
     </head>
-<body   style="margin: 0px; padding:0px;">
+<body   style="margin: 0px; padding:0px;" onload="winLoad()">
     <center>
     <div　class="loginFrame">
         <form id="loginForm">
@@ -52,7 +52,9 @@
     </div>
 </center>
     <script type="text/javascript">
+      var openDBStore=false;
     function login(){
+        
         var obj=geomap.element.formToJson(document.getElementById("loginForm"));
         var url="http://master.cn/ccw/login";
         geomap.request(url,{method:"JSON",body:obj,header:CCW.header,onComplete:function(xhr){
@@ -65,6 +67,10 @@
                         CCW.auth=auth;
                         var token=auth.ssoToken.token;
                         CCW.header= ("token="+token);
+                        if(openDBStore){
+                            geomap.GlobalDBStore(["ccw"],"ccw").dbStore.putStore("ccw","token",token);
+                            window.location.href="map/index.html";
+                        }
                         window.sessionStorage.setItem("token",token);
                     }
                 }
@@ -73,8 +79,12 @@
 
     }
     function reloadCaptcha(){
-
         document.getElementById("captchaImg").src="http://master.cn/ccw/captcha?uuid=1111-666666&r="+new Date();
+    }
+    function winLoad(){
+        geomap.GlobalDBStore(["ccw"],"ccw").dbStore.on("open_success",function(event){
+            openDBStore=true;
+        });
     }
     </script>
 </body>

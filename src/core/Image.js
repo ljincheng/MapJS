@@ -84,6 +84,11 @@
         tag:0,
         tileSize:256,
         headers:{},
+        useCache:false,
+        dbName:"tile",
+        dbFile:"geomap",
+        dbStore:undefined,
+        layer:null,
     initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
@@ -91,6 +96,7 @@
           this._onloadHandle=this.onLoad.bind(this);
           this.image.onload=this._onloadHandle;
        //  this.setElement(element);
+       this.getDBStore();
     },
     isTile:function(tile){
       return (tile.x === this.x && tile.y === this.y && tile.z === this.z && tile.cacheTime == this.cacheTime);
@@ -110,9 +116,11 @@
     },
     drawCanvas:function(){
       if(this.loaded && this.ctx !=undefined){
-        this.ctx.drawImage(this.image,this.left,this.top);
-        var other=this;
-        this.fire("drawend",this);
+        if(this.layer && this.layer._drawLock == this.lockKey){
+          this.ctx.drawImage(this.image,this.left,this.top);
+          var other=this;
+          this.fire("drawend",this);
+        }
       }
     },
     // setElement:function(img){
@@ -138,45 +146,70 @@
     },
     onLoad:function(event){ 
       this.loaded=true;
-      this.drawCanvas();
-    //   var other=this;
-    //   var img=this.image;
-    //     var e={img:img,target:other};
+      this.drawCanvas(); 
         this.fire("onload");
-        //缓存图片
-        var strImgData=localStorage.getItem(this.imgSrc);
-        if(!strImgData){
-          var tileSize=this.tileSize;
-          var canvas = document.createElement('canvas');
-          var ctxt = canvas.getContext('2d');
-          canvas.width = tileSize;
-          canvas.height = tileSize;
-          ctxt.drawImage(this.image, 0, 0);
-          var imgAsDataURL = canvas.toDataURL("image/png");
-          localStorage.setItem(this.imgSrc, imgAsDataURL);
-          canvas.remove();
+    },
+    getDBStore:function(){
+      if(!this.dbStore){
+        var store=geomap.GlobalDBStore([this.dbName],this.dbFile);
+        if(store.open){
+          this.useCache=true;
+        }else{
+          var myself=this;
+          store.dbStore.on("open_success",function(event){
+            store.dbStore.clearData(myself.dbName);
+            myself.useCache=true;
+          });
         }
+
+        this.dbStore=store.dbStore;
+      }
+      return  this.dbStore;
+    },
+    saveCache:function(url,blob){
+      if(this.useCache){
+        this.dbStore.putStore(this.dbName,url,blob);
+      }
     },
     setSrc:function(url){ 
-      // if(this.loaded && this.image.src === url){
-      //   this.onLoad(this.image);
-      // }else{
+ 
         this.loaded=false;
         this.imgSrc=url;
         var img=this.image;　
-        var strImgData=localStorage.getItem(url);
-        if(strImgData){
-          this.image.src=strImgData;
+        var other=this;
+    
+        if(this.useCache){
+
+          var store=this.dbStore.getStore(this.dbName,url);
+            if(store!=null){
+              store.then(function(event){
+                  var imgFile = event.target.result;
+                  if(imgFile !=undefined){
+                    var imageURL = window.URL.createObjectURL(imgFile);
+                    img.src=imageURL; 
+                    // window.URL.revokeObjectURL(imageURL); 
+                  }else{
+                    other.reqImageData(url).then(function(response){
+                      other.saveCache(url,response);
+                      var imageURL = window.URL.createObjectURL(response);
+                      img.src=imageURL;
+                      //  window.URL.revokeObjectURL(imageURL);
+                    });
+                  }
+              });
+            }else{
+              this.reqImageData(url).then(function(response){
+                var imageURL = window.URL.createObjectURL(response);
+                img.src=imageURL;
+              });
+            }
         }else{
           this.reqImageData(url).then(function(response){
             var imageURL = window.URL.createObjectURL(response);
             img.src=imageURL;
           });
         }
-        // this.image.src=url;
-      // this.loaded=false;
-      // }
-      //this.getElement().src=url;
+        
     },
     getSrc:function(){
       return  this.imgSrc;

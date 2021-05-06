@@ -15,10 +15,10 @@
  
  <script type="text/javascript">
   
-var map,mapPane;
+var map,mapPane,token;
 
-    function winLoad(){
-       var winWidth=window.innerWidth,winHeight=window.innerHeight,mapHeight=winHeight;
+function loadMap(){
+    var winWidth=window.innerWidth,winHeight=window.innerHeight,mapHeight=winHeight;
         mapPane=document.getElementById("map");
         geomap.element.setStyle(mapPane,{"width":winWidth+"px","height":mapHeight+"px"});
         
@@ -28,9 +28,10 @@ var map,mapPane;
         console.log("====mapId:"+mapId+",layer="+layer+",saleStatus="+saleStatus);
         if(mapId===''){
             mapId="example";
-        }
+        } 
+       
         // var ccw_config=ccw_conf(layer,saleStatus);//加载地图配置
-        map=new MapProject.Map(mapPane,{mapId:mapId,reqHead:{token:'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJuYmYiOjE2MjAyNjgzNjQsIm9hR3VpZCI6ImVhYjU4OTYwLTViOTItMTFlYS04ZjU2LTlkY2UwYTMyZTEzYyIsInVzZXJOYW1lIjoibGluamluY21mIiwiZXhwIjoxNjIwMjg5OTY0LCJ1c2VySWQiOiIxMDAwMDAwIiwiaWF0IjoxNjIwMjY4MzY0fQ==.228328e3946e054ed201f1031b4e5f472b3e3559bd7e4b8e458524d03b931020'},
+        map=new MapProject.Map(mapPane,{mapId:mapId,reqHead:{token:token},
                                         server:{project:"http://master.cn/ccw/wms/map/project/{mapId}",
                                                 tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
                                                 mapInfo:"http://master.cn/ccw/wms/map/mapinfo/{mapId}",
@@ -150,8 +151,22 @@ var map,mapPane;
     });
     buildingMapDraw.addToMenu(menu);
         // map.setMapDraw(mapDraw);
-      
- 
+}
+    function winLoad(){
+
+        var dbStore=geomap.GlobalDBStore(["ccw"],"ccw").dbStore;
+        dbStore.on("open_success",function(event){
+            geomap.GlobalDBStore(["ccw"],"ccw").dbStore.getStore("ccw","token").then(function(event){
+              var tokenStr = event.target.result;
+                if(tokenStr!=undefined){
+                    token=tokenStr;
+                    loadMap();
+                }else{
+                    window.location.href="../index.html";
+                }
+            });
+        });
+        
  }
 
  function mapProjectMenuEvent(arg){

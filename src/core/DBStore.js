@@ -16,14 +16,13 @@
         type: 'DBStore',
         indexedDB:null,
         dbVersion:1.0,
-        dbName:"geomap",
         dbFile:"geomapFile",
         dbRequest:null,
-        db:null,
-        openStatus:false,
+        db:null, 
         openSuccess:false,
         openError:false,
         dbInitStatus:false,
+        dbNames:["geomap"],
     initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
@@ -31,48 +30,33 @@
           var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
          // IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.OIDBTransaction || window.msIDBTransaction,
           this.indexedDB=indexedDB;
-         // this.openStore();
+          this.openStore();
     },
-    createStore:function(){
+    createStore:function(event){
         console.log("Creating objectStore");
-        this.dbRequest.result.createObjectStore(this.dbName);
+        var db = event.target.result;
+      
+        for(var i=0,k=this.dbNames.length;i<k;i++){
+            var dbName=this.dbNames[i];
+            if (!db.objectStoreNames.contains(dbName)) {
+                db.createObjectStore(dbName);
+            }
+        }
         this.dbInitStatus=true;
     },
     openStore:function(){
-        if(this.openStatus)
-        {
-            return null;
-        }
-        this.openStatus=true;
         var request = this.indexedDB.open(this.dbFile, this.dbVersion);
         this.dbRequest=request;
-        // request.onerror = function (event) {
-        //         console.log("Error creating/accessing IndexedDB database");
-        //         this.openError=true;
-        //         this.dbInitStatus=true;
-        //     }.bind(this);
-        // request.onsuccess=this.openStoreSuccess.bind(this);
-        // request.onupgradeneeded = this.createStore.bind(this);
-
-        var other=this;
-        var res= new Promise(function(resolve, reject) {
-            request.onsuccess=resolve;
-            request.onerror=reject;
-        });
-        
-        
-       
-    //    var nextRes= res.then(resolve=>function(event){
-    //                 other.openStoreSuccess(event);
-    //             }, reject=>function(event){
-    //                 other.openStoreError(event);
-    //             });
-                return res;
+        request.onerror =this.openStoreError.bind(this);
+        request.onsuccess=this.openStoreSuccess.bind(this);
+        request.onupgradeneeded = this.createStore.bind(this); 
     },
     openStoreError:function(event){
         console.log("Error creating/accessing IndexedDB database");
         this.openError=true;
         this.dbInitStatus=true;
+        var myself=this;
+        this.fire("open_error",myself);
     },
     openStoreSuccess:function(event){ 
         console.log("Success creating/accessing IndexedDB database");
@@ -81,7 +65,7 @@
        var db = request.result;
        this.db=db;
 
-       request.onupgradeneeded = this.createStore.bind(this);
+    //    request.onupgradeneeded = this.createStore.bind(this);
 
         db.onerror = function (event) {
             console.log("Error creating/accessing IndexedDB database");
@@ -99,41 +83,58 @@
         }else{
             this.dbInitStatus=true;
         }
-       
+        var myself=this;
+         this.fire("open_success",myself);
        
     },
-    getTranStore:function(dbName){
-
-        if(!this._tranStore){
-            this._tranStore={};
-        }
-        if(!this._tranStore[dbName]){
+    clearData:function(dbName){
+        if(this.openSuccess){
             var transaction =this.db.transaction(dbName, "readwrite");
-            this._tranStore[dbName]= transaction.objectStore(dbName);
+            var tranStore=transaction.objectStore(dbName);
+            var clearRes=tranStore.clear();
+           var myself=this;
+            clearRes.onsuccess=function(e){
+                myself.fire("clear_success",myself);
+                geomap.log('表名['+dbName+']数据清理成功');
+            }
         }
-        return this._tranStore[dbName];
     },
     deleteDb:function(dbName){
         this.indexedDB.deleteDatabase(dbName);
-        this._tranStore[dbName]=null;
-        delete this._tranStore[dbName];
     },
-    putStore:function(key,data){
+    putStore:function(dbName,key,data){
         if(this.openSuccess){
-            this.getTranStore(this.dbName).put(data,key);
-            return true;
+            try{
+                var transaction =this.db.transaction(dbName, "readwrite");
+                var tranStore=transaction.objectStore(dbName);
+                tranStore.put(data,key);
+                // this.getTranStore(this.dbName).put(data,key);
+                return true;
+            }catch(e){
+                // throw new Error("保存数据库失败");
+                geomap.log("保存数据库失败");
+                geomap.warn(e);
+                return false;
+            }
         }
         return false;
     },
 
-    getStore:function(key){
+    getStore:function(dbName,key){
         if(this.openSuccess){
-            var tranStore=this.getTranStore(this.dbName);
+            try{
+            var transaction =this.db.transaction(dbName, "readwrite");
+            var tranStore=transaction.objectStore(dbName);
             var keyObj=tranStore.get(key);
             var res= new Promise(function(resolve, reject) {
                 keyObj.onsuccess=resolve;
             });
             return res;
+            }catch(e){
+                geomap.log("获取数据库数据失败");
+                geomap.warn(e);
+                // throw new Error("获取数据库数据失败");
+            }
         }
         return null;
     }
@@ -141,4 +142,37 @@
 	 
     });
 
+
+    geomap.GlobalDBStore=function (dbNames,dbFile,dbVersion){
+        if(dbFile==undefined){
+            dbFile="geomap";
+        }
+        if(dbVersion==undefined){
+            dbVersion=1.0;
+        }
+        if(!geomap._GLOBAL_DB_STORE){
+            geomap._GLOBAL_DB_STORE={};
+        }
+        var key=dbFile;
+        if(!geomap._GLOBAL_DB_STORE[key]){
+            var dbStore=new geomap.DBStore({dbNames:dbNames,dbFile:dbFile,dbVersion:dbVersion});
+            var _global_store= {dbStore:dbStore,open:false};
+            geomap._GLOBAL_DB_STORE[key]= _global_store;
+            dbStore.on("open_success",function(){
+                _global_store.open=true; 
+            });
+        //      var res=dbStore.openStore();
+        //      if(res!=null){
+        //         res.then(function(resolve,reject){
+        //             dbStore.openStoreSuccess(null);
+        //            // dbStore.clearData();
+        //             _global_store.open=true; 
+        //         },function(event){
+        //             dbStore.openStoreError(event);
+        //         });
+        //        }
+   
+           }
+           return geomap._GLOBAL_DB_STORE[key];
+    }
 })(typeof exports !== 'undefined' ? exports : this);

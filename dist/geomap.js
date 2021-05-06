@@ -2871,14 +2871,13 @@ function parseToForm(form){
         type: 'DBStore',
         indexedDB:null,
         dbVersion:1.0,
-        dbName:"geomap",
         dbFile:"geomapFile",
         dbRequest:null,
-        db:null,
-        openStatus:false,
+        db:null, 
         openSuccess:false,
         openError:false,
         dbInitStatus:false,
+        dbNames:["geomap"],
     initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
@@ -2886,48 +2885,33 @@ function parseToForm(form){
           var indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.OIndexedDB || window.msIndexedDB;
          // IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.OIDBTransaction || window.msIDBTransaction,
           this.indexedDB=indexedDB;
-         // this.openStore();
+          this.openStore();
     },
-    createStore:function(){
+    createStore:function(event){
         console.log("Creating objectStore");
-        this.dbRequest.result.createObjectStore(this.dbName);
+        var db = event.target.result;
+      
+        for(var i=0,k=this.dbNames.length;i<k;i++){
+            var dbName=this.dbNames[i];
+            if (!db.objectStoreNames.contains(dbName)) {
+                db.createObjectStore(dbName);
+            }
+        }
         this.dbInitStatus=true;
     },
     openStore:function(){
-        if(this.openStatus)
-        {
-            return null;
-        }
-        this.openStatus=true;
         var request = this.indexedDB.open(this.dbFile, this.dbVersion);
         this.dbRequest=request;
-        // request.onerror = function (event) {
-        //         console.log("Error creating/accessing IndexedDB database");
-        //         this.openError=true;
-        //         this.dbInitStatus=true;
-        //     }.bind(this);
-        // request.onsuccess=this.openStoreSuccess.bind(this);
-        // request.onupgradeneeded = this.createStore.bind(this);
-
-        var other=this;
-        var res= new Promise(function(resolve, reject) {
-            request.onsuccess=resolve;
-            request.onerror=reject;
-        });
-        
-        
-       
-    //    var nextRes= res.then(resolve=>function(event){
-    //                 other.openStoreSuccess(event);
-    //             }, reject=>function(event){
-    //                 other.openStoreError(event);
-    //             });
-                return res;
+        request.onerror =this.openStoreError.bind(this);
+        request.onsuccess=this.openStoreSuccess.bind(this);
+        request.onupgradeneeded = this.createStore.bind(this); 
     },
     openStoreError:function(event){
         console.log("Error creating/accessing IndexedDB database");
         this.openError=true;
         this.dbInitStatus=true;
+        var myself=this;
+        this.fire("open_error",myself);
     },
     openStoreSuccess:function(event){ 
         console.log("Success creating/accessing IndexedDB database");
@@ -2936,7 +2920,7 @@ function parseToForm(form){
        var db = request.result;
        this.db=db;
 
-       request.onupgradeneeded = this.createStore.bind(this);
+    //    request.onupgradeneeded = this.createStore.bind(this);
 
         db.onerror = function (event) {
             console.log("Error creating/accessing IndexedDB database");
@@ -2954,41 +2938,58 @@ function parseToForm(form){
         }else{
             this.dbInitStatus=true;
         }
-       
+        var myself=this;
+         this.fire("open_success",myself);
        
     },
-    getTranStore:function(dbName){
-
-        if(!this._tranStore){
-            this._tranStore={};
-        }
-        if(!this._tranStore[dbName]){
+    clearData:function(dbName){
+        if(this.openSuccess){
             var transaction =this.db.transaction(dbName, "readwrite");
-            this._tranStore[dbName]= transaction.objectStore(dbName);
+            var tranStore=transaction.objectStore(dbName);
+            var clearRes=tranStore.clear();
+           var myself=this;
+            clearRes.onsuccess=function(e){
+                myself.fire("clear_success",myself);
+                geomap.log('表名['+dbName+']数据清理成功');
+            }
         }
-        return this._tranStore[dbName];
     },
     deleteDb:function(dbName){
         this.indexedDB.deleteDatabase(dbName);
-        this._tranStore[dbName]=null;
-        delete this._tranStore[dbName];
     },
-    putStore:function(key,data){
+    putStore:function(dbName,key,data){
         if(this.openSuccess){
-            this.getTranStore(this.dbName).put(data,key);
-            return true;
+            try{
+                var transaction =this.db.transaction(dbName, "readwrite");
+                var tranStore=transaction.objectStore(dbName);
+                tranStore.put(data,key);
+                // this.getTranStore(this.dbName).put(data,key);
+                return true;
+            }catch(e){
+                // throw new Error("保存数据库失败");
+                geomap.log("保存数据库失败");
+                geomap.warn(e);
+                return false;
+            }
         }
         return false;
     },
 
-    getStore:function(key){
+    getStore:function(dbName,key){
         if(this.openSuccess){
-            var tranStore=this.getTranStore(this.dbName);
+            try{
+            var transaction =this.db.transaction(dbName, "readwrite");
+            var tranStore=transaction.objectStore(dbName);
             var keyObj=tranStore.get(key);
             var res= new Promise(function(resolve, reject) {
                 keyObj.onsuccess=resolve;
             });
             return res;
+            }catch(e){
+                geomap.log("获取数据库数据失败");
+                geomap.warn(e);
+                // throw new Error("获取数据库数据失败");
+            }
         }
         return null;
     }
@@ -2996,6 +2997,39 @@ function parseToForm(form){
 	 
     });
 
+
+    geomap.GlobalDBStore=function (dbNames,dbFile,dbVersion){
+        if(dbFile==undefined){
+            dbFile="geomap";
+        }
+        if(dbVersion==undefined){
+            dbVersion=1.0;
+        }
+        if(!geomap._GLOBAL_DB_STORE){
+            geomap._GLOBAL_DB_STORE={};
+        }
+        var key=dbFile;
+        if(!geomap._GLOBAL_DB_STORE[key]){
+            var dbStore=new geomap.DBStore({dbNames:dbNames,dbFile:dbFile,dbVersion:dbVersion});
+            var _global_store= {dbStore:dbStore,open:false};
+            geomap._GLOBAL_DB_STORE[key]= _global_store;
+            dbStore.on("open_success",function(){
+                _global_store.open=true; 
+            });
+        //      var res=dbStore.openStore();
+        //      if(res!=null){
+        //         res.then(function(resolve,reject){
+        //             dbStore.openStoreSuccess(null);
+        //            // dbStore.clearData();
+        //             _global_store.open=true; 
+        //         },function(event){
+        //             dbStore.openStoreError(event);
+        //         });
+        //        }
+   
+           }
+           return geomap._GLOBAL_DB_STORE[key];
+    }
 })(typeof exports !== 'undefined' ? exports : this);
 
 (function() {
@@ -3176,6 +3210,11 @@ function parseToForm(form){
         tag:0,
         tileSize:256,
         headers:{},
+        useCache:false,
+        dbName:"tile",
+        dbFile:"geomap",
+        dbStore:undefined,
+        layer:null,
     initialize: function(options) {
           options || (options = { }); 
           this._setOptions(options);  
@@ -3183,6 +3222,7 @@ function parseToForm(form){
           this._onloadHandle=this.onLoad.bind(this);
           this.image.onload=this._onloadHandle;
        //  this.setElement(element);
+       this.getDBStore();
     },
     isTile:function(tile){
       return (tile.x === this.x && tile.y === this.y && tile.z === this.z && tile.cacheTime == this.cacheTime);
@@ -3202,9 +3242,11 @@ function parseToForm(form){
     },
     drawCanvas:function(){
       if(this.loaded && this.ctx !=undefined){
-        this.ctx.drawImage(this.image,this.left,this.top);
-        var other=this;
-        this.fire("drawend",this);
+        if(this.layer && this.layer._drawLock == this.lockKey){
+          this.ctx.drawImage(this.image,this.left,this.top);
+          var other=this;
+          this.fire("drawend",this);
+        }
       }
     },
     // setElement:function(img){
@@ -3230,45 +3272,70 @@ function parseToForm(form){
     },
     onLoad:function(event){ 
       this.loaded=true;
-      this.drawCanvas();
-    //   var other=this;
-    //   var img=this.image;
-    //     var e={img:img,target:other};
+      this.drawCanvas(); 
         this.fire("onload");
-        //缓存图片
-        var strImgData=localStorage.getItem(this.imgSrc);
-        if(!strImgData){
-          var tileSize=this.tileSize;
-          var canvas = document.createElement('canvas');
-          var ctxt = canvas.getContext('2d');
-          canvas.width = tileSize;
-          canvas.height = tileSize;
-          ctxt.drawImage(this.image, 0, 0);
-          var imgAsDataURL = canvas.toDataURL("image/png");
-          localStorage.setItem(this.imgSrc, imgAsDataURL);
-          canvas.remove();
+    },
+    getDBStore:function(){
+      if(!this.dbStore){
+        var store=geomap.GlobalDBStore([this.dbName],this.dbFile);
+        if(store.open){
+          this.useCache=true;
+        }else{
+          var myself=this;
+          store.dbStore.on("open_success",function(event){
+            store.dbStore.clearData(myself.dbName);
+            myself.useCache=true;
+          });
         }
+
+        this.dbStore=store.dbStore;
+      }
+      return  this.dbStore;
+    },
+    saveCache:function(url,blob){
+      if(this.useCache){
+        this.dbStore.putStore(this.dbName,url,blob);
+      }
     },
     setSrc:function(url){ 
-      // if(this.loaded && this.image.src === url){
-      //   this.onLoad(this.image);
-      // }else{
+ 
         this.loaded=false;
         this.imgSrc=url;
         var img=this.image;　
-        var strImgData=localStorage.getItem(url);
-        if(strImgData){
-          this.image.src=strImgData;
+        var other=this;
+    
+        if(this.useCache){
+
+          var store=this.dbStore.getStore(this.dbName,url);
+            if(store!=null){
+              store.then(function(event){
+                  var imgFile = event.target.result;
+                  if(imgFile !=undefined){
+                    var imageURL = window.URL.createObjectURL(imgFile);
+                    img.src=imageURL; 
+                    // window.URL.revokeObjectURL(imageURL); 
+                  }else{
+                    other.reqImageData(url).then(function(response){
+                      other.saveCache(url,response);
+                      var imageURL = window.URL.createObjectURL(response);
+                      img.src=imageURL;
+                      //  window.URL.revokeObjectURL(imageURL);
+                    });
+                  }
+              });
+            }else{
+              this.reqImageData(url).then(function(response){
+                var imageURL = window.URL.createObjectURL(response);
+                img.src=imageURL;
+              });
+            }
         }else{
           this.reqImageData(url).then(function(response){
             var imageURL = window.URL.createObjectURL(response);
             img.src=imageURL;
           });
         }
-        // this.image.src=url;
-      // this.loaded=false;
-      // }
-      //this.getElement().src=url;
+        
     },
     getSrc:function(){
       return  this.imgSrc;
@@ -5669,6 +5736,7 @@ function parseToForm(form){
         var top=startTile.top;
   
         this._drawLock=lock; 
+        var mylayer=this;
         for(var key in this._tiles){
           this._tiles[key]=null;
         }
@@ -5687,7 +5755,7 @@ function parseToForm(form){
                     // this.FromURL(imgUrl,{left:l,top:t,lock:lock,drawLock:1});  
                     // this.loadTile(c,r,l,t,z,x,y);
                     var tileId="cr-"+c+"-"+r;
-                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize};
+                    var tile={x:x,y:y,z:z,left:l,top:t,col:c,row:r,cacheTime:this.cacheTime,ctx:this.canvasCtx,tag:0,tileId:tileId,headers:this.headers,tileSize:tsize,lockKey:lock,layer:mylayer};
                     if(this._tiles[tileId]){
                       this._tiles[tileId]=null;
                       delete this._tiles[tileId];
@@ -6166,7 +6234,7 @@ else if (typeof define === 'function' && define.amd) {
       _server:{},
       _server_layers:[],
       codeOk:0,
-      reqHead:"",
+      reqHead:{},
       _mapInfo:{},
       _projectMap:[],
       _init_map_status:false,
@@ -6346,7 +6414,7 @@ else if (typeof define === 'function' && define.amd) {
     },
     orderChangeFn:function (oldIndex,newIndex) {
       var myself=this;
-      Request(this._server.orderChange,{method:"JSON",body:{oldIndex:oldIndex,newIndex:newIndex},onComplete:function(xhr){
+      Request(this._server.orderChange,{method:"JSON",body:{oldIndex:oldIndex,newIndex:newIndex},header:myself.reqHead,onComplete:function(xhr){
           var body=xhr.response,status=xhr.status; 
           if(status==200){ 
               myself.refresh();
@@ -6355,28 +6423,49 @@ else if (typeof define === 'function' && define.amd) {
   },
     displayServerLayer:function (layerId,display) {
       var myself=this;
-      Request(this._server.displayLayer,{method:"JSON",body:{layerId:layerId,display:display},onComplete:function(xhr){
+      var url=this._server.displayLayer;
+      Request(url,{method:"JSON",body:{layerId:layerId,display:display},header:myself.reqHead,onComplete:function(xhr){
           var body=xhr.response,status=xhr.status; 
           if(status==200){ 
-              myself.refresh();
+            var result=JSON.parse(body);
+            if(result.code === myself.codeOk){
+                myself.refresh();
+            }else{
+              this.fire("request_faile",{target:myself,result:result,url:url,tag:"displayServerLayer"});
+              alert(result.msg);
+            }
           }
       }}); 
   },
   deleteServerLayer:function (layerId) {
     var myself=this;
-    Request(this._server.deleteLayer,{method:"JSON",body:{id:layerId},onComplete:function(xhr){
+    var url=this._server.deleteLayer;
+    Request(url,{method:"JSON",body:{id:layerId},header:myself.reqHead,onComplete:function(xhr){
         var body=xhr.response,status=xhr.status; 
         if(status==200){ 
-            myself.refresh();
+          var result=JSON.parse(body);
+          if(result.code === myself.codeOk){
+              myself.refresh();
+          }else{
+            this.fire("request_faile",{target:myself,result:result,url:url,tag:"deleteServerLayer"});
+            alert(result.msg);
+          }
         }
     }}); 
 },
 addServerLayer:function (param) {
   var myself=this;
-  Request(this._server.addLayer,{method:"JSON",body:param,onComplete:function(xhr){
+  var url=this._server.addLayer;
+  Request(url,{method:"JSON",body:param,header:myself.reqHead,onComplete:function(xhr){
       var body=xhr.response,status=xhr.status; 
       if(status==200){ 
-          myself.refresh();
+        var result=JSON.parse(body);
+        if(result.code === myself.codeOk){
+            myself.refresh();
+        }else{
+          this.fire("request_faile",{target:myself,result:result,url:url,tag:"addServerLayer"});
+          alert(result.msg);
+        }
       }
   }}); 
 },

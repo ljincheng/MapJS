@@ -42,7 +42,7 @@ else if (typeof define === 'function' && define.amd) {
       _server:{},
       _server_layers:[],
       codeOk:0,
-      reqHead:"",
+      reqHead:{},
       _mapInfo:{},
       _projectMap:[],
       _init_map_status:false,
@@ -222,7 +222,7 @@ else if (typeof define === 'function' && define.amd) {
     },
     orderChangeFn:function (oldIndex,newIndex) {
       var myself=this;
-      Request(this._server.orderChange,{method:"JSON",body:{oldIndex:oldIndex,newIndex:newIndex},onComplete:function(xhr){
+      Request(this._server.orderChange,{method:"JSON",body:{oldIndex:oldIndex,newIndex:newIndex},header:myself.reqHead,onComplete:function(xhr){
           var body=xhr.response,status=xhr.status; 
           if(status==200){ 
               myself.refresh();
@@ -231,28 +231,49 @@ else if (typeof define === 'function' && define.amd) {
   },
     displayServerLayer:function (layerId,display) {
       var myself=this;
-      Request(this._server.displayLayer,{method:"JSON",body:{layerId:layerId,display:display},onComplete:function(xhr){
+      var url=this._server.displayLayer;
+      Request(url,{method:"JSON",body:{layerId:layerId,display:display},header:myself.reqHead,onComplete:function(xhr){
           var body=xhr.response,status=xhr.status; 
           if(status==200){ 
-              myself.refresh();
+            var result=JSON.parse(body);
+            if(result.code === myself.codeOk){
+                myself.refresh();
+            }else{
+              this.fire("request_faile",{target:myself,result:result,url:url,tag:"displayServerLayer"});
+              alert(result.msg);
+            }
           }
       }}); 
   },
   deleteServerLayer:function (layerId) {
     var myself=this;
-    Request(this._server.deleteLayer,{method:"JSON",body:{id:layerId},onComplete:function(xhr){
+    var url=this._server.deleteLayer;
+    Request(url,{method:"JSON",body:{id:layerId},header:myself.reqHead,onComplete:function(xhr){
         var body=xhr.response,status=xhr.status; 
         if(status==200){ 
-            myself.refresh();
+          var result=JSON.parse(body);
+          if(result.code === myself.codeOk){
+              myself.refresh();
+          }else{
+            this.fire("request_faile",{target:myself,result:result,url:url,tag:"deleteServerLayer"});
+            alert(result.msg);
+          }
         }
     }}); 
 },
 addServerLayer:function (param) {
   var myself=this;
-  Request(this._server.addLayer,{method:"JSON",body:param,onComplete:function(xhr){
+  var url=this._server.addLayer;
+  Request(url,{method:"JSON",body:param,header:myself.reqHead,onComplete:function(xhr){
       var body=xhr.response,status=xhr.status; 
       if(status==200){ 
-          myself.refresh();
+        var result=JSON.parse(body);
+        if(result.code === myself.codeOk){
+            myself.refresh();
+        }else{
+          this.fire("request_faile",{target:myself,result:result,url:url,tag:"addServerLayer"});
+          alert(result.msg);
+        }
       }
   }}); 
 },
