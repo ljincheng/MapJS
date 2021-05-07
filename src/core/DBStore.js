@@ -123,13 +123,11 @@
     getStore:function(dbName,key){
         if(this.openSuccess){
             try{
-            var transaction =this.db.transaction(dbName, "readwrite");
-            var tranStore=transaction.objectStore(dbName);
-            var keyObj=tranStore.get(key);
-            var res= new Promise(function(resolve, reject) {
-                keyObj.onsuccess=resolve;
-            });
-            return res;
+                var transaction =this.db.transaction(dbName, "readwrite");
+                var tranStore=transaction.objectStore(dbName);
+                return new Promise(function(resolve, reject) {
+                    tranStore.get(key).onsuccess=resolve;
+                });
             }catch(e){
                 geomap.log("获取数据库数据失败");
                 geomap.warn(e);

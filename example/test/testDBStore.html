@@ -16,37 +16,22 @@
     
    
    function winLoad(){
-     var dbStore=new geomap.DBStore({dbName:"elephants",dbFile:"elephantFiles"});
-    
-     var res=dbStore.openStore();
-     if(res!=null){
-        res.then(function(resolve,reject){
-            dbStore.openStoreSuccess(null);
-           dbStore.getStore(testImgUrl).then( function(event){
+       var dbName="elephants";
+     var dbStore=new geomap.DBStore({dbNames:[dbName],dbFile:"elephantFiles"});
+     dbStore.on("open_success",function(){
+        dbStore.getStore(dbName,testImgUrl).then( function(event){
                var imgFile = event.target.result;
                if(imgFile !=undefined){
                var URL = window.URL || window.webkitURL;
                 var imgURL = URL.createObjectURL(imgFile); 
                 var imgElephant = document.getElementById("elephant");
                 imgElephant.src=imgURL;
+
+                dbStore.putStore(dbName,"test",imgFile);
                }
            });
-        },function(event){
-            dbStore.openStoreError(event);
-        });
-        //  res.then(resolve =>{
-        //    dbStore.openStoreSuccess(null);
-        //    dbStore.getStore(testImgUrl).then( function(event){
-        //        var imgFile = event.target.result;
-        //        var URL = window.URL || window.webkitURL;
-        //    var imgURL = URL.createObjectURL(imgFile); 
-        //    var imgElephant = document.getElementById("elephant");
-        //    imgElephant.src=imgURL;
-        //    });
-        //  },reject=>{
-        //    dbStore.openStoreError(null);
-        //  })
-     }
+            });
+     
    
    }
     

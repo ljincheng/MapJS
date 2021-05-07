@@ -187,12 +187,25 @@
                   if(imgFile !=undefined){
                     var imageURL = window.URL.createObjectURL(imgFile);
                     img.src=imageURL; 
+                    // img.src=imgFile;
                     // window.URL.revokeObjectURL(imageURL); 
                   }else{
                     other.reqImageData(url).then(function(response){
-                      other.saveCache(url,response);
-                      var imageURL = window.URL.createObjectURL(response);
-                      img.src=imageURL;
+                     
+                      if(response !=undefined && response !=''){
+                        var imageURL = window.URL.createObjectURL(response);
+                        img.src=imageURL; 
+                        other.saveCache(url,response);
+                      }
+                      // var canvas = document.createElement('canvas');
+                      // var ctxt = canvas.getContext('2d');
+                      // canvas.width = this.tileSize;
+                      // canvas.height = this.tileSize;
+                      // var w=this.tileSize;
+                      // ctxt.clearRect(0, 0,w, w);
+                      // ctxt.drawImage(img, 0, 0);
+                      // var imgAsDataURL = canvas.toDataURL("image/png");
+                      // other.saveCache(url,imgAsDataURL);
                       //  window.URL.revokeObjectURL(imageURL);
                     });
                   }

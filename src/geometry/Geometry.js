@@ -1,5 +1,9 @@
 (function() {
 
+     /**
+      * Data:{coordinates:[[[x,y],[x,y]...],[[x,y]...]],type:"Polygon",}
+      */
+     
     
     geomap.Geometry=geomap.Class(geomap.CommonMethods, geomap.Observable ,{
         _coordinates:[],
