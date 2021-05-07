@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="../../dist/geomap.js"></script> 
+        <script type="text/javascript" src="../js/index.js"></script>
+        <style>
+            .infoTable{
+                 border: 1px solid #2196f3;font-size:12px;width:100%;
+            }
+            #toolPane{
+                z-index: 10; position: absolute; top:0px;  right: 0px; width:260px; height:18px; padding: 4px;
+                background-color: #101010c7; font-size:12px;
+                color:#fff;
+            }
+            #editInfoPane{
+                z-index: 10;position: absolute; top:50px; right: -400px; width:400px; height: 400px; 
+                background-color: #101010c7; 
+                color:#fff;
+                overflow: scroll;
+            }
+            #editInfoPane .closeBtn{
+                position: relative; left: 0px; top: 0px; width:35px; background-color: #101010c7; color:#fff;
+            }
+            .iconBtn{
+                margin: 0 10px;
+                cursor: pointer;
+            }
+            .loginFrame{
+                width: 600px;
+                height: 400px;
+                vertical-align: middle; 
+                padding: 100px;
+            }
+        </style>
+    </head>
+<body   style="margin: 20px; padding:0px;" onload="winLoad()">
+    <div　class="loginFrame">
+        <form id="loginForm">
+            <label>请求地址：</label><input type="text" style="width: 600px;" id="myUrl" value="http://master.cn/ccw/wms/">
+            <br><br>
+            <label>提交内容：</label>
+                <textarea id="myData" rows="10" cols="100"></textarea>
+    </form>
+        <input type="button" value="提交" onclick="login()">
+        <div id="logDiv"></div>
+    </div>
+    <script type="text/javascript">
+      var openDBStore=false,token,dbStore,dbName="ccw",dbFile="ccw";
+    function login(){
+        
+        var url=document.getElementById("myUrl").value;
+        var myData=document.getElementById("myData").value;
+        var data={};
+        if(myData!='')
+        {
+            data=JSON.parse(myData);
+        }   
+        geomap.request(url,{method:"JSON",body:data,header:{token:token},onComplete:function(xhr){
+            var res=xhr.response,status=xhr.status; 
+                console.log("url="+url+",body="+res);
+                if( status==200 ){ 
+                     document.getElementById("logDiv").innerHTML=res;
+                }
+            }
+        });
+
+    }
+    function reloadCaptcha(){
+        document.getElementById("captchaImg").src="http://master.cn/ccw/captcha?uuid=1111-666666&r="+new Date();
+    }
+    function winLoad(){
+
+        dbStore=geomap.GlobalDBStore([dbName],dbFile).dbStore;
+        dbStore.on("open_success",function(event){
+            var obj=dbStore.getStore(dbName,"token");
+            if(obj!=null){
+                obj.then(function(event){
+                var tokenStr = event.target.result;
+                    if(tokenStr!=undefined){
+                        token=tokenStr;
+                    }else{
+                        window.location.href="../index.html";
+                    }
+                });
+            }
+            openDBStore=true;
+        });
+    }
+    </script>
+</body>
+</html>
