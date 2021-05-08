@@ -49,6 +49,13 @@ function loadMap(){
         map.on("loadmapinfo_end",function(mapinfo){
             document.getElementById("mapTitle").innerText=mapinfo.title;
         });
+        map.on("request_faile",function(event){
+            //event= {target:myself,result:result,url:url,tag:"addServerLayer"}
+            if(event.result.code === 10001)
+            {
+                window.location.href="../index.html";
+            }
+        });
 
        
         var menu=new MapProject.Menu("toolPane",{map:map,menu:[{"text":"新建地图",type:"CREATEMAP",id:-1}]}); 
@@ -191,8 +198,11 @@ function loadMap(){
             }
         });
     }
-     var form={name:"创建地图",id:"form_create_map",properties:[{id:"mapId",type:"text",title:"地图ID",value:"",required:true},
-     {id:"projectId",type:"text",title:"项目ID",value:"",required:true}, {id:"title",type:"text",title:"名称",value:"",required:true}, {id:"subTitle",type:"text",title:"楼层名称",value:"",required:true}],buttons:[{title:"确定",type:"button",value:"确定",click:createMapFn}]};
+     var form={name:"创建地图",id:"form_create_map",properties:[
+     {id:"projectId",type:"text",title:"项目ID",value:"",required:true},
+     {id:"proPart",type:"text",title:"地图楼层",value:"",required:true},
+      {id:"title",type:"text",title:"名称",value:"",required:true},
+       {id:"subTitle",type:"text",title:"楼层名称",value:"",required:true}],buttons:[{title:"确定",type:"button",value:"确定",click:createMapFn}]};
      window._createMapForm=geomap.element.parseToForm(form);
       window._FRAMEID_CREATEMAP= new geomap.view.Frame(document.body,{title:form.name, body:window._createMapForm,w:400,h:220});
 

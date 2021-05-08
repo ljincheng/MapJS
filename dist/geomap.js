@@ -6330,13 +6330,26 @@ else if (typeof define === 'function' && define.amd) {
         if( status==200   ){ 
           var mq=this.get("mapQuery");
           var featureCollection=null;
-          if(res.length>0 && res.indexOf("{")==0)
-          {
-             featureCollection=JSON.parse(res);
+          var result=JSON.parse(xhr.response);
+          if(result.code === this.codeOk){
+             //featureCollection=result.data;
+             if(mq){  
+              featureCollection={type:"FeatureCollection","features":result.data};
+              mq.fire("coord_data",featureCollection);
+            }
+              
+          }else{
+            var myself=this;
+            this.fire("request_faile",{target:myself,result:result,tag:"mapQuery"});
           }
-          if(mq){  
-            mq.fire("coord_data",featureCollection);
-          }
+
+          // if(res.length>0 && res.indexOf("{")==0)
+          // {
+          //    featureCollection=JSON.parse(res);
+          // }
+          // if(mq){  
+          //   mq.fire("coord_data",featureCollection);
+          // }
             
           //  if(featureCollection && featureCollection.type=="FeatureCollection"){
           //   this.vectorLayer.addData(featureCollection,{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]});
@@ -6405,6 +6418,9 @@ else if (typeof define === 'function' && define.amd) {
                 this.fire("server_layer_ok",this._server_layers);
                 return ;
               }
+          }else{
+            var myself=this;
+            this.fire("request_faile",{target:myself,result:result,url:this._server.mapInfo,tag:"loadServerLayers"});
           }
           this.fire("req_project_fail");
         }else{
@@ -6446,7 +6462,7 @@ else if (typeof define === 'function' && define.amd) {
             if(result.code === myself.codeOk){
                 myself.refresh();
             }else{
-              this.fire("request_faile",{target:myself,result:result,url:url,tag:"displayServerLayer"});
+              myself.fire("request_faile",{target:myself,result:result,url:url,tag:"displayServerLayer"});
               alert(result.msg);
             }
           }
@@ -6462,7 +6478,7 @@ else if (typeof define === 'function' && define.amd) {
           if(result.code === myself.codeOk){
               myself.refresh();
           }else{
-            this.fire("request_faile",{target:myself,result:result,url:url,tag:"deleteServerLayer"});
+            myself.fire("request_faile",{target:myself,result:result,url:url,tag:"deleteServerLayer"});
             alert(result.msg);
           }
         }
@@ -6478,7 +6494,7 @@ addServerLayer:function (param) {
         if(result.code === myself.codeOk){
             myself.refresh();
         }else{
-          this.fire("request_faile",{target:myself,result:result,url:url,tag:"addServerLayer"});
+          myself.fire("request_faile",{target:myself,result:result,url:url,tag:"addServerLayer"});
           alert(result.msg);
         }
       }
