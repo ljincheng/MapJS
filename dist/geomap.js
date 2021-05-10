@@ -6727,7 +6727,7 @@ jsonReq:function(url,data,fn){
         editForm:function () {
             var addLayerFn=this.addLayerFn.bind(this);
            var forms={name:"车位",id:"form_edit_parking",properties:[{id:"title",type:"text",title:"图层说明",value:"",required:false}
-                ,{id:"layerSource",type:"text",title:"图层源",value:"",required:false}
+                ,{id:"layerSource",type:"text",title:"数据源",value:"",required:false}
                 ,{id:"layerType",type:"radio",title:"类型",value:"POLYGON",option:{"POLYGON":"面","POINT":"点","RASTER":"栅格图    "},required:false}
                 ,{id:"display",type:"radio",title:"状态",value:"1",option:{"1":"可见","2":"不可见"},required:true}
                 ,{id:"styleId",type:"radio",title:"样式",value:"parking_polygon",option:{"parking_polygon":"车位面","parking_point":"车位点","line_dash":"楼栋边界线"},required:true}
@@ -7175,8 +7175,18 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 }
                 var myself=this;
                 myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
-                    myself.map.refresh();
-                    myself.hideFrame();
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        var result=JSON.parse(body);
+                        if(result.code === myself.map.codeOk){
+                            myself.map.refresh();
+                            myself.hideFrame();
+                        }else{
+                            alert(result.msg);
+                        }
+                        // myself.map.refresh();
+                        // myself.hideFrame();
+                    }
                 });
                  
             }

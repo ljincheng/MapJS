@@ -72,8 +72,18 @@
                 }
                 var myself=this;
                 myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
-                    myself.map.refresh();
-                    myself.hideFrame();
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        var result=JSON.parse(body);
+                        if(result.code === myself.map.codeOk){
+                            myself.map.refresh();
+                            myself.hideFrame();
+                        }else{
+                            alert(result.msg);
+                        }
+                        // myself.map.refresh();
+                        // myself.hideFrame();
+                    }
                 });
                  
             }

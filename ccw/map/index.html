@@ -97,11 +97,17 @@ function loadMap(){
         var buildingMapQuery=new MapProject.MapQuery({map:map,id:2,icon:MapProject.Icons.query2,title:"查询楼栋",geomOption:geomOption,url:"http://master.cn/ccw/wms/building/query/{mapId}",
             buttons:[{text:"删除",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
                 var data=self.data,el=self.target;
-                map.jsonReq("http://master.cn/ccw/wms/building/delete/{mapId}",{featureId:data.id},function(xhr){
+                map.jsonReq("http://master.cn/ccw/wms/building/delete/{mapId}",{featureId:data.bid},function(xhr){
                     var body=xhr.response,status=xhr.status; 
                     if(status == 200){
-                        map.refresh();
-                        buildingMapQuery.removeRow(el);
+                        var result=JSON.parse(xhr.response);
+                        if(result.code === map.codeOk){
+                            map.refresh();
+                            buildingMapQuery.removeRow(el);
+                        }else{
+                            alert(result.msg);
+                        }
+                     
                     }
                 });
             }},
@@ -154,6 +160,7 @@ function loadMap(){
 
 
         var buildingMapDraw=new MapProject.MapDraw({title:"绘制楼栋",id:2,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/building/add/{mapId}",
+        drawType:"Polygon",
         form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}]}
     });
     buildingMapDraw.addToMenu(menu);
