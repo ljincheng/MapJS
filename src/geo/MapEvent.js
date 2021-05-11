@@ -73,10 +73,11 @@
             // this.fire("zoom",{event:event,point:point,delta:zoomDelta,startZoom:startZoom,endZoom:endZoom});
         },
             wheelZoomStart:function(e,p,delta){
-                this._wheel_delta=0;
+                
                 this._wheel_d0=0;
                 this._wheel_d1=0;
                 this._wheel_d2=0;
+                this._wheel_delta=0;
                 this.fire("zoomstart",{event:e,point:p,delta:delta,zoom:this.zoom});
             },
             wheelZoom:function(e,p,delta){
@@ -107,6 +108,7 @@
                 this._wheel_d0=0;
                 this._wheel_d1=0;
                 this._wheel_d2=0;
+                this._wheel_delta=0;
                 // geomap.debug("_wheel_delta(END)="+this._wheel_delta);
                 this.fire("zoomend",{event:e,point:p,delta:delta});
             },

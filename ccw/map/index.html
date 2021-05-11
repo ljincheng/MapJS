@@ -58,7 +58,7 @@ function loadMap(){
         });
 
        
-        var menu=new MapProject.Menu("toolPane",{map:map,menu:[{"text":"新建地图",type:"CREATEMAP",id:-1}]}); 
+        var menu=new MapProject.Menu("toolPane",{map:map,menu:[{text:"新建地图",type:"CREATEMAP",id:-1}]}); 
         menu.on("menu_click",mapProjectMenuEvent);
         var layerInfo=new MapProject.LayerInfo({map:map});
         layerInfo.addToMenu(menu);
@@ -160,11 +160,35 @@ function loadMap(){
 
 
         var buildingMapDraw=new MapProject.MapDraw({title:"绘制楼栋",id:2,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/building/add/{mapId}",
-        drawType:"Polygon",
-        form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}]}
-    });
-    buildingMapDraw.addToMenu(menu);
+            drawType:"Polygon",
+            form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}]}
+        });
+        buildingMapDraw.addToMenu(menu);
         // map.setMapDraw(mapDraw);
+
+        var parkingDatalist=new MapProject.DataListFrame({map:map,url:"http://master.cn/ccw/wms/parking/list/{mapId}",headColumn:[{text:"图形",type:"fn",fn:function(value){
+            var elA= geomap.element.create("a");
+            if(value.geometry){
+                elA.innerText="有";
+               　eventjs.add(elA,"click",function(event){
+                        if(value.geometry && value.geometry.type=='Polygon'){
+                        var coords=value.geometry.coordinates;
+                        if(coords.length>0 && coords[0].length>0){
+                            var cp=geomap.util.coordCenter(coords[0]);
+                            if(cp){
+                            console.log("cp="+cp[0]+","+cp[1]);
+                            //    cp=[0,0];
+                            map.animMove(cp);
+                            }
+                        }
+                    }
+               });
+            }else{
+                elA.innerText="无";
+            }
+            return elA;
+        }},{text:"车位编号",id:"parkingNo"},{text:"车位ID",id:"parkingId"}]});
+        parkingDatalist.addToMenu(menu);
 }
     function winLoad(){
 
@@ -187,6 +211,26 @@ function loadMap(){
      console.log("##mapProjectMenuEvent="+arg);
      if(arg.menu.data.id=== -1){
         createMap();
+     }
+     if(arg.menu.data.id === 100){
+         map.jsonReq("http://master.cn/ccw/wms/parking/list/{mapId}",{},function(xhr){
+            if(xhr.status==200){
+                // alert(xhr.response);
+                var result=JSON.parse(xhr.response);
+                        if(result.code === map.codeOk){
+                            var data=result.data;
+                            var html="";
+                            for(var key　in data){
+                                html+="<span>"+key+":"+data[key]+"</span>";
+                            }
+                            window._FRAMEID_PARKINGLIST= new geomap.view.Frame(document.body,{title:"车位列表", body:html,w:400,h:220,closeType:2,pos:'rc'});
+                        }else{
+                            alert(result.msg);
+                        }
+                     
+                
+            }
+         });
      }
  }
 

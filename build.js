@@ -119,7 +119,8 @@ var filesToInclude = [
     'src/project/LayerInfo.js',
     'src/project/Menu.js',
     'src/project/MapQuery.js',
-    'src/project/MapDraw.js'
+    'src/project/MapDraw.js',
+    'src/project/DataListFrame.js'
    
   ];
 
