@@ -4625,11 +4625,11 @@ function parseToForm(form){
             },
             dragEndWithInertiaSpeed:function(arg){
                 var event=arg.event;
-                if(this._animMoveFn){
-                    this._animMoveFn.stop();
+                if(this._dragEndSpeedAnimFn){
+                    this._dragEndSpeedAnimFn.stop();
                 }else{
-                    this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
-                    this._animMoveFn.on("end",function(){ 
+                    this._dragEndSpeedAnimFn=new geomap.PosAnimation({easeLinearity:0.1});
+                    this._dragEndSpeedAnimFn.on("end",function(){ 
                         // geomap.debug("###======dragend=====");
                         var _map=this.other;
                         var fireEvent=this.arg;
@@ -4640,7 +4640,7 @@ function parseToForm(form){
                 var startP=arg.point; 
                 var d_e=new Point(arg.event.inertiaSpeed[0],arg.event.inertiaSpeed[1]);
                 // var res=this._map.resolution(this._map.zoom);
-                this._animMoveFn.run(this,function(pos,e){ 
+                this._dragEndSpeedAnimFn.run(this,function(pos,e){ 
                     this.other.panScreen(pos); 
                     var p=this.startP.add(pos);
                     this.startP=p;
@@ -4837,8 +4837,10 @@ function parseToForm(form){
         this._container=container;
         this._initElement();
        // this._drawlayer();
-        this.on("drawmap",this.OnDrawMap.bind(this));
-        this.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
+       this.FNID_draw=this.draw.bind(this);
+       this.FNID_fireAnimmoveEnd=this.FireAnimmoveEnd.bind(this);
+        this.on("drawmap",this.drawMap.bind(this));
+        this.on("drawCanvas",this.FNID_draw);
         this.on("clear_geometry",this.clearGeometry.bind(this));
         this.LoopTime();
       },
@@ -4951,15 +4953,18 @@ function parseToForm(form){
         
         }
       }, 
-      OnDrawMap:function(){
+      animated:function(){
+        this.fire("animated");
+      },
+      drawMap:function(){
           this.fire("viewreset");
           this._redrawing=true;
-      },
-      RedrawingCanvasTag:function(){
+      }, 
+      draw:function(){
         this._redrawing=true;
       },
       _loadLayer:function(layer){
-        layer.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
+        layer.on("drawCanvas",this.FNID_draw);
         layer.initLayer(this.canvas,this);
       },
       addLayer:function(layer){ 
@@ -4975,7 +4980,10 @@ function parseToForm(form){
           this.setZoom(zoom);
         }
        },
-       animMove:function(coord){
+       FireAnimmoveEnd:function(event){
+        this.fire("animmove_end",this._event_animMove_arg);
+       },
+       animMove:function(coord,feature){
           coord=toPoint(coord);
           var startCoord,size=this.getSize(),
             pos1=this.coordToScreen(coord).round(); 
@@ -5000,8 +5008,11 @@ function parseToForm(form){
                 this._animMoveFn.stop();
               }else{
                 this._animMoveFn=new geomap.PosAnimation();
+                var self=this;
+                this._animMoveFn.on("end",this.FNID_fireAnimmoveEnd);
               }
-            
+              var self=this;
+              this._event_animMove_arg={map:self,coord:coord,feature:feature};
               this._animMoveFn.run(this,function(pos){
               // this.moveTo(pos); 
              // geomap.debug("pos="+pos.toString());
@@ -5061,6 +5072,57 @@ function parseToForm(form){
   
   })(typeof exports !== 'undefined' ? exports : this);
   
+
+
+(function(global) {
+    geomap.shape = {};
+  })(typeof exports !== 'undefined' ? exports : this);
+  
+
+
+
+  (function() { 
+
+    var toPoint=geomap.util.toPoint,extend = geomap.util.object.extend;
+
+    function Group(){
+       this.type="group";
+       this._data=[];
+    }
+    Group.prototype={
+        add:function(geometry){
+            if(geometry){
+                if(typeof geometry == 'array'){
+                    for(var i=0,k=geometry.length;i<k;i++){
+                        this._data.push(geometry[i]);
+                    }
+                }else if(typeof geometry == 'object'){
+                    this._data.push(geometry);
+                }
+            }
+        },
+        remove:function(index){
+            if(this._data.length<index){
+                this._data.splice(index,1);
+            }
+        },
+        draw:function(ctx,options){
+            for(var i=0,k=this._data.length;i<k;i++){
+                this._data[i].draw(ctx,options);
+            }
+        },
+        getData:function(){
+            var data=[]
+            for(var i=0,k=this._data.length;i<k;i++){
+                data.push(this._data[i].getData());
+            }
+            return data;
+        }
+    };
+   
+
+    geomap.shape.Group=Group;
+  })();
 
 (function() {
 
@@ -5513,6 +5575,135 @@ function parseToForm(form){
   
 
 
+
+  (function() { 
+
+    var toPoint=geomap.util.toPoint,extend = geomap.util.object.extend;
+
+    function Feature(feature,map){
+        var data=extend({id:null,properties:null,geometry:{type:null,coordinates:[]}},feature);
+        this._data=data;
+        if(map != undefined){
+            this._map=map;
+        }
+        // this.id=id;
+        // this.geometry=data.geometry;
+        // this.properties=data.prop;
+    }
+    Feature.prototype={
+        drawOptions:{lineWidth:2,
+            lineDash:[],
+            radius:5,
+            dashOffset:1,
+            animated:false,
+            strokeStyle:"rgba(3,169, 244,1)",
+            fillStyle:"rgba(41,182,246,1)",
+            fill:true},
+        setMap:function(map){
+            this._map=map;
+        },
+        initCoords:function(){
+            if(!this._coords){
+                this._coords=[];
+                var geometry=this._data.geometry;
+                var coords=geometry.coordinates;
+                if(coords && coords.length>0){
+                    if(geometry.type === "Polygon"){
+                        coords=coords[0];
+                    }
+                    for(var i=0,k=coords.length;i<k;i++){
+                        this._coords.push(toPoint(coords[i]));
+                    }
+                }    
+            }
+        },
+        clearCanvasOpt:function(ctx){
+            ctx.fillStyle=null;
+            ctx.strokeStyle=null;
+            //还原
+            ctx.lineDashOffset=1;
+            ctx.lineWidth =1;
+            ctx.setLineDash([]);
+        },
+        drawPolygon:function(ctx,opt){
+            if(!this._coords){
+                this.initCoords();
+            }
+            if(this._coords.length>3){
+                var m=this._map,s=this,c=s._coords,len=c.length;
+                ctx.lineWidth = opt.lineWidth;
+                ctx.setLineDash(opt.lineDash);
+                ctx.strokeStyle =opt.strokeStyle;
+                ctx.fillStyle=opt.fillStyle;
+                ctx.lineDashOffset = (s.drawOptions.dashOffset+=0.5);
+                ctx.beginPath();
+                    var p0=m.coordToScreen(c[0]);
+                    ctx.moveTo(p0.x,p0.y);
+                    for(var i=1;i<len;i++){
+                        var coord=c[i];
+                        var p=m.coordToScreen(coord);
+                        ctx.lineTo(p.x,p.y);
+                    }
+                ctx.closePath();
+                ctx.stroke();
+                if(opt.fill){
+                    ctx.fill();
+                }
+                
+            }
+        },
+        drawPoint:function(ctx,opt){
+            if(!this._coords){
+                this.initCoords();
+            }
+            if(this._coords.length>0){
+                var m=this._map,s=this,c=s._coords,len=c.length,r=s.radius;
+                var p0=m.coordToScreen(c[0]);
+                ctx.lineWidth = opt.lineWidth;
+                ctx.setLineDash(opt.lineDash);
+                ctx.strokeStyle =opt.strokeStyle;
+                ctx.fillStyle=opt.fillStyle;
+                ctx.lineDashOffset = (s.drawOptions.dashOffset+=1);
+                ctx.beginPath();
+                ctx.arc(p0.x, p0.y, r, 0, Math.PI * 2, true);
+                ctx.closePath();
+               
+                ctx.stroke();
+                if(opt.fill){
+                    ctx.fill();
+                }
+            }
+        },
+        draw:function(ctx,options){
+            var geometry=this._data.geometry,option=options||{};
+
+             var opt=extend({},this.drawOptions);
+              extend(opt,option);
+            
+           this.clearCanvasOpt(ctx);
+           switch(geometry.type){
+               case "Polygon":{
+                this.drawPolygon(ctx,opt);
+                break;
+               }
+               case "Point":{
+                   this.drawPoint(ctx,opt);
+                   break;
+               }
+           }
+
+           this.clearCanvasOpt(ctx);
+           if(opt.animated){
+               this._map.animated();
+           }
+        }
+    };
+   
+
+    geomap.Feature=Feature;
+  })();
+
+
 (function(global) {
 
     'use strict';
@@ -5908,107 +6099,7 @@ function parseToForm(form){
       global.geomap = { };
     }
   
-    if (global.geomap.Palette) {
-      geomap.warn('geomap.Map is already defined.');
-      return;
-    }
-   
-    geomap.VectorLayer = geomap.Class(geomap.Layer,  {
-      type: 'VectorLayer',
-      paths:[],
-      drawType:0,
-      fill:true,
-      loopRender:false,
-      _enabled:true,
-      initialize: function(options) {
-        // options || (options = { }); 
-        // this._setOptions(options);
-        this.callSuper('initialize',options);
-        this.on("initLayer",this.OnInitLayer.bind(this));
-      }, 
-      OnInitLayer:function(){ 
-        this.transformtion.setOrigin(0,0);
-      },
-      setType:function(gtype,fill){
-          this.drawType=gtype;
-          if(fill!= undefined){
-            this.fill=fill;
-          }
-        
-          if(this._pathing){
-              this._pathing.setType(this.drawType,this.fill);
-          }
-      },
-      addData:function(featureData,options){
-
-        if(featureData.type=="FeatureCollection"){
-            var geomNum=featureData.features.length;
-            for(var i=0;i<geomNum;i++){
-                var geometry=featureData.features[i].geometry;
-                 var path=new geomap.Path(this._map,options);
-                 path.setData(geometry);
-                this.paths.push(path);
-            }
-        }else if(featureData.type=="Feature"){
-            var geometry=featureData.geometry;
-            var path=new geomap.Path(this._map,options);
-            path.setData(geometry);
-            this.paths.push(path);
-        }else{
-            this.paths.push(featureData);
-        }
-        this.ViewReset();
-      },
-      clearData:function(){
-        this.paths=[];
-        this.ViewReset();
-      },
-      OnLoopTime:function(){ 
-        if(this.loopRender && (this._canvasScale==1 || this._canvasScale == undefined )){
-          this._dragOffset=null;//实时重绘canvas，不需要拖拽偏移量。
-           this.ViewReset();
-        }
-      },
-      ViewReset:function(){ 
-        if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
-          this.canvasCtx.clearRect(0,0,this.width,this.height);
-            this._canvasScale=1;
-            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
-            this.loopRender=false;
-            if(this.paths.length>0){
-                for(var i=0,k=this.paths.length;i<k;i++){
-                    var path=this.paths[i];
-                    this.canvasCtx.setLineDash([]);
-                    path.render(this.canvasCtx);
-                    if(path.loopRender){
-                      this.loopRender=true;
-                    }
-                }
-            }
-            if(this._pathing && this._pathing != null){
-                this._pathing.render(this.canvasCtx);
-            }
-            this.fire("drawCanvas");
-        }
-      } 
-       
-      
-    });
-  
-  })(typeof exports !== 'undefined' ? exports : this);
-  
-
-
-(function(global) {
-    'use strict';
-    var extend = geomap.util.object.extend;
-    var Point =geomap.Point;
-  
-    if (!global.geomap) {
-      global.geomap = { };
-    }
-  
-    if (global.geomap.Palette) {
+    if (global.geomap.PaletteLayer) {
       geomap.warn('geomap.Map is already defined.');
       return;
     }
@@ -6224,6 +6315,300 @@ function parseToForm(form){
 
 
 (function(global) {
+    'use strict';
+   
+  
+    if (!global.geomap) {
+      global.geomap = { };
+    }
+  
+    if (global.geomap.FeatureLayer) {
+      geomap.warn('geomap.Map is already defined.');
+      return;
+    }
+
+    var extend = geomap.util.object.extend;
+    var Point =geomap.Point;
+    var Feature =geomap.Feature;
+   
+    geomap.FeatureLayer = geomap.Class(geomap.Layer,  {
+      type: 'FeatureLayer',
+      features:[],
+      drawType:0,
+      fill:true,
+      loopRender:false,
+      _enabled:true,
+      drawOptions:{},
+      initialize: function(options) {
+        this.callSuper('initialize',options);
+        this.on("initLayer",this.OnInitLayer.bind(this));
+        
+      }, 
+      OnInitLayer:function(){ 
+        this.transformtion.setOrigin(0,0);
+        this._map.on("animated",this.AnimatedTag.bind(this));
+      },
+      AnimatedTag:function(){
+        this.loopRender=true;
+      },
+      setType:function(gtype,fill){
+          this.drawType=gtype;
+          if(fill!= undefined){
+            this.fill=fill;
+          }
+        
+          if(this._pathing){
+              this._pathing.setType(this.drawType,this.fill);
+          }
+      },
+      setFeatures:function(featureData,options){
+        this.clearData();
+        this.drawOptions= options||{};
+
+        if( typeof featureData == 'array'){
+            for(var i=0,k=featureData.length;i<k;i++){
+                this.features.push(new Feature(featureData,this._map));
+            }
+        }else if(typeof featureData == 'object'){
+            if(featureData.type && featureData.type ==='FeatureCollection'){
+                 
+                var geomNum=featureData.features.length;
+                for(var i=0;i<geomNum;i++){
+                    this.features.push(new Feature(featureData.features[i],this._map));
+                }
+            }else{
+                this.features.push(new Feature(featureData,this._map));
+            } 
+        }
+         
+        this.ViewReset();
+      },
+      clearData:function(){
+        if(this.features){
+            this.features.forEach(function (item, index, array) {
+                // delete item;
+                // array[index]=null;
+            });
+        }
+        this.features=[];
+      },
+      clear:function(){
+          this.clearData();
+          this.ViewReset();
+      },
+      OnLoopTime:function(){ 
+        if(this.loopRender && (this._canvasScale==1 || this._canvasScale == undefined )){
+          this._dragOffset=null;//实时重绘canvas，不需要拖拽偏移量。
+          this.loopRender=false;
+           this.ViewReset();
+        }
+      },
+      ViewReset:function(){
+        if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
+          this.canvasCtx.clearRect(0,0,this.width,this.height);
+            this._canvasScale=1;
+            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+                for(var i=0,k=this.features.length;i<k;i++){
+                    var feature=this.features[i];
+                    feature.draw(this.canvasCtx,this.drawOptions);
+                }
+            this.fire("drawCanvas");
+           
+        }
+    //   },
+    //   drawingCanvas:function(ctx){
+    //       if(this.drawOptions.animated){
+    //             for(var i=0,k=this.features.length;i<k;i++){
+    //                 var feature=this.features[i];
+    //                 feature.draw(ctx,this.drawOptions);
+    //             }
+    //         }else{
+    //             this.callSuper('drawingCanvas',ctx);
+    //         }
+      }
+      
+    });
+  
+  })(typeof exports !== 'undefined' ? exports : this);
+  
+
+
+
+  (function() { 
+
+    var toPoint=geomap.util.toPoint;
+    var Ball = {
+        x: 100,
+        y: 100,
+        vx: 5,
+        vy: 2,
+        radius: 50,
+        color: '#e57373a8',
+        drawType:0,
+        times:0,
+        setMap:function(map){
+            this._map=map;
+            this._play=false;
+            this._map.on("drawingCanvas",this.draw.bind(this));
+            this._radius=0;
+            this._dashOffset=1;
+        },
+        play:function(event){
+            this._radius=0;
+            this._play=true;
+            this._alpha=0;
+            this.drawType=0;
+            this.times=2,
+            geomap.debug("====Ball do play.");
+            if(this._coords){
+                this._coords.forEach(function (item, index, array) {
+                    delete item;
+                    array[index]=null;
+                });
+                this._coords=[];
+            }else{
+                this._coords=[];
+            }
+            
+            if(event!=undefined){
+                var feature=event.feature;
+                if(feature!=undefined &&  feature.geometry && feature.geometry.type=='Polygon'){
+                    var coords=feature.geometry.coordinates; 
+                    if(coords && coords.length>0){
+                        var coord1=coords[0];
+                        for(var i=0,k=coord1.length;i<k;i++){
+                            this._coords.push(toPoint(coord1[i]));
+                        }
+                        this.drawType=1;
+                    }
+                }
+            }
+        },
+        drawPolygon:function(ctx){
+               if(this.times>0){
+                            var coords=this._coords;
+                            if(coords.length>0){
+                                var m=this._map,len=coords.length;
+                               
+                                ctx.beginPath();
+                                ctx.lineWidth = 3;
+                                ctx.setLineDash([15,4]);
+                                ctx.lineDashOffset = (this._dashOffset+=1);
+                                    var p0=m.coordToScreen(coords[0]);
+                                    ctx.moveTo(p0.x,p0.y);
+                                    for(var i=1;i<len;i++){
+                                        var coord=coords[i];
+                                        var p=m.coordToScreen(coord);
+                                        ctx.lineTo(p.x,p.y);
+                                    }
+                                ctx.closePath();
+                                ctx.strokeStyle = 'rgba(255,87,34,'+this._alpha+')';
+                                ctx.stroke();
+                                ctx.lineWidth = 1;
+                                this._alpha+=0.1;
+                                if(this._alpha<1){
+                                    m.draw();
+                                }else{
+                                    this._alpha=0;
+                                    this.times-=1;
+                                }
+                        }
+                    
+                }
+
+        },
+        drawPoint:function(ctx){
+            if(this.times>0){
+                var m=this._map,r, center=m.center; 
+                var pos1=m.coordToScreen(center).round(); 
+                this.x=pos1.x,this.y=pos1.y;
+                
+                if(this._radius<this.radius){
+                    this._radius+=1;
+                   
+                    r=this._radius;
+                    var co= (this.radius-r)/this.radius;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, r, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(33, 150, 243,'+co+')';
+                    ctx.fill();
+                    m.draw(); 
+                }else{
+                    this.times -=1;
+                    // this.drawText(ctx,pos1);
+                    
+                }
+            }
+        },
+        drawLock:function(ctx){
+            if(this.times>0){
+                var m=this._map,r, center=m.center; 
+                var pos1=m.coordToScreen(center).round(); 
+                this.x=pos1.x,this.y=pos1.y;
+                
+                if(this._radius<this.radius){
+                    this._radius+=1;
+                   
+                    r=this._radius;
+                    var co= (this.radius-r)/this.radius;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, r, 0, Math.PI * 2, true);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(33, 150, 243,'+co+')';
+                    ctx.fill();
+                    m.draw(); 
+                }else{
+                    this.drawText(ctx,pos1);
+                    
+                }
+            }
+        },
+        draw: function(ctx) {
+           if(this.times>0){
+               switch(this.drawType){
+                   case 1:{
+                       this.drawPolygon(ctx);
+                       break;
+                   }
+                   default:
+                       this.drawPoint(ctx);
+               }
+           }
+        },
+        drawText:function(ctx,pos){
+            if(this._alpha<=1){
+                var rx=100,ry=-100,sx=pos.x,sy=pos.y,ex=pos.x+rx,ey=pos.y+ry,r=4,lw=100;
+                ctx.beginPath();
+                ctx.moveTo(sx,sy);
+                ctx.arc(sx,sy, r, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(103 ,58,183,'+this._alpha+')';
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(103 ,58,183,'+this._alpha+')';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.setLineDash([15,4]);
+                ctx.moveTo(sx,sy);
+                ctx.lineTo(ex, ey);
+                ctx.lineTo(ex+lw,ey);
+                ctx.stroke();
+                this._alpha+=0.1;
+                if(this._alpha<1){
+                    this._map.draw(); 
+                }
+            }else{
+                this.times -=1;
+            }
+        }
+        
+      };
+
+    geomap.Ball=Ball;
+  })();
+
+
+(function(global) {
 
     'use strict';
          
@@ -6360,7 +6745,7 @@ else if (typeof define === 'function' && define.amd) {
        }
       },
       __queryCoordData:function(p){
-        this.vectorLayer.clearData();
+        // this.vectorLayer.clearData();
         var mq=this.get("mapQuery");
         if(mq){
           var url=Template(mq.url,{mapId:this.mapId});
@@ -6369,7 +6754,7 @@ else if (typeof define === 'function' && define.amd) {
       },
       __reqcb_queryCoordData:function(xhr){
         var res=xhr.response,status=xhr.status; 
-        this.vectorLayer.clearData();
+        // this.vectorLayer.clearData();
         if( status==200   ){ 
           var mq=this.get("mapQuery");
           var featureCollection=null;
@@ -6417,8 +6802,10 @@ else if (typeof define === 'function' && define.amd) {
            this._init_map_status=true;
            var parkingLayer=new geomap.TileLayer({url:this._server.tile,headers:this.reqHead});
            this.parkingLayer=parkingLayer;
-           var vectorLayer=new geomap.VectorLayer();
-           this.vectorLayer=vectorLayer;
+          //  var vectorLayer=new geomap.VectorLayer();
+          //  this.vectorLayer=vectorLayer;
+           var featrueLayer=new geomap.FeatureLayer();
+           this.featrueLayer=featrueLayer;
            var paletteLayer=new geomap.PaletteLayer({drawType:this.drawType});
            this.paletteLayer=paletteLayer;
           //  var drawCallbackFn=function(geo){
@@ -6426,7 +6813,8 @@ else if (typeof define === 'function' && define.amd) {
           //  }.bind(this);
            paletteLayer.on("geometry_change",this._drawMapGeom);;
            this.addLayer(parkingLayer);
-           this.addLayer(vectorLayer);
+          //  this.addLayer(vectorLayer);
+           this.addLayer(featrueLayer);
            this.addLayer(paletteLayer);
            var queryCallback=this._queryCoordData;
            this.on("pointcoord",function(e){
@@ -6441,7 +6829,7 @@ else if (typeof define === 'function' && define.amd) {
          }else{
           this.parkingLayer.url=this._server.tile;
           this.parkingLayer.refreshCache();
-          this.vectorLayer.clearData();
+          this.featrueLayer.clear();
           this.fire("drawmap");
          }
          this.fire("map_complete",this);
@@ -6550,8 +6938,12 @@ setMapDraw:function(md){
   this.set("mapDraw",md);
   this.paletteLayer.setType(md.drawType,md.fill);
 },
-drawGeom:function(data,option){
-  this.vectorLayer.addData(data,option);
+// drawGeom:function(data,option){
+//   this.vectorLayer.addData(data,option);
+//   this.fire("drawmap");
+// },
+setFeatures:function(data,option){
+  this.featrueLayer.setFeatures(data,option);
   this.fire("drawmap");
 },
 jsonReq:function(url,data,fn){
@@ -7005,7 +7397,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         table:undefined,
         buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"}}],
         menu:undefined,
-        geomOption:{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]},
+        geomOption:{},
         initialize: function( options) {
             options || (options = { });  
             this.id=+new Date();
@@ -7036,6 +7428,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 this.root.appendChild(this.table);
             }
             this.table.innerHTML="";
+            this.map.setFeatures([],this.geomOption);
             if(featureData && featureData.type=="FeatureCollection"){
                     var geomNum=featureData.features.length;
                     for(var i=0;i<geomNum;i++){
@@ -7061,10 +7454,11 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                     rows.push(properties);
                     features=[featureData];
                 }
+                
                 if(rows.length>0){
                     //先绘图
                     if(featureData && featureData.type=="FeatureCollection"){
-                        this.map.drawGeom(featureData,this.geomOption);
+                        this.map.setFeatures(featureData,this.geomOption);
                     }
                     //做表格
                     var table=this.table;
@@ -7326,8 +7720,9 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         onlyIcon:false,
         url:undefined,
         root:undefined,
-        width:600,
+        width:200,
         height:400,
+        framePos:"rb",
         tbOpt:{"className":"datalist"},
         tbStyle:{width:"100%"},
         map:undefined,
@@ -7472,7 +7867,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             if(this.viewFrame){
                 this.viewFrame.show();
             }else{
-                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:'rc'});
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:this.framePos});
             }
         }
     

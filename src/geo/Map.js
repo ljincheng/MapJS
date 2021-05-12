@@ -57,8 +57,10 @@
         this._container=container;
         this._initElement();
        // this._drawlayer();
-        this.on("drawmap",this.OnDrawMap.bind(this));
-        this.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
+       this.FNID_draw=this.draw.bind(this);
+       this.FNID_fireAnimmoveEnd=this.FireAnimmoveEnd.bind(this);
+        this.on("drawmap",this.drawMap.bind(this));
+        this.on("drawCanvas",this.FNID_draw);
         this.on("clear_geometry",this.clearGeometry.bind(this));
         this.LoopTime();
       },
@@ -171,15 +173,18 @@
         
         }
       }, 
-      OnDrawMap:function(){
+      animated:function(){
+        this.fire("animated");
+      },
+      drawMap:function(){
           this.fire("viewreset");
           this._redrawing=true;
-      },
-      RedrawingCanvasTag:function(){
+      }, 
+      draw:function(){
         this._redrawing=true;
       },
       _loadLayer:function(layer){
-        layer.on("drawCanvas",this.RedrawingCanvasTag.bind(this));
+        layer.on("drawCanvas",this.FNID_draw);
         layer.initLayer(this.canvas,this);
       },
       addLayer:function(layer){ 
@@ -195,7 +200,10 @@
           this.setZoom(zoom);
         }
        },
-       animMove:function(coord){
+       FireAnimmoveEnd:function(event){
+        this.fire("animmove_end",this._event_animMove_arg);
+       },
+       animMove:function(coord,feature){
           coord=toPoint(coord);
           var startCoord,size=this.getSize(),
             pos1=this.coordToScreen(coord).round(); 
@@ -220,8 +228,11 @@
                 this._animMoveFn.stop();
               }else{
                 this._animMoveFn=new geomap.PosAnimation();
+                var self=this;
+                this._animMoveFn.on("end",this.FNID_fireAnimmoveEnd);
               }
-            
+              var self=this;
+              this._event_animMove_arg={map:self,coord:coord,feature:feature};
               this._animMoveFn.run(this,function(pos){
               // this.moveTo(pos); 
              // geomap.debug("pos="+pos.toString());

@@ -104,14 +104,21 @@ var filesToInclude = [
     'src/geo/MapRectSelect.js',
     // 'src/geo/layer/FrameLayer.js',
     'src/geo/Map.js',
+    //---- shape ------
+    'src/shapes/Shape.js',
+    'src/shapes/Group.js',
+    //----  geometry ------
     'src/geometry/Geometry.js',
     'src/geometry/Path.js',
     'src/geometry/Polygon.js',
     'src/geometry/Marker.js',
+    'src/geometry/Feature.js',
     'src/geo/Layer.js',
     'src/geo/layer/TileLayer.js',
-    'src/geo/layer/VectorLayer.js',
+    // 'src/geo/layer/VectorLayer.js',
     'src/geo/layer/PaletteLayer.js',
+    'src/geo/layer/FeatureLayer.js',
+    'src/geometry/Ball.js',
     //---- ProjectMap ------
 
     'src/project/Icon.js',

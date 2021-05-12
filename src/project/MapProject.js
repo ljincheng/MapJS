@@ -110,7 +110,7 @@ else if (typeof define === 'function' && define.amd) {
        }
       },
       __queryCoordData:function(p){
-        this.vectorLayer.clearData();
+        // this.vectorLayer.clearData();
         var mq=this.get("mapQuery");
         if(mq){
           var url=Template(mq.url,{mapId:this.mapId});
@@ -119,7 +119,7 @@ else if (typeof define === 'function' && define.amd) {
       },
       __reqcb_queryCoordData:function(xhr){
         var res=xhr.response,status=xhr.status; 
-        this.vectorLayer.clearData();
+        // this.vectorLayer.clearData();
         if( status==200   ){ 
           var mq=this.get("mapQuery");
           var featureCollection=null;
@@ -167,8 +167,10 @@ else if (typeof define === 'function' && define.amd) {
            this._init_map_status=true;
            var parkingLayer=new geomap.TileLayer({url:this._server.tile,headers:this.reqHead});
            this.parkingLayer=parkingLayer;
-           var vectorLayer=new geomap.VectorLayer();
-           this.vectorLayer=vectorLayer;
+          //  var vectorLayer=new geomap.VectorLayer();
+          //  this.vectorLayer=vectorLayer;
+           var featrueLayer=new geomap.FeatureLayer();
+           this.featrueLayer=featrueLayer;
            var paletteLayer=new geomap.PaletteLayer({drawType:this.drawType});
            this.paletteLayer=paletteLayer;
           //  var drawCallbackFn=function(geo){
@@ -176,7 +178,8 @@ else if (typeof define === 'function' && define.amd) {
           //  }.bind(this);
            paletteLayer.on("geometry_change",this._drawMapGeom);;
            this.addLayer(parkingLayer);
-           this.addLayer(vectorLayer);
+          //  this.addLayer(vectorLayer);
+           this.addLayer(featrueLayer);
            this.addLayer(paletteLayer);
            var queryCallback=this._queryCoordData;
            this.on("pointcoord",function(e){
@@ -191,7 +194,7 @@ else if (typeof define === 'function' && define.amd) {
          }else{
           this.parkingLayer.url=this._server.tile;
           this.parkingLayer.refreshCache();
-          this.vectorLayer.clearData();
+          this.featrueLayer.clear();
           this.fire("drawmap");
          }
          this.fire("map_complete",this);
@@ -300,8 +303,12 @@ setMapDraw:function(md){
   this.set("mapDraw",md);
   this.paletteLayer.setType(md.drawType,md.fill);
 },
-drawGeom:function(data,option){
-  this.vectorLayer.addData(data,option);
+// drawGeom:function(data,option){
+//   this.vectorLayer.addData(data,option);
+//   this.fire("drawmap");
+// },
+setFeatures:function(data,option){
+  this.featrueLayer.setFeatures(data,option);
   this.fire("drawmap");
 },
 jsonReq:function(url,data,fn){

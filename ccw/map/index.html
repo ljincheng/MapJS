@@ -56,6 +56,11 @@ function loadMap(){
                 window.location.href="../index.html";
             }
         });
+        geomap.Ball.setMap(map);
+        map.on("animmove_end",function(event){
+            geomap.Ball.play(event);
+           
+        })
 
        
         var menu=new MapProject.Menu("toolPane",{map:map,menu:[{text:"新建地图",type:"CREATEMAP",id:-1}]}); 
@@ -63,7 +68,7 @@ function loadMap(){
         var layerInfo=new MapProject.LayerInfo({map:map});
         layerInfo.addToMenu(menu);
 
-        var geomOption={style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]};
+        var geomOption={lineWidth:2,fill:false,lineDash:[12,4],strokeStyle:"rgba(33,150,243,0.9)",animated:true};
         //============坐标搜索车位
         var parkingMapQuery=new MapProject.MapQuery({map:map,id:1,icon:MapProject.Icons.query,title:"查询车位",geomOption:geomOption,url:"http://master.cn/ccw/wms/parking/query/{mapId}",
             buttons:[{text:"删除",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
@@ -84,7 +89,7 @@ function loadMap(){
                        if(cp){
                        console.log("cp="+cp[0]+","+cp[1]);
                     //    cp=[0,0];
-                       map.animMove(cp);
+                       map.animMove(cp,features);
                        }
                    }
                }
@@ -93,8 +98,8 @@ function loadMap(){
         parkingMapQuery.addToMenu(menu);
         
         //============坐标搜索楼盘
-        geomOption={style:{strokeStyle:"red",lineWidth:1},_fill:false,lineDash:[6,3]};
-        var buildingMapQuery=new MapProject.MapQuery({map:map,id:2,icon:MapProject.Icons.query2,title:"查询楼栋",geomOption:geomOption,url:"http://master.cn/ccw/wms/building/query/{mapId}",
+        var geomOption2={strokeStyle:"rgba(33,150,243,0.9)",lineWidth:2,fill:false,lineDash:[15,4],animated:true};
+        var buildingMapQuery=new MapProject.MapQuery({map:map,id:2,icon:MapProject.Icons.query2,title:"查询楼栋",geomOption:geomOption2,url:"http://master.cn/ccw/wms/building/query/{mapId}",
             buttons:[{text:"删除",tag:"a",style:{cursor:"pointer",paddingRight:"10px"},fn:function(event,self){
                 var data=self.data,el=self.target;
                 map.jsonReq("http://master.cn/ccw/wms/building/delete/{mapId}",{featureId:data.bid},function(xhr){
@@ -120,7 +125,7 @@ function loadMap(){
                        if(cp){
                        console.log("cp="+cp[0]+","+cp[1]);
                     //    cp=[0,0];
-                       map.animMove(cp);
+                       map.animMove(cp,features);
                        }
                    }
                }
@@ -130,6 +135,7 @@ function loadMap(){
         buildingMapQuery.addToMenu(menu);
 
          //============坐标搜索楼盘的车位
+        //  geomOption={lineWidth:2,fill:true,lineDash:[]};
          var  bparkingMapQuery=new MapProject.MapQuery({map:map,id:3,icon:MapProject.Icons.queryRect,title:"查询楼栋的车位",geomOption:geomOption,url:"http://master.cn/ccw/wms/building/queryParking/{mapId}",
             buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"},fn:function(event,self){
                 var data=self.data,el=self.target;
@@ -178,7 +184,8 @@ function loadMap(){
                             if(cp){
                             console.log("cp="+cp[0]+","+cp[1]);
                             //    cp=[0,0];
-                            map.animMove(cp);
+                            map.animMove(cp,value);
+                           
                             }
                         }
                     }
@@ -189,6 +196,7 @@ function loadMap(){
             return elA;
         }},{text:"车位编号",id:"parkingNo"},{text:"车位ID",id:"parkingId"}]});
         parkingDatalist.addToMenu(menu);
+
 }
     function winLoad(){
 

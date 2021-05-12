@@ -25,8 +25,9 @@
         onlyIcon:false,
         url:undefined,
         root:undefined,
-        width:600,
+        width:200,
         height:400,
+        framePos:"rb",
         tbOpt:{"className":"datalist"},
         tbStyle:{width:"100%"},
         map:undefined,
@@ -171,7 +172,7 @@
             if(this.viewFrame){
                 this.viewFrame.show();
             }else{
-                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:'rc'});
+                this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.root,w:this.width,h:this.height,closeType:2,pos:this.framePos});
             }
         }
     

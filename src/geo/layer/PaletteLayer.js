@@ -8,7 +8,7 @@
       global.geomap = { };
     }
   
-    if (global.geomap.Palette) {
+    if (global.geomap.PaletteLayer) {
       geomap.warn('geomap.Map is already defined.');
       return;
     }

@@ -33,7 +33,7 @@
         table:undefined,
         buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"}}],
         menu:undefined,
-        geomOption:{style:{fillStyle:"rgba(0,0,200,0.5)",strokeStyle:"#fff",lineWidth:2},_fill:true,lineDash:[4,2]},
+        geomOption:{},
         initialize: function( options) {
             options || (options = { });  
             this.id=+new Date();
@@ -64,6 +64,7 @@
                 this.root.appendChild(this.table);
             }
             this.table.innerHTML="";
+            this.map.setFeatures([],this.geomOption);
             if(featureData && featureData.type=="FeatureCollection"){
                     var geomNum=featureData.features.length;
                     for(var i=0;i<geomNum;i++){
@@ -89,10 +90,11 @@
                     rows.push(properties);
                     features=[featureData];
                 }
+                
                 if(rows.length>0){
                     //先绘图
                     if(featureData && featureData.type=="FeatureCollection"){
-                        this.map.drawGeom(featureData,this.geomOption);
+                        this.map.setFeatures(featureData,this.geomOption);
                     }
                     //做表格
                     var table=this.table;

@@ -130,11 +130,11 @@
             },
             dragEndWithInertiaSpeed:function(arg){
                 var event=arg.event;
-                if(this._animMoveFn){
-                    this._animMoveFn.stop();
+                if(this._dragEndSpeedAnimFn){
+                    this._dragEndSpeedAnimFn.stop();
                 }else{
-                    this._animMoveFn=new geomap.PosAnimation({easeLinearity:0.1});
-                    this._animMoveFn.on("end",function(){ 
+                    this._dragEndSpeedAnimFn=new geomap.PosAnimation({easeLinearity:0.1});
+                    this._dragEndSpeedAnimFn.on("end",function(){ 
                         // geomap.debug("###======dragend=====");
                         var _map=this.other;
                         var fireEvent=this.arg;
@@ -145,7 +145,7 @@
                 var startP=arg.point; 
                 var d_e=new Point(arg.event.inertiaSpeed[0],arg.event.inertiaSpeed[1]);
                 // var res=this._map.resolution(this._map.zoom);
-                this._animMoveFn.run(this,function(pos,e){ 
+                this._dragEndSpeedAnimFn.run(this,function(pos,e){ 
                     this.other.panScreen(pos); 
                     var p=this.startP.add(pos);
                     this.startP=p;
