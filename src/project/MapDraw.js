@@ -25,6 +25,8 @@
         onlyIcon:false,
         url:undefined,
         root:undefined,
+        toolEl:undefined,
+        formEl:undefined,
         width:600,
         height:400,
         tbOpt:{},
@@ -44,6 +46,28 @@
             this._closeFrameEv=this.closeFrameEv.bind(this);
             this.root=Element.create("div");
             this.on("geom_data",this.geomDataCallback.bind(this));
+            var toolEl=Element.create("div");
+            this.toolEl=toolEl;
+            this.formEl=Element.create("div");
+            this.root.appendChild(this.toolEl);
+            this.root.appendChild(this.formEl);
+            this.creatTools();
+        },
+        creatTools:function(){
+           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"});
+           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_xnum"});
+          
+           this._xnumEl=xnumEl;
+
+           this.toolEl.appendChild(xnumEl);
+           this.toolEl.appendChild(btn);
+           eventjs.add(btn,"click",this.editGeometry.bind(this));
+        },
+        editGeometry:function(){
+            if(this._group){
+                var value=this._xnumEl.value;
+                this._group.split(Number(value));
+            }
         },
         addToMenu:function(menu){
             this.menu=menu;
@@ -60,9 +84,17 @@
             this.map.clearDrawGeometry();
         },
         saveGeomEv:function(){
-            if(this.form && this.form.id && this._data_geom){
+            if(this.form && this.form.id && this._group){
                 var properties=Element.formToJson(document.getElementById(this.form.id));
-                var geomText=this._data_geom.getText();
+                // var geomText=this._data_geom.getText();
+                var geoms=this._group.getData();
+                var geomText=null;
+                if(geoms.length>0){
+                    geomText=JSON.stringify(geoms[0]);
+                }else{
+                    return;
+                }
+               
                 var featureId="";
                 for(var key in properties){
                     if(key === 'id'){
@@ -93,46 +125,23 @@
             var formId= bodyForm.id;
             bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
             var form=Element.parseToForm(bodyForm);
-            return form;
+            this.formEl.appendChild(form);
+            return this.root;
         },
         geomDataCallback:function(arg){
-            var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
-            var myself=this;
-            this._data_geom=geometry;
-            if(clearDraw){clearDraw();}
-            if(geometry._coordinates.length<1){
-                return;
-            }
-            this.showFrame();
-            // var mapId=arg.map.mapId;
-             
-            // var bodyForm=this.form;
-            //  var formId= bodyForm.id;
-            // //  if(!bodyForm.buttons){
-            // //  var closeFrameCallback=function(event,self) {
-            // //      this.paletteLayer.clearGeometry();
-            // //  }.bind(this);
-            // //  var parkingAddUrl=this.getParkingAddUrl(mapId);
-            // //  var okFrameCallback=function(event,self) {
-            // //     var obj=geomap.element.formToJson(document.getElementById(this.formId));
-            // //     // var geomText=geometry;
-            // //     // this.other.parkingRequestCallback.call(this.other,geomText,obj,self);
-            // //     // this.other.paletteLayer.clearGeometry();
-            // //  }.bind({other:myself,geometry:geometry.getText(),formId:formId,url:parkingAddUrl});
+            var group=arg.geometry;
+            this._group=group;
+            // group.split(4,4);
 
-            //  bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
-            // // }
-
-            //  window.FRAMES = window.FRAMES ||{};
-            //  var form=Element.parseToForm(bodyForm);
-            // if(window.FRAMES.editGeomFrame){
-            //     window.FRAMES.editGeomFrame.setData("表单信息设置",form,{w:400,h:250});
-            //     window.FRAMES.editGeomFrame.show();
-            // }else{
-            //     window.FRAMES.editGeomFrame=new geomap.view.Frame(document.body,{title:"表单信息设置", body:form,w:400,h:250,closeType:2,pos:"rc"});
-            //     window.FRAMES.editGeomFrame.on("close",this._closeFrameEv);
+            // var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
+            // var myself=this;
+            // this._data_geom=geometry;
+            // if(clearDraw){clearDraw();}
+            // if(geometry._coordinates.length<1){
+            //     return;
             // }
-
+             this.showFrame();
+           
         },
         showFrame:function(){
             if(this.viewFrame){

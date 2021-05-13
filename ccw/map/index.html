@@ -154,7 +154,7 @@ function loadMap(){
 
         var parkingMapDraw=new MapProject.MapDraw({title:"绘制车位",id:1,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/parking/add/{mapId}",
         form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
-        ,{id:"building_id",type:"text",title:"楼栋",value:"",required:false}
+        ,{id:"xnum",type:"text",title:"垂直拆分多个面",value:"",required:false}
         ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
         ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
         ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}

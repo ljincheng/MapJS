@@ -3,7 +3,7 @@
      /**
       * Data:{coordinates:[[[x,y],[x,y]...],[[x,y]...]],type:"Polygon",}
       */
-     
+     var toPoint=geomap.util.toPoint;
     
     geomap.Geometry=geomap.Class(geomap.CommonMethods, geomap.Observable ,{
         _coordinates:[],
@@ -139,6 +139,54 @@
         getText:function(){
             var jsonObj=this.getJson();
             return JSON.stringify(jsonObj);
+        },
+        getCoordJson:function(){
+            var coords=this._coordinates,num=coords.length;
+            var geoJson={type:"",coordinates:[]};
+            if(num<1){
+                return geoJson;
+            } 
+            switch(this._type){
+                case 1:{
+                    geoJson.type="Point";
+                    geoJson.coordinates.push(coords[0]);
+                }
+                    break;
+                case 2:{
+                    geoJson.type="Line";
+                    for(var i=0;i<num;i++){
+                        geoJson.coordinates.push(coords[i]);
+                    }
+                }
+                    break;
+                case 3:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        pg1.push(toPoint([p1.x,p1.y]));
+                        pg1.push(toPoint([p1.x,p2.y]));
+                        pg1.push(toPoint([p2.x,p2.y]));
+                        pg1.push(toPoint([p2.x,p1.y]));
+                        pg1.push(toPoint([p1.x,p1.y]));
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+                    break;
+                default:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        for(var i=0;i<num;i++){
+                            pg1.push(coords[i]);
+                        }
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+
+            }
+            return geoJson; 
         },
         getJson:function(){
             var coords=this._coordinates,num=coords.length;

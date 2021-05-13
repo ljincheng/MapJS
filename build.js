@@ -107,6 +107,7 @@ var filesToInclude = [
     //---- shape ------
     'src/shapes/Shape.js',
     'src/shapes/Group.js',
+    'src/shapes/Path.js',
     //----  geometry ------
     'src/geometry/Geometry.js',
     'src/geometry/Path.js',

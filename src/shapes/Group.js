@@ -7,6 +7,7 @@
     function Group(){
        this.type="group";
        this._data=[];
+
     }
     Group.prototype={
         add:function(geometry){
@@ -25,10 +26,18 @@
                 this._data.splice(index,1);
             }
         },
-        draw:function(ctx,options){
+        draw:function(ctx,map){
             for(var i=0,k=this._data.length;i<k;i++){
-                this._data[i].draw(ctx,options);
+                geomap.shape.draw(ctx,map,this._data[i].getGeometry())
+               // this._data[i].draw(ctx,options);
             }
+        },
+        split:function(xnum,ynum){
+            var data=[]
+            for(var i=0,k=this._data.length;i<k;i++){
+                this._data[i].split(xnum,ynum);
+            }
+            
         },
         getData:function(){
             var data=[]

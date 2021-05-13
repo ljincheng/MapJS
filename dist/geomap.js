@@ -4302,7 +4302,10 @@ function parseToForm(form){
         zoom:0,
         map:undefined,
         transformtion:new geomap.Transformtion(1,0,-1,0),
-        transformtion2:new geomap.Transformtion(1,0,1,0),
+        // transformtion2:new geomap.Transformtion(1,0,1,0),
+        // transformtion2:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
+        // transformtion3:new geomap.Transformtion(1 / 180, 1, -1 / 180, 0.5),
+        // transformtion3:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
         resolution:function(zoom)
         {
             var x = (360 / (Math.pow(2, zoom)) / this.tileSize);
@@ -4398,10 +4401,30 @@ function parseToForm(form){
         },
         modelCoord:function(coord){
             return this.toTransform(coord,1);
-        },
-        toTransformScreen:function(point,scale){
-            return this.transformtion2.transform(point,scale);
         }
+        // toTransformScreen:function(point,scale){
+        //     return this.transformtion2.transform(point,scale);
+        // }
+      
+    // project: function (latlng) {
+	// 	return new Point(latlng.x, latlng.y);
+	// },
+
+	// unproject: function (point) {
+	// 	return new Point(point.y, point.x);
+	// },
+    //     coordToScreen1:function(p0){
+    //        var p= this.unproject(p0);
+    //        var scale = this.getScale(this.zoom);
+    //        var np= this.transformtion3._transform(p,scale);
+    //        return np;
+    //     },
+    //     screenToCoord1:function(p0){
+    //         var p= this.project(p0);
+    //         var scale = this.getScale(this.zoom);
+    //         var np= this.transformtion3.untransform(p,scale);
+    //         return np;
+    //     }
 
     }; 
      
@@ -5075,9 +5098,56 @@ function parseToForm(form){
 
 
 (function(global) {
-    geomap.shape = {};
-  })(typeof exports !== 'undefined' ? exports : this);
+
+  function draw(ctx,map,geometry){
+          var coords=geometry.coordinates,len=coords.length;
+          if(len>0){
+            switch(geometry.type){
+              case "Polygon":{ 
+                coords=coords[0];
+                len=coords.length;
+                if(coords.length>1){
+                  ctx.beginPath();
+                  var p0=map.coordToScreen(coords[0]).round();
+                  ctx.moveTo(p0.x,p0.y);
+                  for(var i=1;i<len;i++){
+                      var coord=coords[i];
+                      var p=map.coordToScreen(coord).round();
+                      ctx.lineTo(p.x,p.y);
+                  }
+                  ctx.closePath();
+                  ctx.stroke();
+                  ctx.fill();
+                }
+                  break;
+              }
+              case "Point":{
+                var p=map.coordToScreen(coords[0]).round(),r=geometry.r;
+                ctx.fillRect(p.x-r/2,p.y-r/2,r,r);
+                ctx.strokeRect(p.x-r/2,p.y-r/2,r,r);
+                break;
+            }
+              default:{
+                ctx.beginPath();
+                  var p0=map.coordToScreen(coords[0]).round();
+                  ctx.moveTo(p0.x,p0.y);
+                  for(var i=1;i<len;i++){
+                      var coord=coords[i];
+                      var p=map.coordToScreen(coord).round();
+                      ctx.lineTo(p.x,p.y);
+                  }
+                  ctx.closePath();
+                  ctx.stroke();
+              }
+
+            }
+          }
+    }
   
+
+    geomap.shape = {draw:draw};
+  })(typeof exports !== 'undefined' ? exports : this);
+
 
 
 
@@ -5088,6 +5158,7 @@ function parseToForm(form){
     function Group(){
        this.type="group";
        this._data=[];
+
     }
     Group.prototype={
         add:function(geometry){
@@ -5106,10 +5177,18 @@ function parseToForm(form){
                 this._data.splice(index,1);
             }
         },
-        draw:function(ctx,options){
+        draw:function(ctx,map){
             for(var i=0,k=this._data.length;i<k;i++){
-                this._data[i].draw(ctx,options);
+                geomap.shape.draw(ctx,map,this._data[i].getGeometry())
+               // this._data[i].draw(ctx,options);
             }
+        },
+        split:function(xnum,ynum){
+            var data=[]
+            for(var i=0,k=this._data.length;i<k;i++){
+                this._data[i].split(xnum,ynum);
+            }
+            
         },
         getData:function(){
             var data=[]
@@ -5124,12 +5203,142 @@ function parseToForm(form){
     geomap.shape.Group=Group;
   })();
 
+
+
+  (function() { 
+
+    var toPoint=geomap.util.toPoint,extend = geomap.util.object.extend;
+
+    function Path(group,geometry){
+       this.type="Path";
+       this._group=group;
+       group.add(this);
+       this._geometry=extend({type:null,coordinates:[]},geometry);
+    } 
+
+    Path.prototype={
+        setData:function(type,coords){
+            this._geometry.type=type;
+            this._geometry.coordinates=coords;
+        },
+        setProp:function(prop){
+            this._properties=prop;
+        },
+        addProp:function(key,value){
+            var prop= this._properties ||{};
+            prop[key]=value;
+            this._properties=prop;
+        },
+        split:function(xnum,ynum){
+            var geom=this._geometry,minx=null,miny=null,maxx=null,maxy=null,cs;
+            switch(geom.type){
+                case 'Polygon':{
+                      cs=geom.coordinates;
+                    if(cs.length==1 && cs[0].length==5){
+                        cs=cs[0];
+                       var groupGeometry=[];
+                        var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
+                        var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0);
+                        var rt=pt.x / xnum, rb=pb.x/ xnum;
+                        var start_p0=ptx0,start_p1=pbx0;
+                        for(var i=0;i<xnum;i++){
+                            var newCoords=[];
+                            newCoords.push(start_p0);
+                            newCoords.push(start_p1);
+                            var p0=start_p1.clone();
+                            p0.x += rb;
+                            newCoords.push(p0);
+                            var p1=start_p0.clone();
+                            p1.x+=rt;
+                            newCoords.push(p1);
+                            newCoords.push(start_p0);
+                             groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
+                             if(i>0){
+                            new Path(this._group,{type:'Polygon',coordinates:[newCoords]});
+                             }
+                            start_p0=p1;
+                            start_p1=p0;
+                        }
+                        this._geometry=groupGeometry[0];
+                         
+                         
+                    }
+                    
+                    break;
+                }
+                default:{
+                    cs=geom.coordinates;
+                }
+            }
+        },
+        bounds:function(){
+            var geom=this._geometry,minx=null,miny=null,maxx=null,maxy=null,cs;
+            switch(geom.type){
+                case 'Polygon':{
+                      cs=geom.coordinates;
+                    if(cs.length>0){
+                        cs=cs[0];
+                    }
+                    break;
+                }
+                default:{
+                    cs=geom.coordinates;
+                }
+            }
+            if(cs.length>0){
+                maxx = minx = cs[0].x; maxy = miny = cs[0].y;
+                for(var i=1,k=cs.length;i<k;i++){
+                    minx=Math.min(minx,cs[i].x);
+                    miny=Math.min(miny,cs[i].y);
+                    maxx=Math.max(maxx,cs[i].x);
+                    maxy=Math.max(maxy,cs[i].y);
+                }
+                return  geomap.util.toBounds(minx,miny,maxx,maxy); 
+            }else{
+                return null;
+            }
+           
+        },
+        getGeometry:function(){
+           return this._geometry;
+        },
+        getData:function(){
+            var coords=this._geometry.coordinates,cs=[];
+            var geometry={type:this._geometry.type,coordinates:[]};
+            if(geometry.type == 'Polygon'){
+                if(coords.length>0){
+                    coords=coords[0];
+                }
+                geometry.coordinates=[cs];
+            }else{
+                geometry.coordinates=cs;
+            }
+            if(coords.length>0){
+                for(var i=0,k=coords.length;i<k;i++){
+                    cs.push([coords[i].x,coords[i].y]);
+                }
+                return geometry;
+            }else{
+                return null;
+            }
+          
+        },
+        getFeature:function(){
+            return {geometry:this._geometry,properties:this._properties};
+        }
+    };
+   
+
+    geomap.shape.Path=Path;
+    
+  })();
+
 (function() {
 
      /**
       * Data:{coordinates:[[[x,y],[x,y]...],[[x,y]...]],type:"Polygon",}
       */
-     
+     var toPoint=geomap.util.toPoint;
     
     geomap.Geometry=geomap.Class(geomap.CommonMethods, geomap.Observable ,{
         _coordinates:[],
@@ -5265,6 +5474,54 @@ function parseToForm(form){
         getText:function(){
             var jsonObj=this.getJson();
             return JSON.stringify(jsonObj);
+        },
+        getCoordJson:function(){
+            var coords=this._coordinates,num=coords.length;
+            var geoJson={type:"",coordinates:[]};
+            if(num<1){
+                return geoJson;
+            } 
+            switch(this._type){
+                case 1:{
+                    geoJson.type="Point";
+                    geoJson.coordinates.push(coords[0]);
+                }
+                    break;
+                case 2:{
+                    geoJson.type="Line";
+                    for(var i=0;i<num;i++){
+                        geoJson.coordinates.push(coords[i]);
+                    }
+                }
+                    break;
+                case 3:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        pg1.push(toPoint([p1.x,p1.y]));
+                        pg1.push(toPoint([p1.x,p2.y]));
+                        pg1.push(toPoint([p2.x,p2.y]));
+                        pg1.push(toPoint([p2.x,p1.y]));
+                        pg1.push(toPoint([p1.x,p1.y]));
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+                    break;
+                default:{
+                    geoJson.type="Polygon";
+                    if(num>1){
+
+                        var p1=coords[0],p2=coords[1],pg1=[];
+                        for(var i=0;i<num;i++){
+                            pg1.push(coords[i]);
+                        }
+                        geoJson.coordinates.push(pg1);
+                    }
+                }
+
+            }
+            return geoJson; 
         },
         getJson:function(){
             var coords=this._coordinates,num=coords.length;
@@ -6112,6 +6369,7 @@ function parseToForm(form){
       loopRender:false,
       _enabled:true,
       referenceLine:false,
+      group:null,
       initialize: function(options) {
         this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
@@ -6121,6 +6379,7 @@ function parseToForm(form){
         this._map.on("mousemove",this.OnMouseMove.bind(this));
         this._map.on("mouseup",this.OnMouseUp.bind(this));
         this.transformtion.setOrigin(0,0);
+        this.group=new geomap.shape.Group();
       },
       setType:function(gtype,fill){
           this.drawType=gtype;
@@ -6213,9 +6472,13 @@ function parseToForm(form){
       PathEnd:function(e,p){
         if(this._pathing && this._pathing!=null){
             this._pathing.end();
-
-            this.fire("geometry_change",this._pathing);
-            this.paths.push(this._pathing);
+            var geometry=this._pathing.getJson();
+            if(geometry.coordinates.length>0){
+              var shapePath=new geomap.shape.Path(this.group,this._pathing.getCoordJson());
+            }
+            this.fire("geometry_change",this.group);
+            // this.fire("geometry_change",this._pathing);
+           
             this._pathing=null;
             this.ViewReset();
         }
@@ -6259,6 +6522,7 @@ function parseToForm(form){
                     }
                 }
             }
+            this.group.draw(ctx,this._map);
             if(this._pathing && this._pathing != null){
                 this._pathing.render(ctx);
             }
@@ -7565,6 +7829,8 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         onlyIcon:false,
         url:undefined,
         root:undefined,
+        toolEl:undefined,
+        formEl:undefined,
         width:600,
         height:400,
         tbOpt:{},
@@ -7584,6 +7850,28 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             this._closeFrameEv=this.closeFrameEv.bind(this);
             this.root=Element.create("div");
             this.on("geom_data",this.geomDataCallback.bind(this));
+            var toolEl=Element.create("div");
+            this.toolEl=toolEl;
+            this.formEl=Element.create("div");
+            this.root.appendChild(this.toolEl);
+            this.root.appendChild(this.formEl);
+            this.creatTools();
+        },
+        creatTools:function(){
+           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"});
+           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_xnum"});
+          
+           this._xnumEl=xnumEl;
+
+           this.toolEl.appendChild(xnumEl);
+           this.toolEl.appendChild(btn);
+           eventjs.add(btn,"click",this.editGeometry.bind(this));
+        },
+        editGeometry:function(){
+            if(this._group){
+                var value=this._xnumEl.value;
+                this._group.split(Number(value));
+            }
         },
         addToMenu:function(menu){
             this.menu=menu;
@@ -7600,9 +7888,17 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             this.map.clearDrawGeometry();
         },
         saveGeomEv:function(){
-            if(this.form && this.form.id && this._data_geom){
+            if(this.form && this.form.id && this._group){
                 var properties=Element.formToJson(document.getElementById(this.form.id));
-                var geomText=this._data_geom.getText();
+                // var geomText=this._data_geom.getText();
+                var geoms=this._group.getData();
+                var geomText=null;
+                if(geoms.length>0){
+                    geomText=JSON.stringify(geoms[0]);
+                }else{
+                    return;
+                }
+               
                 var featureId="";
                 for(var key in properties){
                     if(key === 'id'){
@@ -7633,46 +7929,23 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             var formId= bodyForm.id;
             bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
             var form=Element.parseToForm(bodyForm);
-            return form;
+            this.formEl.appendChild(form);
+            return this.root;
         },
         geomDataCallback:function(arg){
-            var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
-            var myself=this;
-            this._data_geom=geometry;
-            if(clearDraw){clearDraw();}
-            if(geometry._coordinates.length<1){
-                return;
-            }
-            this.showFrame();
-            // var mapId=arg.map.mapId;
-             
-            // var bodyForm=this.form;
-            //  var formId= bodyForm.id;
-            // //  if(!bodyForm.buttons){
-            // //  var closeFrameCallback=function(event,self) {
-            // //      this.paletteLayer.clearGeometry();
-            // //  }.bind(this);
-            // //  var parkingAddUrl=this.getParkingAddUrl(mapId);
-            // //  var okFrameCallback=function(event,self) {
-            // //     var obj=geomap.element.formToJson(document.getElementById(this.formId));
-            // //     // var geomText=geometry;
-            // //     // this.other.parkingRequestCallback.call(this.other,geomText,obj,self);
-            // //     // this.other.paletteLayer.clearGeometry();
-            // //  }.bind({other:myself,geometry:geometry.getText(),formId:formId,url:parkingAddUrl});
+            var group=arg.geometry;
+            this._group=group;
+            // group.split(4,4);
 
-            //  bodyForm.buttons=[{id:"ok",type:"button",title:"",value:"确定",click:this._saveGeomEv}];
-            // // }
-
-            //  window.FRAMES = window.FRAMES ||{};
-            //  var form=Element.parseToForm(bodyForm);
-            // if(window.FRAMES.editGeomFrame){
-            //     window.FRAMES.editGeomFrame.setData("表单信息设置",form,{w:400,h:250});
-            //     window.FRAMES.editGeomFrame.show();
-            // }else{
-            //     window.FRAMES.editGeomFrame=new geomap.view.Frame(document.body,{title:"表单信息设置", body:form,w:400,h:250,closeType:2,pos:"rc"});
-            //     window.FRAMES.editGeomFrame.on("close",this._closeFrameEv);
+            // var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
+            // var myself=this;
+            // this._data_geom=geometry;
+            // if(clearDraw){clearDraw();}
+            // if(geometry._coordinates.length<1){
+            //     return;
             // }
-
+             this.showFrame();
+           
         },
         showFrame:function(){
             if(this.viewFrame){

@@ -21,6 +21,7 @@
       loopRender:false,
       _enabled:true,
       referenceLine:false,
+      group:null,
       initialize: function(options) {
         this.callSuper('initialize',options);
         this.on("initLayer",this.OnInitLayer.bind(this));
@@ -30,6 +31,7 @@
         this._map.on("mousemove",this.OnMouseMove.bind(this));
         this._map.on("mouseup",this.OnMouseUp.bind(this));
         this.transformtion.setOrigin(0,0);
+        this.group=new geomap.shape.Group();
       },
       setType:function(gtype,fill){
           this.drawType=gtype;
@@ -122,9 +124,13 @@
       PathEnd:function(e,p){
         if(this._pathing && this._pathing!=null){
             this._pathing.end();
-
-            this.fire("geometry_change",this._pathing);
-            this.paths.push(this._pathing);
+            var geometry=this._pathing.getJson();
+            if(geometry.coordinates.length>0){
+              var shapePath=new geomap.shape.Path(this.group,this._pathing.getCoordJson());
+            }
+            this.fire("geometry_change",this.group);
+            // this.fire("geometry_change",this._pathing);
+           
             this._pathing=null;
             this.ViewReset();
         }
@@ -168,6 +174,7 @@
                     }
                 }
             }
+            this.group.draw(ctx,this._map);
             if(this._pathing && this._pathing != null){
                 this._pathing.render(ctx);
             }

@@ -13,7 +13,10 @@
         zoom:0,
         map:undefined,
         transformtion:new geomap.Transformtion(1,0,-1,0),
-        transformtion2:new geomap.Transformtion(1,0,1,0),
+        // transformtion2:new geomap.Transformtion(1,0,1,0),
+        // transformtion2:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
+        // transformtion3:new geomap.Transformtion(1 / 180, 1, -1 / 180, 0.5),
+        // transformtion3:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
         resolution:function(zoom)
         {
             var x = (360 / (Math.pow(2, zoom)) / this.tileSize);
@@ -109,10 +112,30 @@
         },
         modelCoord:function(coord){
             return this.toTransform(coord,1);
-        },
-        toTransformScreen:function(point,scale){
-            return this.transformtion2.transform(point,scale);
         }
+        // toTransformScreen:function(point,scale){
+        //     return this.transformtion2.transform(point,scale);
+        // }
+      
+    // project: function (latlng) {
+	// 	return new Point(latlng.x, latlng.y);
+	// },
+
+	// unproject: function (point) {
+	// 	return new Point(point.y, point.x);
+	// },
+    //     coordToScreen1:function(p0){
+    //        var p= this.unproject(p0);
+    //        var scale = this.getScale(this.zoom);
+    //        var np= this.transformtion3._transform(p,scale);
+    //        return np;
+    //     },
+    //     screenToCoord1:function(p0){
+    //         var p= this.project(p0);
+    //         var scale = this.getScale(this.zoom);
+    //         var np= this.transformtion3.untransform(p,scale);
+    //         return np;
+    //     }
 
     }; 
      
