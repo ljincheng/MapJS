@@ -3978,7 +3978,7 @@ function parseToForm(form){
     };
 
     function toBounds(minx,miny,maxx,maxy){
-        var isPoint=geomap.util.isPoint,hasXY=geomap.util.hasXY;
+        var isPoint=geomap.util.isPoint,hasXY=geomap.util.hasXY,toPoint=geomap.util.toPoint;
         if(!minx || minx instanceof Bounds){
             return minx;
         }
@@ -5183,13 +5183,29 @@ function parseToForm(form){
                // this._data[i].draw(ctx,options);
             }
         },
-        split:function(xnum,ynum){
+        split:function(xnum,ynum,padding){
             var data=[]
             for(var i=0,k=this._data.length;i<k;i++){
-                this._data[i].split(xnum,ynum);
+                this._data[i].split(xnum,ynum,padding);
             }
             
         },
+        bounds:function(){
+            var boundArr=[],minx,miny;
+            for(var i=0,k=this._data.length;i<k;i++){
+                boundArr.push(this._data[i].bounds());
+            }
+            for(var i=0,k=boundArr.length;i<k;i++){
+                var bd=boundArr[i];
+                if(bd!=null){
+                    
+                }
+            }
+        },
+        getSize:function(){
+            return this._data.length;
+        },
+        getPaths:function(){return this._data;},
         getData:function(){
             var data=[]
             for(var i=0,k=this._data.length;i<k;i++){
@@ -5229,37 +5245,126 @@ function parseToForm(form){
             prop[key]=value;
             this._properties=prop;
         },
-        split:function(xnum,ynum){
+        splitH:function(cs,xnum,padding){
+            var groupGeometry=[];
+            if(padding ==undefined){
+                padding=0;
+            }
+            if(cs.length==5){
+                var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
+                var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0),pnum=xnum-1;
+                var rt=(pt.x - pnum * padding) / xnum, rb=(pb.x -pnum * padding)/ xnum;
+                var start_p0=ptx0,start_p1=pbx0;
+                for(var i=0;i<xnum;i++){//水平拆分
+                    var newCoords=[];
+                    newCoords.push(start_p0);
+                    newCoords.push(start_p1);
+                    var p0=start_p1.clone();
+                    p0.x += rb;
+                    newCoords.push(p0);
+                    var p1=start_p0.clone();
+                    p1.x+=rt;
+                    newCoords.push(p1);
+                    newCoords.push(start_p0);
+                    // groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
+                    groupGeometry.push(newCoords);
+                  
+                    start_p0=p1.clone();
+                    start_p1=p0.clone();
+                    start_p0.x +=padding;
+                    start_p1.x +=padding;
+                }
+            }
+            return groupGeometry;
+        },
+        splitV:function(cs,ynum,padding){
+            var groupGeometry=[];
+            if(padding ==undefined){
+                padding=0;
+            }
+            padding=padding/2;
+            if(cs.length==5){
+                var pty0=cs[0],pty1=cs[1],pby0=cs[3],pby1=cs[2];
+                var pl=pty1.subtract(pty0),pr=pby1.subtract(pby0),pnum=ynum-1;
+                var rl=(pl.y + pnum * padding)/ ynum, rr=(pr.y + pnum * padding)/ ynum;
+                var start_p0=pty0,start_p1=pby0;
+                for(var i=0;i<ynum;i++){//垂直拆分
+                    var newCoords=[];
+                    newCoords.push(start_p0);
+                    var p0=start_p0.clone();
+                    p0.y += rl;
+                    newCoords.push(p0);
+                    var p1=start_p1.clone();
+                    p1.y +=rr;
+                    newCoords.push(p1); 
+                    newCoords.push(start_p1);
+                    newCoords.push(start_p0);
+                  
+                    // groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
+                    groupGeometry.push(newCoords);
+                   
+                    start_p0=p0.clone();
+                    start_p1=p1.clone();
+                    start_p0.y -=padding;
+                    start_p1.y -=padding;
+                }
+            }
+            return groupGeometry;
+        },
+        split:function(xnum,ynum,padding){
             var geom=this._geometry,minx=null,miny=null,maxx=null,maxy=null,cs;
             switch(geom.type){
                 case 'Polygon':{
                       cs=geom.coordinates;
                     if(cs.length==1 && cs[0].length==5){
                         cs=cs[0];
-                       var groupGeometry=[];
-                        var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
-                        var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0);
-                        var rt=pt.x / xnum, rb=pb.x/ xnum;
-                        var start_p0=ptx0,start_p1=pbx0;
-                        for(var i=0;i<xnum;i++){
-                            var newCoords=[];
-                            newCoords.push(start_p0);
-                            newCoords.push(start_p1);
-                            var p0=start_p1.clone();
-                            p0.x += rb;
-                            newCoords.push(p0);
-                            var p1=start_p0.clone();
-                            p1.x+=rt;
-                            newCoords.push(p1);
-                            newCoords.push(start_p0);
-                             groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
-                             if(i>0){
-                            new Path(this._group,{type:'Polygon',coordinates:[newCoords]});
-                             }
-                            start_p0=p1;
-                            start_p1=p0;
+                        var groupGeomArr=[];
+                        var groupGeometry=this.splitH(cs,xnum,padding);
+                            if(groupGeometry.length>0 ){
+                                if( ynum !=undefined && ynum>1){
+                                    for(var i=0,k=groupGeometry.length;i<k;i++){
+                                        var vgeomArr=this.splitV(groupGeometry[i],ynum,padding);
+                                        for(var j=0,jk=vgeomArr.length;j<jk;j++){
+                                            groupGeomArr.push(vgeomArr[j]);
+                                        }
+                                    }
+                                }else{
+                                    groupGeomArr=groupGeometry;
+                                }
+                            }
+                        // var groupGeometry=[];
+                        // var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
+                        // var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0);
+                        // var rt=pt.x / xnum, rb=pb.x/ xnum;
+                        // var start_p0=ptx0,start_p1=pbx0;
+                        // for(var i=0;i<xnum;i++){//水平拆分
+                        //     var newCoords=[];
+                        //     newCoords.push(start_p0);
+                        //     newCoords.push(start_p1);
+                        //     var p0=start_p1.clone();
+                        //     p0.x += rb;
+                        //     newCoords.push(p0);
+                        //     var p1=start_p0.clone();
+                        //     p1.x+=rt;
+                        //     newCoords.push(p1);
+                        //     newCoords.push(start_p0);
+                        //     for(var j=0;j<ynum;j++){//垂直拆分
+
+
+                        //     }
+                        //      groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
+                        //      if(i>0){
+                        //          new Path(this._group,{type:'Polygon',coordinates:[newCoords]});
+                        //      }
+                        //     start_p0=p1;
+                        //     start_p1=p0;
+                        // }
+                        if(groupGeomArr.length>0){
+                            this._geometry.coordinates=[groupGeomArr[0]];
+                            for(var i=1,k=groupGeomArr.length;i<k;i++){
+                                new Path(this._group,{type:'Polygon',coordinates:[ groupGeomArr[i]]});
+                            }
                         }
-                        this._geometry=groupGeometry[0];
                          
                          
                     }
@@ -7858,19 +7963,30 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             this.creatTools();
         },
         creatTools:function(){
-           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"});
-           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_xnum"});
+            var styleOpt={width:"80px"};
+           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"},styleOpt);
+           var ynumEl=Element.create("input",{type:"text" ,id:"tool_ynum"},styleOpt);
+           var pnumEl=Element.create("input",{type:"text" ,id:"tool_pnum"},styleOpt);
+           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_btn"});
+           this.geomInfoDiv=Element.create("div");
           
            this._xnumEl=xnumEl;
+           this._ynumEl=ynumEl;
+           this._pnumEl=pnumEl;
 
            this.toolEl.appendChild(xnumEl);
+           this.toolEl.appendChild(ynumEl);
+           this.toolEl.appendChild(pnumEl);
            this.toolEl.appendChild(btn);
+           this.toolEl.appendChild(this.geomInfoDiv);
            eventjs.add(btn,"click",this.editGeometry.bind(this));
         },
         editGeometry:function(){
             if(this._group){
                 var value=this._xnumEl.value;
-                this._group.split(Number(value));
+                var ynum=this._ynumEl.value;
+                var pnum=this._pnumEl.value;
+                this._group.split(Number(value),Number(ynum),Number(pnum));
             }
         },
         addToMenu:function(menu){
@@ -7893,9 +8009,9 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 // var geomText=this._data_geom.getText();
                 var geoms=this._group.getData();
                 var geomText=null;
-                if(geoms.length>0){
-                    geomText=JSON.stringify(geoms[0]);
-                }else{
+                if(geoms.length==0){
+                    
+                
                     return;
                 }
                
@@ -7906,8 +8022,16 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                         delete properties[key];
                     }
                 }
+                var reqData=[],idNum=Number(featureId);
+                for(var i=0,k=geoms.length;i<k;i++){
+                    var geomText=JSON.stringify(geoms[i]); 
+                    reqData.push({geometry:geomText,properties:properties,id:idNum});
+                    idNum+=1; 
+                }
+                
                 var myself=this;
-                myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
+                // myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
+                    myself.map.jsonReq(this.url,reqData,function(xhr){
                     var body=xhr.response,status=xhr.status; 
                     if(status == 200){
                         var result=JSON.parse(body);
@@ -7935,6 +8059,14 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         geomDataCallback:function(arg){
             var group=arg.geometry;
             this._group=group;
+            var geomNum=this._group.getSize();
+            if(geomNum>0){
+                if(this._group.getPaths().length==1){
+                    var p=this._group.getPaths()[0].bounds().getSize();
+                    this.geomInfoDiv.innerText="Size="+p.x+","+p.y;
+                } 
+                this.showFrame();
+            }
             // group.split(4,4);
 
             // var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
@@ -7944,7 +8076,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             // if(geometry._coordinates.length<1){
             //     return;
             // }
-             this.showFrame();
+             
            
         },
         showFrame:function(){

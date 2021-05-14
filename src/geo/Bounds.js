@@ -52,7 +52,7 @@
     };
 
     function toBounds(minx,miny,maxx,maxy){
-        var isPoint=geomap.util.isPoint,hasXY=geomap.util.hasXY;
+        var isPoint=geomap.util.isPoint,hasXY=geomap.util.hasXY,toPoint=geomap.util.toPoint;
         if(!minx || minx instanceof Bounds){
             return minx;
         }

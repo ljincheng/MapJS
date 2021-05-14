@@ -32,13 +32,29 @@
                // this._data[i].draw(ctx,options);
             }
         },
-        split:function(xnum,ynum){
+        split:function(xnum,ynum,padding){
             var data=[]
             for(var i=0,k=this._data.length;i<k;i++){
-                this._data[i].split(xnum,ynum);
+                this._data[i].split(xnum,ynum,padding);
             }
             
         },
+        bounds:function(){
+            var boundArr=[],minx,miny;
+            for(var i=0,k=this._data.length;i<k;i++){
+                boundArr.push(this._data[i].bounds());
+            }
+            for(var i=0,k=boundArr.length;i<k;i++){
+                var bd=boundArr[i];
+                if(bd!=null){
+                    
+                }
+            }
+        },
+        getSize:function(){
+            return this._data.length;
+        },
+        getPaths:function(){return this._data;},
         getData:function(){
             var data=[]
             for(var i=0,k=this._data.length;i<k;i++){

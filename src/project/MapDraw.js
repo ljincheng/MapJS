@@ -54,19 +54,30 @@
             this.creatTools();
         },
         creatTools:function(){
-           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"});
-           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_xnum"});
+            var styleOpt={width:"80px"};
+           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"},styleOpt);
+           var ynumEl=Element.create("input",{type:"text" ,id:"tool_ynum"},styleOpt);
+           var pnumEl=Element.create("input",{type:"text" ,id:"tool_pnum"},styleOpt);
+           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_btn"});
+           this.geomInfoDiv=Element.create("div");
           
            this._xnumEl=xnumEl;
+           this._ynumEl=ynumEl;
+           this._pnumEl=pnumEl;
 
            this.toolEl.appendChild(xnumEl);
+           this.toolEl.appendChild(ynumEl);
+           this.toolEl.appendChild(pnumEl);
            this.toolEl.appendChild(btn);
+           this.toolEl.appendChild(this.geomInfoDiv);
            eventjs.add(btn,"click",this.editGeometry.bind(this));
         },
         editGeometry:function(){
             if(this._group){
                 var value=this._xnumEl.value;
-                this._group.split(Number(value));
+                var ynum=this._ynumEl.value;
+                var pnum=this._pnumEl.value;
+                this._group.split(Number(value),Number(ynum),Number(pnum));
             }
         },
         addToMenu:function(menu){
@@ -89,9 +100,9 @@
                 // var geomText=this._data_geom.getText();
                 var geoms=this._group.getData();
                 var geomText=null;
-                if(geoms.length>0){
-                    geomText=JSON.stringify(geoms[0]);
-                }else{
+                if(geoms.length==0){
+                    
+                
                     return;
                 }
                
@@ -102,8 +113,16 @@
                         delete properties[key];
                     }
                 }
+                var reqData=[],idNum=Number(featureId);
+                for(var i=0,k=geoms.length;i<k;i++){
+                    var geomText=JSON.stringify(geoms[i]); 
+                    reqData.push({geometry:geomText,properties:properties,id:idNum});
+                    idNum+=1; 
+                }
+                
                 var myself=this;
-                myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
+                // myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
+                    myself.map.jsonReq(this.url,reqData,function(xhr){
                     var body=xhr.response,status=xhr.status; 
                     if(status == 200){
                         var result=JSON.parse(body);
@@ -131,6 +150,14 @@
         geomDataCallback:function(arg){
             var group=arg.geometry;
             this._group=group;
+            var geomNum=this._group.getSize();
+            if(geomNum>0){
+                if(this._group.getPaths().length==1){
+                    var p=this._group.getPaths()[0].bounds().getSize();
+                    this.geomInfoDiv.innerText="Size="+p.x+","+p.y;
+                } 
+                this.showFrame();
+            }
             // group.split(4,4);
 
             // var geometry=arg.geometry,layer=arg.layer,clearDraw=arg.clearDraw;
@@ -140,7 +167,7 @@
             // if(geometry._coordinates.length<1){
             //     return;
             // }
-             this.showFrame();
+             
            
         },
         showFrame:function(){
