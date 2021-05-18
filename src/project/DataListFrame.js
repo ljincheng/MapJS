@@ -53,7 +53,7 @@
         },
         menuClick:function(arg){
             var menu=arg.menu,menuItem=menu.data;
-            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.id){
+            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.get("id")){
                var self=this;
                self.map.jsonReq(this.url,this.paramData,function(xhr){
                     if(xhr.status==200){
@@ -128,7 +128,11 @@
                                 
                             }else{
                                 var key=column[j].id
-                                rows[i].properties[key] !=undefined ?( th.innerText=rows[i].properties[key] ):"";
+                                if(rows[i].properties){
+                                    rows[i].properties[key] !=undefined ?( th.innerText=rows[i].properties[key] ):"";
+                                }else{
+                                    rows[i][key] !=undefined ?( th.innerText=rows[i][key] ):"";
+                                }
                             }
                             tr.appendChild(th);
                         }

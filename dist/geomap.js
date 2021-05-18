@@ -3412,6 +3412,7 @@ function parseToForm(form){
      * @param {String} url URL to send XMLHttpRequest to
      * @param {Object} [options] Options object
      * @param {String} [options.method="GET"]
+     * @param {String} [options.contentType="application/x-www-form-urlencoded"]
      * @param {String} [options.parameters] parameters to append to url in GET or in body
      * @param {String} [options.body] body to send with POST or PUT request
      * @param {Function} options.onComplete Callback to invoke when request is completed
@@ -3423,7 +3424,8 @@ function parseToForm(form){
       var method = options.method ? options.method.toUpperCase() : 'GET',
           onComplete = options.onComplete || function() { },
           xhr = new geomap.window.XMLHttpRequest(),
-          body = options.body || options.parameters
+          body = options.body || options.parameters,
+          contentType= (options.contentType === undefined) ? "application/x-www-form-urlencoded":options.contentType ,
           headers=options.header||{};
   
       /** @ignore */
@@ -3454,11 +3456,12 @@ function parseToForm(form){
       if(method === 'JSON'){
         xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
         // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      }else if (method === 'POST' || method === 'PUT') {
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      // }else if (method === 'POST' || method === 'PUT') {
+      }else if (method != 'GET') {
+        if(contentType && contentType.length >0){
+          xhr.setRequestHeader('Content-Type', contentType);
+        }
       }
-
-      
   
       if(body!= undefined && method=== 'JSON' && body !=null ){
         xhr.send(JSON.stringify(body));
@@ -7315,9 +7318,14 @@ setFeatures:function(data,option){
   this.featrueLayer.setFeatures(data,option);
   this.fire("drawmap");
 },
-jsonReq:function(url,data,fn){
+jsonReq:function(url,data,fn,opt){
   var mapurl=Template(url,{mapId:this.mapId}); 
-  Request(mapurl,{method:"JSON",body:data,header:this.reqHead,onComplete:fn}); 
+  if(opt=== undefined){
+    opt={};
+  }
+  var param={method:"JSON",body:data,header:this.reqHead,onComplete:fn};
+  extend(param,opt);
+  Request(mapurl,param); 
 },
       toggleReferenceLine:function(){
         this.paletteLayer.toggleReferenceLine();
@@ -8153,7 +8161,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
         },
         menuClick:function(arg){
             var menu=arg.menu,menuItem=menu.data;
-            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.id){
+            if(menuItem.mapMenu && menuItem.type=== this.type && menuItem.id && menuItem.id === this.get("id")){
                var self=this;
                self.map.jsonReq(this.url,this.paramData,function(xhr){
                     if(xhr.status==200){
@@ -8228,7 +8236,11 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                                 
                             }else{
                                 var key=column[j].id
-                                rows[i].properties[key] !=undefined ?( th.innerText=rows[i].properties[key] ):"";
+                                if(rows[i].properties){
+                                    rows[i].properties[key] !=undefined ?( th.innerText=rows[i].properties[key] ):"";
+                                }else{
+                                    rows[i][key] !=undefined ?( th.innerText=rows[i][key] ):"";
+                                }
                             }
                             tr.appendChild(th);
                         }

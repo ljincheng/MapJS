@@ -311,9 +311,14 @@ setFeatures:function(data,option){
   this.featrueLayer.setFeatures(data,option);
   this.fire("drawmap");
 },
-jsonReq:function(url,data,fn){
+jsonReq:function(url,data,fn,opt){
   var mapurl=Template(url,{mapId:this.mapId}); 
-  Request(mapurl,{method:"JSON",body:data,header:this.reqHead,onComplete:fn}); 
+  if(opt=== undefined){
+    opt={};
+  }
+  var param={method:"JSON",body:data,header:this.reqHead,onComplete:fn};
+  extend(param,opt);
+  Request(mapurl,param); 
 },
       toggleReferenceLine:function(){
         this.paletteLayer.toggleReferenceLine();

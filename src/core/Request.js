@@ -12,6 +12,7 @@
      * @param {String} url URL to send XMLHttpRequest to
      * @param {Object} [options] Options object
      * @param {String} [options.method="GET"]
+     * @param {String} [options.contentType="application/x-www-form-urlencoded"]
      * @param {String} [options.parameters] parameters to append to url in GET or in body
      * @param {String} [options.body] body to send with POST or PUT request
      * @param {Function} options.onComplete Callback to invoke when request is completed
@@ -23,7 +24,8 @@
       var method = options.method ? options.method.toUpperCase() : 'GET',
           onComplete = options.onComplete || function() { },
           xhr = new geomap.window.XMLHttpRequest(),
-          body = options.body || options.parameters
+          body = options.body || options.parameters,
+          contentType= (options.contentType === undefined) ? "application/x-www-form-urlencoded":options.contentType ,
           headers=options.header||{};
   
       /** @ignore */
@@ -54,11 +56,12 @@
       if(method === 'JSON'){
         xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
         // xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-      }else if (method === 'POST' || method === 'PUT') {
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      // }else if (method === 'POST' || method === 'PUT') {
+      }else if (method != 'GET') {
+        if(contentType && contentType.length >0){
+          xhr.setRequestHeader('Content-Type', contentType);
+        }
       }
-
-      
   
       if(body!= undefined && method=== 'JSON' && body !=null ){
         xhr.send(JSON.stringify(body));

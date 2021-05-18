@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="../../dist/geomap.js"></script>
         <link rel="stylesheet" href="../css/map.css">
+        <!-- <link   href="../css/bootstrap.min.css" rel="stylesheet" /> -->
     </head>
 <body onload="winLoad()" onresize="winResize()" style="margin: 0px; padding:0px;">
     <div id="titlePane"><h4 id="mapTitle" style="margin-left: 10px;"></h4></div>
@@ -171,7 +172,8 @@ function loadMap(){
         buildingMapDraw.addToMenu(menu);
         // map.setMapDraw(mapDraw);
 
-        var parkingDatalist=new MapProject.DataListFrame({map:map,url:"http://master.cn/ccw/wms/parking/list/{mapId}",headColumn:[{text:"图形",type:"fn",fn:function(value){
+        // 查看车位数据列表
+        var parkingDatalist=new MapProject.DataListFrame({id:101,title:"车位列表",map:map,url:"http://master.cn/ccw/wms/parking/list/{mapId}",headColumn:[{text:"图形",type:"fn",fn:function(value){
             var elA= geomap.element.create("a");
             if(value.geometry){
                 elA.innerText="有";
@@ -196,6 +198,37 @@ function loadMap(){
         }},{text:"车位编号",id:"parkingNo"},{text:"车位ID",id:"parkingId"}]});
         parkingDatalist.addToMenu(menu);
 
+        //查看样式列表
+        var styleInfoDatalist=new MapProject.DataListFrame({id:102,width:400,title:"样式列表",map:map,url:"http://master.cn/ccw/wms/map/styleInfo/list",headColumn:[{text:"类型",type:"fn",fn:function(value){
+            var elA= geomap.element.create("a");
+            var txt="";
+            if(value.styleType){
+                switch(value.styleType){
+                    case "POINT":{txt="点";break}
+                    case "POLYGON":{txt="面";break}
+                    case "LINE":{txt="线";break}
+                }
+               
+            }
+            elA.innerText=txt; 
+            return elA;
+        }},{text:"编号",id:"styleId"},{text:"说明",id:"title"}]});
+        styleInfoDatalist.addToMenu(menu);
+
+         //查看栅格图片列表
+         var rasterImageDatalist=new MapProject.DataListFrame({id:103,width:400,title:"栅格列表",map:map,url:"http://master.cn/ccw/wms/map/rasterImage/list",headColumn:[{text:"编号",id:"id"},{text:"说明",id:"remark"},{text:"文件",id:"imgPath"},{text:"大小",type:"fn",fn:function(value){
+            var elA= geomap.element.create("a");
+            var txt="";
+            if(value.imgSize){
+               var imgSize=geomap.util.formatNum(value.imgSize/(1024 * 1024),2);
+               txt=imgSize+"M";
+               
+            }
+            elA.innerText=txt; 
+            return elA;
+         }}]});
+        rasterImageDatalist.addToMenu(menu);
+
 }
     function winLoad(){
 
@@ -219,26 +252,26 @@ function loadMap(){
      if(arg.menu.data.id=== -1){
         createMap();
      }
-     if(arg.menu.data.id === 100){
-         map.jsonReq("http://master.cn/ccw/wms/parking/list/{mapId}",{},function(xhr){
-            if(xhr.status==200){
-                // alert(xhr.response);
-                var result=JSON.parse(xhr.response);
-                        if(result.code === map.codeOk){
-                            var data=result.data;
-                            var html="";
-                            for(var key　in data){
-                                html+="<span>"+key+":"+data[key]+"</span>";
-                            }
-                            window._FRAMEID_PARKINGLIST= new geomap.view.Frame(document.body,{title:"车位列表", body:html,w:400,h:220,closeType:2,pos:'rc'});
-                        }else{
-                            alert(result.msg);
-                        }
+    //  if(arg.menu.data.id === 100){
+    //      map.jsonReq("http://master.cn/ccw/wms/parking/list/{mapId}",{},function(xhr){
+    //         if(xhr.status==200){
+    //             // alert(xhr.response);
+    //             var result=JSON.parse(xhr.response);
+    //                     if(result.code === map.codeOk){
+    //                         var data=result.data;
+    //                         var html="";
+    //                         for(var key　in data){
+    //                             html+="<span>"+key+":"+data[key]+"</span>";
+    //                         }
+    //                         window._FRAMEID_PARKINGLIST= new geomap.view.Frame(document.body,{title:"车位列表", body:html,w:400,h:220,closeType:2,pos:'rc'});
+    //                     }else{
+    //                         alert(result.msg);
+    //                     }
                      
                 
-            }
-         });
-     }
+    //         }
+    //      });
+    //  }
  }
 
  function winResize(){

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link   href="../css/bootstrap.min.css" rel="stylesheet" />
+        <script type="text/javascript" src="../../dist/geomap.js"></script> 
+        <script type="text/javascript" src="../js/index.js"></script>
+         
+    </head>
+<body   style="margin: 20px; padding:0px;" onload="winLoad()">
+    <div class="main-panel">
+    <div class="row">
+    <div　class="loginFrame">
+        <div class="form-group">
+            <label>请求地址：</label><input type="text" class="form-control" id="myUrl" value="http://master.cn/ccw/wms/map/rasterImage/upload">
+        </div>
+        <form id="myForm" name="myForm">
+        <div class="form-group">
+            <label>说明:</label><input type="text"  class="form-control" name="remark" id="remark" >
+        </div>
+        <div class="form-group">
+            <label>上传图片：</label>
+            <input type="file" name="file" id="file" accept=".png,.jpg,.jpeg" >
+                </div>
+    </form>
+    <div class="form-group">
+        <input type="button" value="提交"  class="btn btn-primary" onclick="login()">
+    </div>
+        <div id="logDiv"></div>
+    </div>
+</div>
+</div>
+    <script type="text/javascript">
+      var openDBStore=false,token,dbStore,dbName="ccw",dbFile="ccw";
+    function login(){
+        
+        var url=document.getElementById("myUrl").value;
+        // var content=document.getElementById("content").value;
+        // var styleType=document.getElementById("styleType").value;
+        var remark=document.getElementById("remark").value;
+        // var data={title:title,styleType:styleType,content:content};
+        var myForm = document.getElementById('myForm');
+        // var formData = new FormData(myForm);
+        var files=document.getElementById("file").files;
+        var  formData = new FormData();
+        formData.append("remark",remark);
+        formData.append("file",files[0]);
+       
+//         let xhr = new XMLHttpRequest();
+//             xhr.onload = function (event) {
+//             console.log('上传成功');
+//         } 
+//         xhr.onreadystatechange = function(xhr) {
+//         if (xhr.readyState === 4) {
+//             var res=xhr.response,status=xhr.status; 
+//                 console.log("url="+url+",body="+res);
+//                 if( status==200 ){ 
+//                      document.getElementById("logDiv").innerHTML=res;
+//                 }
+//           xhr.onreadystatechange = function(){};
+//         }
+//       };
+//   xhr.open('POST',url, true);
+//   xhr.setRequestHeader('token', token);
+//   xhr.send(formData);
+ 
+console.log(typeof formData);
+        geomap.request(url,{method:"POST",body:formData,header:{token:token},contentType:"",onComplete:function(xhr){
+            var res=xhr.response,status=xhr.status; 
+                console.log("url="+url+",body="+res);
+                if( status==200 ){ 
+                     document.getElementById("logDiv").innerHTML=res;
+                }
+            }
+        });
+
+    }
+     
+    function winLoad(){
+
+        dbStore=geomap.GlobalDBStore([dbName],dbFile).dbStore;
+        dbStore.on("open_success",function(event){
+            var obj=dbStore.getStore(dbName,"token");
+            if(obj!=null){
+                obj.then(function(event){
+                var tokenStr = event.target.result;
+                    if(tokenStr!=undefined){
+                        token=tokenStr;
+                    }else{
+                        window.location.href="../index.html";
+                    }
+                });
+            }
+            openDBStore=true;
+        });
+    }
+    </script>
+</body>
+</html>
