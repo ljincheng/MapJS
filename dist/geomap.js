@@ -6326,6 +6326,7 @@ function parseToForm(form){
           }
           for(var i in tiles){
               tiles[i]["tag"]=0;
+              tiles[i]["cacheTime"]=this.cacheTime;
           }
 
           var cells=Math.round(offsetSize.x  /tsize)+2;
@@ -6391,6 +6392,7 @@ function parseToForm(form){
              image.src=this.GetTileUrl(this.url,tile);
          }else{
              var newSrc=this.GetTileUrl(this.url,tile);
+             geomap.debug("newSrc="+newSrc);
              if(newSrc != image.src){
                   tile.status=0;
                   image.src=newSrc;
@@ -7553,7 +7555,7 @@ jsonReq:function(url,data,fn,opt){
                 ,{id:"layerSource",type:"text",title:"数据源",value:"",required:false}
                 ,{id:"layerType",type:"radio",title:"类型",value:"POLYGON",option:{"POLYGON":"面","POINT":"点","RASTER":"栅格图    "},required:false}
                 ,{id:"display",type:"radio",title:"状态",value:"1",option:{"1":"可见","2":"不可见"},required:true}
-                ,{id:"styleId",type:"radio",title:"样式",value:"parking_polygon",option:{"parking_polygon":"车位面","parking_point":"车位点","line_dash":"楼栋边界线"},required:true}
+                ,{id:"styleId",type:"text",title:"样式编号",value:"parking_polygon",required:true}
             ],buttons:[{title:"确定",type:"button",value:"确定",click:addLayerFn}]};
             var formEl=Element.parseToForm(forms);
             this.addFormEl=formEl;

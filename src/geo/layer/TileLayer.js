@@ -76,6 +76,7 @@
           }
           for(var i in tiles){
               tiles[i]["tag"]=0;
+              tiles[i]["cacheTime"]=this.cacheTime;
           }
 
           var cells=Math.round(offsetSize.x  /tsize)+2;
@@ -141,6 +142,7 @@
              image.src=this.GetTileUrl(this.url,tile);
          }else{
              var newSrc=this.GetTileUrl(this.url,tile);
+             geomap.debug("newSrc="+newSrc);
              if(newSrc != image.src){
                   tile.status=0;
                   image.src=newSrc;

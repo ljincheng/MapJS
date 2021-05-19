@@ -152,6 +152,23 @@ function loadMap(){
         bparkingMapQuery.addToMenu(menu);
 
 
+          //============坐标搜索要素
+        //  geomOption={lineWidth:2,fill:true,lineDash:[]};
+        var  featureMapQuery=new MapProject.MapQuery({map:map,id:4,icon:MapProject.Icons.queryRect,title:"查询其他要素",geomOption:geomOption,url:"http://master.cn/ccw/wms/feature/query/floor/{mapId}",
+            buttons:[{text:"删除",tag:"a",style:{cursor:"pointer"},fn:function(event,self){
+                var data=self.data,el=self.target;
+                map.jsonReq("http://master.cn/ccw/wms/feature/delete/{mapId}",{featureId:data.id,layerSource:"floor"},function(xhr){
+                    var body=xhr.response,status=xhr.status; 
+                    if(status == 200){
+                        map.refresh();
+                        featureMapQuery.removeRow(el);
+                    }
+                });
+            }}]});
+        // map.setMapQuery(bparkingMapQuery);
+        featureMapQuery.addToMenu(menu);
+
+
 
         var parkingMapDraw=new MapProject.MapDraw({title:"绘制车位",id:1,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/parking/batchAdd/{mapId}",
         form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
@@ -165,12 +182,21 @@ function loadMap(){
         parkingMapDraw.addToMenu(menu);
 
 
-        var buildingMapDraw=new MapProject.MapDraw({title:"绘制楼栋",id:2,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/building/add/{mapId}",
+        var buildingMapDraw=new MapProject.MapDraw({title:"绘制楼栋",id:2,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/building/batchAdd/{mapId}",
             drawType:"Polygon",
             form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"楼栋ID",value:"",required:false}]}
         });
         buildingMapDraw.addToMenu(menu);
         // map.setMapDraw(mapDraw);
+
+        var featureMapDraw=new MapProject.MapDraw({title:"绘制要素",id:3,icon:MapProject.Icons.draw,map:map,url:"http://master.cn/ccw/wms/feature/batchAdd/{mapId}",
+            drawType:"Polygon",
+            form:{name:"要素",id:"form_edit_feature",properties:[{id:"title",type:"text",title:"说明",value:"",required:false},
+            {id:"geomType",type:"radio",title:"图形类型",value:"1",option:{"1":"面1","2":"线1","3":"面2","4":"线2"},required:true},
+            {id:"source",type:"radio",title:"要素来源",value:"1",option:{"road":"道路","floor":"地面"},required:true}
+        ]}
+        });
+        featureMapDraw.addToMenu(menu);
 
         // 查看车位数据列表
         var parkingDatalist=new MapProject.DataListFrame({id:101,title:"车位列表",map:map,url:"http://master.cn/ccw/wms/parking/list/{mapId}",headColumn:[{text:"图形",type:"fn",fn:function(value){
