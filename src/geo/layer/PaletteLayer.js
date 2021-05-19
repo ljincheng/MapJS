@@ -119,6 +119,7 @@
       },
       clearGeometry:function(){
         this.paths=[];
+        this.group.clear();
         this.ViewReset();
       },
       PathEnd:function(e,p){

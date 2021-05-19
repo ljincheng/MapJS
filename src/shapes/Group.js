@@ -61,6 +61,16 @@
                 data.push(this._data[i].getData());
             }
             return data;
+        },
+        clear:function(){
+            var n=this._data.length;
+            if(n>0){
+                while(n>0){
+                    var last=this._data.pop();
+                    delete last;
+                    n=this._data.length;
+                }
+            }
         }
     };
    

@@ -5215,6 +5215,16 @@ function parseToForm(form){
                 data.push(this._data[i].getData());
             }
             return data;
+        },
+        clear:function(){
+            var n=this._data.length;
+            if(n>0){
+                while(n>0){
+                    var last=this._data.pop();
+                    delete last;
+                    n=this._data.length;
+                }
+            }
         }
     };
    
@@ -6575,6 +6585,7 @@ function parseToForm(form){
       },
       clearGeometry:function(){
         this.paths=[];
+        this.group.clear();
         this.ViewReset();
       },
       PathEnd:function(e,p){
@@ -7963,7 +7974,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
             this._closeFrameEv=this.closeFrameEv.bind(this);
             this.root=Element.create("div");
             this.on("geom_data",this.geomDataCallback.bind(this));
-            var toolEl=Element.create("div");
+            var toolEl=Element.create("div",{className:"tooldiv"},{margin:"20px"});
             this.toolEl=toolEl;
             this.formEl=Element.create("div");
             this.root.appendChild(this.toolEl);
@@ -7975,15 +7986,25 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
            var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"},styleOpt);
            var ynumEl=Element.create("input",{type:"text" ,id:"tool_ynum"},styleOpt);
            var pnumEl=Element.create("input",{type:"text" ,id:"tool_pnum"},styleOpt);
-           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_btn"});
-           this.geomInfoDiv=Element.create("div");
+           var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_btn"},{marginLeft:"10px"});
+           this.geomInfoDiv=Element.create("div",{},{color:"gray"});
           
            this._xnumEl=xnumEl;
            this._ynumEl=ynumEl;
            this._pnumEl=pnumEl;
 
+           var layerStyleOpt={display:"initial"};
+           var titlelayer=Element.create("div",{},layerStyleOpt);titlelayer.innerHTML="拆分矩行操作<br>";
+           var xlayer=Element.create("div",{},layerStyleOpt);xlayer.innerText="水平:";
+           var ylayer=Element.create("div",{},layerStyleOpt);ylayer.innerText="垂直:";
+           var player=Element.create("div",{},layerStyleOpt);player.innerText="间距:";
+
+           this.toolEl.appendChild(titlelayer)
+           this.toolEl.appendChild(xlayer);
            this.toolEl.appendChild(xnumEl);
+           this.toolEl.appendChild(ylayer);
            this.toolEl.appendChild(ynumEl);
+           this.toolEl.appendChild(player);
            this.toolEl.appendChild(pnumEl);
            this.toolEl.appendChild(btn);
            this.toolEl.appendChild(this.geomInfoDiv);
@@ -7995,6 +8016,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 var ynum=this._ynumEl.value;
                 var pnum=this._pnumEl.value;
                 this._group.split(Number(value),Number(ynum),Number(pnum));
+                this.map.drawMap();
             }
         },
         addToMenu:function(menu){
@@ -8044,6 +8066,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                     if(status == 200){
                         var result=JSON.parse(body);
                         if(result.code === myself.map.codeOk){
+                            myself.map.clearDrawGeometry();
                             myself.map.refresh();
                             myself.hideFrame();
                         }else{
@@ -8092,6 +8115,7 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 this.viewFrame.show();
             }else{
                 this.viewFrame=new geomap.view.Frame(document.body,{title:this.title, body:this.getViewForm(),w:this.width,h:this.height,closeType:2});
+                this.viewFrame.on("hide",this._closeFrameEv);
             }
         },
         hideFrame:function(){
