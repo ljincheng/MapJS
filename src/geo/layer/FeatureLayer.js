@@ -92,7 +92,8 @@
         if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
           this.canvasCtx.clearRect(0,0,this.width,this.height);
             this._canvasScale=1;
-            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            // var z=this._map.zoom,res=this._map.resolution(z);
+            var z=this._map.zoom;
                 for(var i=0,k=this.features.length;i<k;i++){
                     var feature=this.features[i];
                     feature.draw(this.canvasCtx,this.drawOptions);

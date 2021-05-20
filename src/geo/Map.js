@@ -216,7 +216,8 @@
             var startCoordX,startCoordY; 
             startCoordX = pos1.x - (pos1.x-cpos.x) * scale;
             startCoordY = pos1.y + (cpos.y - pos1.y) * scale;
-            pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
+            // pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
+            pos1=this.transformtion.transform(new Point(startCoordX,startCoordY).round(),1);
             startCoord=this.screenToCoord(pos1);
           }else{
             // geomap.debug("offsetR 2");

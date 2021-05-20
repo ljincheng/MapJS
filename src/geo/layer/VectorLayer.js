@@ -73,7 +73,8 @@
         if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
           this.canvasCtx.clearRect(0,0,this.width,this.height);
             this._canvasScale=1;
-            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            // var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            var z=this._map.zoom,bounds=this._map.getBounds();
             this.loopRender=false;
             if(this.paths.length>0){
                 for(var i=0,k=this.paths.length;i<k;i++){

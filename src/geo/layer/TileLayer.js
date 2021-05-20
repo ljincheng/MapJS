@@ -193,7 +193,7 @@
           z=map.zoom,
           tsize=map.tileSize,
           bounds=map.getBounds(),
-          res=map.resolution(z),
+        //   res=map.resolution(z),
           canvasSize=this.getCanavsSize(),
           offsetSize=this._canvas_map_size,
           lock=this._drawLock+1;
@@ -202,12 +202,19 @@
       this.fire("draw_tile",null);
     },
     OriginTileInfo:function(res,min){
+    //   var map=this._map,o=map.origin,tsize=map.tileSize;
+    //   var x=min.x,y=min.y;
+    //   var cell = Math.floor((min.x - o.x) / res.x / tsize);
+    //   var row = Math.floor((o.y - min.y) / res.y / tsize);
+    //   var left = -(min.x - o.x) / res.x +tsize * cell ;
+    //   var top = -(o.y - min.y) / res.y +tsize * row;
+    //   return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
       var map=this._map,o=map.origin,tsize=map.tileSize;
       var x=min.x,y=min.y;
       var cell = Math.floor((min.x - o.x) / res.x / tsize);
-      var row = Math.floor((o.y - min.y) / res.y / tsize);
+      var row = Math.floor((min.y-o.y ) / res.y / tsize);
       var left = -(min.x - o.x) / res.x +tsize * cell ;
-      var top = -(o.y - min.y) / res.y +tsize * row;
+      var top = -(min.y-o.y ) / res.y +tsize * row;
       return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
     }
      

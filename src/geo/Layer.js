@@ -88,8 +88,8 @@
           }
           this._touchZoomStart=arg.point;
           this._animMoveFn.run(this._map,function(pos,e){
-           var startRes=this._map.getScale(e.pos[0].x)/256;
-           var res=this._map.getScale(pos.x)/256;
+           var startRes=this._map.getScale(e.pos[0].x);
+           var res=this._map.getScale(pos.x);
            var scale=res/startRes;
             this._canvasScale =scale;
             this.wheelZoomChanage=true;

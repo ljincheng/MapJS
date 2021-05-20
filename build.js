@@ -98,6 +98,7 @@ var filesToInclude = [
   'src/view/View.js',
    'src/view/Frame.js',
    //---- geo -------
+   'src/geo/Projection.js',
     'src/geo/Model.js',
     'src/geo/Caliper.js',
     'src/geo/MapEvent.js',

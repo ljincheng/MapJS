@@ -4290,20 +4290,76 @@ function parseToForm(form){
   })();
   
 
+
+(function(global) {
+
+    'use strict';
+   
+    if (!global.geomap) {
+      global.geomap = { };
+    }
+  
+    if (global.geomap.Projection) {
+      geomap.warn('geomap.Map is already defined.');
+      return;
+    } 
+
+    var Point=geomap.Point;
+    geomap.Projection = geomap.Class(geomap.CommonMethods, geomap.Observable, {
+        transformtion:null,
+        bounds:null,
+        extent:[-180,-90,180,90],
+        resolutions:[],
+        initialize: function( options) {
+            options || (options = { });
+            this.transformtion=new geomap.Transformtion(1,0,-0.5,0); 
+            this._setOptions(options);
+            var p0=new Point(this.extent[0],this.extent[1]);
+            var p1=new Point(this.extent[2],this.extent[3]);
+            this.bounds=new geomap.Bounds(p0,p1);
+        }, 
+        getBounds:function(){
+            return this.bounds;
+        },
+        resolution:function(zoom){
+            var r0=this.resolutions[zoom];
+            if(!r0){
+                var r= 1/Math.pow(2,zoom);
+                r0= this.resolutions[zoom] =r;
+            }
+            return r0;
+        },
+        screenToCoord:function(p,zoom){
+            this.transformtion.untransform(p,zoom);
+        },
+        coordToScreen:function(p,zoom){
+            this.transformtion.transform(p,zoom);
+        },
+        getTransformtion:function(){
+            return this.transformtion;
+        }
+    
+    });
+    
+       
+    
+    })(typeof exports !== 'undefined' ? exports : this);
+
 (function() {
 
     var Point =geomap.Point;
     var Bounds =geomap.Bounds;
     var toPoint=geomap.util.toPoint;
+    var defaultProject=new geomap.Projection({});
     geomap.Model={
-        origin:new Point(-180,90),
+        origin:new Point(0,0),
         tileSize:256,
         res:undefined,
         bounds:undefined,
         center:new Point(0,0),
         viewSize:undefined,
         zoom:0,
-        map:undefined,
+        projection:defaultProject,
         transformtion:new geomap.Transformtion(1,0,-1,0),
         // transformtion2:new geomap.Transformtion(1,0,1,0),
         // transformtion2:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
@@ -4311,17 +4367,22 @@ function parseToForm(form){
         // transformtion3:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
         resolution:function(zoom)
         {
-            var x = (360 / (Math.pow(2, zoom)) / this.tileSize);
-            var y = (180 / (Math.pow(2, zoom)) / this.tileSize);
-           return new Point(x,y);
+        //     var w=this.tileSize,h=this.tileSize*0.5;
+        //     var x = (w / (Math.pow(2, zoom)) / this.tileSize);
+        //     var y = (h / (Math.pow(2, zoom)) / this.tileSize);
+        //    return new Point(x,y);
+            var r=this.projection.resolution(zoom);
+            var p1=this.projection.getTransformtion().transform(new Point(r,r),1);
+            return p1;
         },
         getScale:function(zoom){
-            return this.tileSize * Math.pow(2,zoom);
+            // return this.tileSize * Math.pow(2,zoom);
+            return Math.pow(2,zoom);
         },
-        getZoomScale:function(toZoom,fromZoom){
-            fromZoom = fromZoom === undefined ? this.zoom:fromZoom;
-            return this.getScale(toZoom) / this.getScale(fromZoom);
-         },
+        // getZoomScale:function(toZoom,fromZoom){
+        //     fromZoom = fromZoom === undefined ? this.zoom:fromZoom;
+        //     return this.getScale(toZoom) / this.getScale(fromZoom);
+        //  },
         getBounds:function(){
             return this._getBounds().clone();
         },
@@ -4332,14 +4393,10 @@ function parseToForm(form){
                 r1=this.resolution(this.zoom);
                 s1=this.getSize().divideBy(2);
                 p1=r1._scaleBy(s1);
-                // min=cp1.subtract(p1);
-                // max=cp1.add(p1);
-                // min=this.modelCoord(min);
-                // max=this.modelCoord(max);
-                min=cp1.subtract(this.modelCoord(p1));
-                max=cp1.add(this.modelCoord(p1));
-                // min=this.modelCoord(min);
-                // max=this.modelCoord(max);
+                // var rp1=this.transformtion.transform(p1,1);
+                var rp1=p1;
+                min=cp1.subtract(rp1);
+                max=cp1.add(rp1);
                 this._bounds= new Bounds(min,max);
                 this._boundsChanged=false;
             }
@@ -4358,22 +4415,21 @@ function parseToForm(form){
             }
             var sc1=this.coordToScreen(coord);
             var r1=this.resolution(zoom);
-            // var min= this.modelCoord(coord).subtract(sc1._scaleBy(r1));
-            var min= coord.subtract(this.modelCoord(sc1._scaleBy(r1)));
-            // this.center=this.getSize()._unscaleBy(2)._scaleBy(r1).add(min);
+            // var min= coord.subtract(this.modelCoord(sc1._scaleBy(r1)));
+            var min= coord.subtract(sc1._scaleBy(r1));
             this.center=this.getSize().divideBy(2)._scaleBy(r1).add(min);
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;
         },
         setZoomScreen:function(point,zoom){ 
-            var p1=point; 
+            var p1=toPoint(point); 
                r1=this.resolution(zoom),
               coord=this.screenToCoord(p1),
               viewHalf=this.getSize().divideBy(2),
               centerOffset=viewHalf.subtract(p1);
-            //   this.center=this.modelCoord(coord)._add(centerOffset._scaleBy(r1));
-              this.center=coord._add(this.modelCoord(centerOffset._scaleBy(r1)));
+            //   this.center=coord._add(this.modelCoord(centerOffset._scaleBy(r1)));
+              this.center=coord._add(centerOffset._scaleBy(r1));
             this.zoom=zoom;
             this._boundsChanged=true;
             return this;
@@ -4382,52 +4438,25 @@ function parseToForm(form){
             var p1=toPoint(opts);
             var zoom=this.zoom;
             var  r1=this.resolution(zoom);
-            this.center._subtract(this.modelCoord(p1.scaleBy(r1)));
+            // this.center._subtract(this.modelCoord(p1.scaleBy(r1)));
+            this.center._subtract(p1.scaleBy(r1));
             this._boundsChanged=true;
         },
         screenToCoord:function(p0){
             var bounds=this.getBounds();
-            var r1=this.resolution(this.zoom);
-            var  p1=this.modelCoord(r1._scaleBy(p0));
+            // var r1=this.resolution(this.zoom),p1=this.transformtion.transform(r1._scaleBy(p0),1);
+            var r1=this.resolution(this.zoom),p1=r1._scaleBy(p0);
            return bounds.min._add(p1);
         },
         coordToScreen:function(p0){
-            var bounds=this.getBounds();
-           
-            var r1=this.resolution(this.zoom);
-            var p1=this.modelCoord(p0.subtract(bounds.min));
+            var bounds=this.getBounds(); 
+            // var r1=this.resolution(this.zoom),p1=this.transformtion.transform(p0.subtract(bounds.min),1);
+            var r1=this.resolution(this.zoom),p1=p0.subtract(bounds.min);
              return p1._unscaleBy(r1);
-           //return this.modelCoord(p1._unscaleBy(r1));
-        },
-        toTransform:function(coord,scale){
-            return this.transformtion.transform(coord,scale);
-        },
-        modelCoord:function(coord){
-            return this.toTransform(coord,1);
         }
-        // toTransformScreen:function(point,scale){
-        //     return this.transformtion2.transform(point,scale);
+        // modelCoord:function(coord){
+        //     return this.transformtion.transform(coord,1);
         // }
-      
-    // project: function (latlng) {
-	// 	return new Point(latlng.x, latlng.y);
-	// },
-
-	// unproject: function (point) {
-	// 	return new Point(point.y, point.x);
-	// },
-    //     coordToScreen1:function(p0){
-    //        var p= this.unproject(p0);
-    //        var scale = this.getScale(this.zoom);
-    //        var np= this.transformtion3._transform(p,scale);
-    //        return np;
-    //     },
-    //     screenToCoord1:function(p0){
-    //         var p= this.project(p0);
-    //         var scale = this.getScale(this.zoom);
-    //         var np= this.transformtion3.untransform(p,scale);
-    //         return np;
-    //     }
 
     }; 
      
@@ -4696,7 +4725,7 @@ function parseToForm(form){
                // geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
                     var s1=r0 * scale;
-                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                var newZoom=Math.round(Math.log(s1) / Math.LN2);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
                 
                 var z=this._limitZoom(newZoom);
@@ -4707,7 +4736,7 @@ function parseToForm(form){
             touchZoomEnd:function(e,p,scale){
                 var r0=this.getScale(this.__touch_zoom);
                 var s1=r0 * scale;
-                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                var newZoom=Math.round(Math.log(s1) / Math.LN2);
                 var z=newZoom;
                 // geomap.debug("(Map_Event) newZoom="+newZoom);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
@@ -5022,7 +5051,8 @@ function parseToForm(form){
             var startCoordX,startCoordY; 
             startCoordX = pos1.x - (pos1.x-cpos.x) * scale;
             startCoordY = pos1.y + (cpos.y - pos1.y) * scale;
-            pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
+            // pos1=this.modelCoord(new Point(startCoordX,startCoordY).round());
+            pos1=this.transformtion.transform(new Point(startCoordX,startCoordY).round(),1);
             startCoord=this.screenToCoord(pos1);
           }else{
             // geomap.debug("offsetR 2");
@@ -6168,8 +6198,8 @@ function parseToForm(form){
           }
           this._touchZoomStart=arg.point;
           this._animMoveFn.run(this._map,function(pos,e){
-           var startRes=this._map.getScale(e.pos[0].x)/256;
-           var res=this._map.getScale(pos.x)/256;
+           var startRes=this._map.getScale(e.pos[0].x);
+           var res=this._map.getScale(pos.x);
            var scale=res/startRes;
             this._canvasScale =scale;
             this.wheelZoomChanage=true;
@@ -6443,7 +6473,7 @@ function parseToForm(form){
           z=map.zoom,
           tsize=map.tileSize,
           bounds=map.getBounds(),
-          res=map.resolution(z),
+        //   res=map.resolution(z),
           canvasSize=this.getCanavsSize(),
           offsetSize=this._canvas_map_size,
           lock=this._drawLock+1;
@@ -6452,12 +6482,19 @@ function parseToForm(form){
       this.fire("draw_tile",null);
     },
     OriginTileInfo:function(res,min){
+    //   var map=this._map,o=map.origin,tsize=map.tileSize;
+    //   var x=min.x,y=min.y;
+    //   var cell = Math.floor((min.x - o.x) / res.x / tsize);
+    //   var row = Math.floor((o.y - min.y) / res.y / tsize);
+    //   var left = -(min.x - o.x) / res.x +tsize * cell ;
+    //   var top = -(o.y - min.y) / res.y +tsize * row;
+    //   return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
       var map=this._map,o=map.origin,tsize=map.tileSize;
       var x=min.x,y=min.y;
       var cell = Math.floor((min.x - o.x) / res.x / tsize);
-      var row = Math.floor((o.y - min.y) / res.y / tsize);
+      var row = Math.floor((min.y-o.y ) / res.y / tsize);
       var left = -(min.x - o.x) / res.x +tsize * cell ;
-      var top = -(o.y - min.y) / res.y +tsize * row;
+      var top = -(min.y-o.y ) / res.y +tsize * row;
       return {cell:cell,row:row,left:left,top:top,res:res,tsize:tsize};
     }
      
@@ -6632,7 +6669,8 @@ function parseToForm(form){
           ctx.clearRect(0,0,this.width,this.height);
           ctx.setLineDash([]);
             this._canvasScale=1;
-            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            // var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            var z=this._map.zoom,bounds=this._map.getBounds();
             this.loopRender=false;
             if(this.paths.length>0){
                 for(var i=0,k=this.paths.length;i<k;i++){
@@ -6792,7 +6830,8 @@ function parseToForm(form){
         if(!this.wheelZoomChanage && (this._canvasScale==1 || this._canvasScale == undefined )){
           this.canvasCtx.clearRect(0,0,this.width,this.height);
             this._canvasScale=1;
-            var z=this._map.zoom,bounds=this._map.getBounds(),res=this._map.resolution(z);
+            // var z=this._map.zoom,res=this._map.resolution(z);
+            var z=this._map.zoom;
                 for(var i=0,k=this.features.length;i<k;i++){
                     var feature=this.features[i];
                     feature.draw(this.canvasCtx,this.drawOptions);

@@ -175,7 +175,7 @@
                // geomap.debug("(Map_Event) scale="+scale);
                     var r0=this.getScale(this.__touch_zoom);
                     var s1=r0 * scale;
-                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                var newZoom=Math.round(Math.log(s1) / Math.LN2);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
                 
                 var z=this._limitZoom(newZoom);
@@ -186,7 +186,7 @@
             touchZoomEnd:function(e,p,scale){
                 var r0=this.getScale(this.__touch_zoom);
                 var s1=r0 * scale;
-                var newZoom=Math.round(Math.log(s1/256) / Math.LN2);
+                var newZoom=Math.round(Math.log(s1) / Math.LN2);
                 var z=newZoom;
                 // geomap.debug("(Map_Event) newZoom="+newZoom);
                 // var z=geomap.util.formatNum(scale,1)-1+this.__touch_zoom;
