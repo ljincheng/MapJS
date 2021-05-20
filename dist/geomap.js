@@ -4312,7 +4312,7 @@ function parseToForm(form){
         resolutions:[],
         initialize: function( options) {
             options || (options = { });
-            this.transformtion=new geomap.Transformtion(1,0,-0.5,0); 
+            this.transformtion=new geomap.Transformtion(2,0,-1,0); 
             this._setOptions(options);
             var p0=new Point(this.extent[0],this.extent[1]);
             var p1=new Point(this.extent[2],this.extent[3]);
