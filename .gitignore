@@ -160,5 +160,7 @@ fabric.properties
 #ccw/**
 #example/ccw
 #example/ccw/**
+dist/geomap.js
+dist/geomap.min.js
 dist/geomap.min.js.gz
 application-ljc.yml
