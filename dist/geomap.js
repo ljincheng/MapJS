@@ -4360,7 +4360,7 @@ function parseToForm(form){
         viewSize:undefined,
         zoom:0,
         projection:defaultProject,
-        transformtion:new geomap.Transformtion(1,0,-1,0),
+        // transformtion:new geomap.Transformtion(1,0,-1,0),
         // transformtion2:new geomap.Transformtion(1,0,1,0),
         // transformtion2:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
         // transformtion3:new geomap.Transformtion(1 / 180, 1, -1 / 180, 0.5),
@@ -4378,6 +4378,9 @@ function parseToForm(form){
         getScale:function(zoom){
             // return this.tileSize * Math.pow(2,zoom);
             return Math.pow(2,zoom);
+        },
+        transform:function(point,scale){
+            return this.projection.getTransformtion().transform(point,scale);
         },
         // getZoomScale:function(toZoom,fromZoom){
         //     fromZoom = fromZoom === undefined ? this.zoom:fromZoom;
@@ -5290,13 +5293,14 @@ function parseToForm(form){
         },
         splitH:function(cs,xnum,padding){
             var groupGeometry=[];
-            if(padding ==undefined){
-                padding=0;
+            var px=0;
+            if(padding !=undefined){
+                px=padding.x;
             }
             if(cs.length==5){
                 var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
                 var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0),pnum=xnum-1;
-                var rt=(pt.x - pnum * padding) / xnum, rb=(pb.x -pnum * padding)/ xnum;
+                var rt=(pt.x - pnum * px) / xnum, rb=(pb.x -pnum * padding)/ xnum;
                 var start_p0=ptx0,start_p1=pbx0;
                 for(var i=0;i<xnum;i++){//水平拆分
                     var newCoords=[];
@@ -5314,22 +5318,22 @@ function parseToForm(form){
                   
                     start_p0=p1.clone();
                     start_p1=p0.clone();
-                    start_p0.x +=padding;
-                    start_p1.x +=padding;
+                    start_p0.x +=px;
+                    start_p1.x +=px;
                 }
             }
             return groupGeometry;
         },
         splitV:function(cs,ynum,padding){
-            var groupGeometry=[];
-            if(padding ==undefined){
-                padding=0;
+            var groupGeometry=[],py=0;
+            if(padding !=undefined){
+                py=padding.y;
             }
-            padding=padding/2;
+            // padding=padding/2;
             if(cs.length==5){
                 var pty0=cs[0],pty1=cs[1],pby0=cs[3],pby1=cs[2];
                 var pl=pty1.subtract(pty0),pr=pby1.subtract(pby0),pnum=ynum-1;
-                var rl=(pl.y + pnum * padding)/ ynum, rr=(pr.y + pnum * padding)/ ynum;
+                var rl=(pl.y - pnum * py)/ ynum, rr=(pr.y - pnum * py)/ ynum;
                 var start_p0=pty0,start_p1=pby0;
                 for(var i=0;i<ynum;i++){//垂直拆分
                     var newCoords=[];
@@ -5348,8 +5352,8 @@ function parseToForm(form){
                    
                     start_p0=p0.clone();
                     start_p1=p1.clone();
-                    start_p0.y -=padding;
-                    start_p1.y -=padding;
+                    start_p0.y +=py;
+                    start_p1.y +=py;
                 }
             }
             return groupGeometry;
@@ -8056,7 +8060,8 @@ MapProject.Menu = geomap.Class(geomap.CommonMethods, geomap.Observable, {
                 var value=this._xnumEl.value;
                 var ynum=this._ynumEl.value;
                 var pnum=this._pnumEl.value;
-                this._group.split(Number(value),Number(ynum),Number(pnum));
+                var padding=this.map.transform(new Point(pnum,pnum),1);
+                this._group.split(Number(value),Number(ynum),padding);
                 this.map.drawMap();
             }
         },

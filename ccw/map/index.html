@@ -3,7 +3,7 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="../../dist/geomap.js"></script>
+        <script type="text/javascript" src="../../dist/geomap.min.js"></script>
         <link rel="stylesheet" href="../css/map.css">
         <!-- <link   href="../css/bootstrap.min.css" rel="stylesheet" /> -->
     </head>
@@ -34,7 +34,7 @@ function loadMap(){
         // var ccw_config=ccw_conf(layer,saleStatus);//加载地图配置
         map=new MapProject.Map(mapPane,{mapId:mapId,reqHead:{token:token},
                                         server:{project:"http://master.cn/ccw/wms/map/project/{mapId}",
-                                                tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}.png",
+                                                tile:"http://master.cn/ccw/wms/map/image/{mapId}/{z}/{x}/{y}/false.png",
                                                 mapInfo:"http://master.cn/ccw/wms/map/mapinfo/{mapId}",
                                                 orderChange:"http://master.cn/ccw/wms/map/layerOrderChange/{mapId}",
                                                 displayLayer:"http://master.cn/ccw/wms/map/displayLayer/{mapId}",
