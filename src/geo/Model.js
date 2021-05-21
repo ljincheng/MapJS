@@ -13,7 +13,7 @@
         viewSize:undefined,
         zoom:0,
         projection:defaultProject,
-        transformtion:new geomap.Transformtion(1,0,-1,0),
+        // transformtion:new geomap.Transformtion(1,0,-1,0),
         // transformtion2:new geomap.Transformtion(1,0,1,0),
         // transformtion2:new geomap.Transformtion(1 / 180, 1, 1 / 180, 0.5),
         // transformtion3:new geomap.Transformtion(1 / 180, 1, -1 / 180, 0.5),
@@ -31,6 +31,9 @@
         getScale:function(zoom){
             // return this.tileSize * Math.pow(2,zoom);
             return Math.pow(2,zoom);
+        },
+        transform:function(point,scale){
+            return this.projection.getTransformtion().transform(point,scale);
         },
         // getZoomScale:function(toZoom,fromZoom){
         //     fromZoom = fromZoom === undefined ? this.zoom:fromZoom;

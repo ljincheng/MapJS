@@ -87,7 +87,8 @@
                 var value=this._xnumEl.value;
                 var ynum=this._ynumEl.value;
                 var pnum=this._pnumEl.value;
-                this._group.split(Number(value),Number(ynum),Number(pnum));
+                var padding=this.map.transform(new Point(pnum,pnum),1);
+                this._group.split(Number(value),Number(ynum),padding);
                 this.map.drawMap();
             }
         },
