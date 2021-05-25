@@ -26,56 +26,74 @@
         },
         splitH:function(cs,xnum,padding){
             var groupGeometry=[];
-            var px=0;
+            var px=0,py=0;
             if(padding !=undefined){
-                px=padding.x;
+                px=padding.x ;
+                py=padding.y ;
             }
             if(cs.length==5){
                 var ptx0=cs[0],ptx1=cs[3],pbx0=cs[1],pbx1=cs[2];
-                var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0),pnum=xnum-1;
-                var rt=(pt.x - pnum * px) / xnum, rb=(pb.x -pnum * padding)/ xnum;
+                if(cs[1].x > cs[3].x){
+                    ptx1=cs[1],pbx0=cs[3]
+                }
+                var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0);
+                var rt_x=pt.x / xnum,rt_y= pt.y / xnum, rb_x= pb.x / xnum,rb_y=pb.y / xnum;
                 var start_p0=ptx0,start_p1=pbx0;
+                var hpy=(pb.y * px / pb.x )/2,hpx=px/2, hpy2=(pt.y * px /pt.x)/2;
                 for(var i=0;i<xnum;i++){//水平拆分
                     var newCoords=[];
                     newCoords.push(start_p0);
                     newCoords.push(start_p1);
                     var p0=start_p1.clone();
-                    p0.x += rb;
+                    p0.x =  p0.x + rb_x - hpx;
+                    p0.y = p0.y + rb_y - hpy;
                     newCoords.push(p0);
                     var p1=start_p0.clone();
-                    p1.x+=rt;
+                    p1.x += (rt_x - hpx);
+                    p1.y += (rt_y - hpy2 );
                     newCoords.push(p1);
                     newCoords.push(start_p0);
                     // groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
                     groupGeometry.push(newCoords);
                   
-                    start_p0=p1.clone();
-                    start_p1=p0.clone();
-                    start_p0.x +=px;
-                    start_p1.x +=px;
+                    start_p0=start_p0.clone();
+                    start_p1=start_p1.clone();
+                    start_p0.x +=(rt_x + hpx);
+                    start_p0.y +=(rt_y + hpy2 );
+                    start_p1.x +=(rb_x + hpx);
+                    start_p1.y +=(rb_y + hpy);
                 }
             }
             return groupGeometry;
         },
         splitV:function(cs,ynum,padding){
-            var groupGeometry=[],py=0;
+            var groupGeometry=[],py=0,px=0;
             if(padding !=undefined){
                 py=padding.y;
+                px=padding.x;
             }
             // padding=padding/2;
             if(cs.length==5){
-                var pty0=cs[0],pty1=cs[1],pby0=cs[3],pby1=cs[2];
+
+                var pty0=cs[0],pty1=cs[1],pby0=cs[3],pby1=cs[2]; 
+                if(cs[1].y > cs[3].y){
+                    pty1=cs[3],pby0=cs[1]
+                }
                 var pl=pty1.subtract(pty0),pr=pby1.subtract(pby0),pnum=ynum-1;
-                var rl=(pl.y - pnum * py)/ ynum, rr=(pr.y - pnum * py)/ ynum;
+                // var rl_y=(pl.y - pnum * py)/ ynum,rl_x=(pl.x -(pnum * px))/ynum, rr_y=(pr.y - pnum * py)/ ynum,rr_x=(pr.x - (pnum * px))/ynum;
+                var rl_y=pl.y / ynum, rl_x= pl.x / ynum, rr_y= pr.y  / ynum,rr_x=pr.x  /ynum;
+                var hpx=(pl.x * py / pl.y )/2,hpy=py/2,hpx2=(pr.x * py /pr.y)/2;
                 var start_p0=pty0,start_p1=pby0;
                 for(var i=0;i<ynum;i++){//垂直拆分
                     var newCoords=[];
                     newCoords.push(start_p0);
                     var p0=start_p0.clone();
-                    p0.y += rl;
+                    p0.y += (rl_y - hpy);
+                    p0.x += (rl_x - hpx);
                     newCoords.push(p0);
                     var p1=start_p1.clone();
-                    p1.y +=rr;
+                    p1.y +=(rr_y - hpy);
+                    p1.x +=(rr_x - hpx2);
                     newCoords.push(p1); 
                     newCoords.push(start_p1);
                     newCoords.push(start_p0);
@@ -83,10 +101,12 @@
                     // groupGeometry.push({type:'Polygon',coordinates:[newCoords]});
                     groupGeometry.push(newCoords);
                    
-                    start_p0=p0.clone();
-                    start_p1=p1.clone();
-                    start_p0.y +=py;
-                    start_p1.y +=py;
+                    start_p0=start_p0.clone();
+                    start_p1=start_p1.clone();
+                    start_p0.y +=(rl_y + hpy);
+                    start_p0.x +=(rl_x + hpx);
+                    start_p1.y +=(rr_y + hpy);
+                    start_p1.x +=(rr_x + hpx2);
                 }
             }
             return groupGeometry;

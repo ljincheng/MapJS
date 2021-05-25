@@ -46,7 +46,7 @@
         <input type="text" name="captcha"　placeholder="验证码">
         <br>
         <input type="hidden" name="uuid" value="1111-666666">
-        <img id="captchaImg" src="http://master.cn/ccw/captcha?uuid=1111-666666" onclick="reloadCaptcha()">
+        <img id="captchaImg" src="../../ccw/captcha?uuid=1111-666666" onclick="reloadCaptcha()">
     </form>
         <input type="button" value="登录" onclick="login()">
     </div>
@@ -56,7 +56,7 @@
     function login(){
         
         var obj=geomap.element.formToJson(document.getElementById("loginForm"));
-        var url="http://master.cn/ccw/login";
+        var url="../../ccw/login";
         geomap.request(url,{method:"JSON",body:obj,header:CCW.header,onComplete:function(xhr){
             var res=xhr.response,status=xhr.status; 
                 console.log("url="+url+",body="+res);
@@ -79,7 +79,7 @@
 
     }
     function reloadCaptcha(){
-        document.getElementById("captchaImg").src="http://master.cn/ccw/captcha?uuid=1111-666666&r="+new Date();
+        document.getElementById("captchaImg").src="../../ccw/captcha?uuid=1111-666666&r="+new Date();
     }
     function winLoad(){
         geomap.GlobalDBStore(["ccw"],"ccw").dbStore.on("open_success",function(event){
