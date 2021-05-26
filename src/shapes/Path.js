@@ -36,20 +36,20 @@
                 if(cs[1].x > cs[3].x){
                     ptx1=cs[1],pbx0=cs[3]
                 }
-                var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0);
-                var rt_x=pt.x / xnum,rt_y= pt.y / xnum, rb_x= pb.x / xnum,rb_y=pb.y / xnum;
-                var start_p0=ptx0,start_p1=pbx0;
+                var pt=ptx1.subtract(ptx0),pb=pbx1.subtract(pbx0),pnum=xnum-1;
                 var hpy=(pb.y * px / pb.x )/2,hpx=px/2, hpy2=(pt.y * px /pt.x)/2;
+                var rt_x=(pt.x - (pnum * px))/ xnum,rt_y= pt.y  / xnum, rb_x= ( pb.x - ( pnum * px )) / xnum,rb_y=pb.y / xnum;
+                var start_p0=ptx0,start_p1=pbx0;
                 for(var i=0;i<xnum;i++){//水平拆分
                     var newCoords=[];
                     newCoords.push(start_p0);
                     newCoords.push(start_p1);
                     var p0=start_p1.clone();
-                    p0.x =  p0.x + rb_x - hpx;
-                    p0.y = p0.y + rb_y - hpy;
+                    p0.x += (rb_x );
+                    p0.y += (rb_y - hpy);
                     newCoords.push(p0);
                     var p1=start_p0.clone();
-                    p1.x += (rt_x - hpx);
+                    p1.x += (rt_x);
                     p1.y += (rt_y - hpy2 );
                     newCoords.push(p1);
                     newCoords.push(start_p0);
@@ -58,9 +58,9 @@
                   
                     start_p0=start_p0.clone();
                     start_p1=start_p1.clone();
-                    start_p0.x +=(rt_x + hpx);
+                    start_p0.x +=(rt_x + px);
                     start_p0.y +=(rt_y + hpy2 );
-                    start_p1.x +=(rb_x + hpx);
+                    start_p1.x +=(rb_x + px);
                     start_p1.y +=(rb_y + hpy);
                 }
             }
@@ -80,19 +80,19 @@
                     pty1=cs[3],pby0=cs[1]
                 }
                 var pl=pty1.subtract(pty0),pr=pby1.subtract(pby0),pnum=ynum-1;
-                // var rl_y=(pl.y - pnum * py)/ ynum,rl_x=(pl.x -(pnum * px))/ynum, rr_y=(pr.y - pnum * py)/ ynum,rr_x=(pr.x - (pnum * px))/ynum;
-                var rl_y=pl.y / ynum, rl_x= pl.x / ynum, rr_y= pr.y  / ynum,rr_x=pr.x  /ynum;
+                var rl_y=(pl.y - pnum * py)/ ynum,rl_x=pl.x /ynum, rr_y=(pr.y - pnum * py)/ ynum,rr_x=pr.x /ynum;
+               // var rl_y=pl.y / ynum, rl_x= pl.x / ynum, rr_y= pr.y  / ynum,rr_x=pr.x  /ynum;
                 var hpx=(pl.x * py / pl.y )/2,hpy=py/2,hpx2=(pr.x * py /pr.y)/2;
                 var start_p0=pty0,start_p1=pby0;
                 for(var i=0;i<ynum;i++){//垂直拆分
                     var newCoords=[];
                     newCoords.push(start_p0);
                     var p0=start_p0.clone();
-                    p0.y += (rl_y - hpy);
+                    p0.y += rl_y;
                     p0.x += (rl_x - hpx);
                     newCoords.push(p0);
                     var p1=start_p1.clone();
-                    p1.y +=(rr_y - hpy);
+                    p1.y +=rr_y ;
                     p1.x +=(rr_x - hpx2);
                     newCoords.push(p1); 
                     newCoords.push(start_p1);
@@ -103,9 +103,9 @@
                    
                     start_p0=start_p0.clone();
                     start_p1=start_p1.clone();
-                    start_p0.y +=(rl_y + hpy);
+                    start_p0.y +=(rl_y + py);
                     start_p0.x +=(rl_x + hpx);
-                    start_p1.y +=(rr_y + hpy);
+                    start_p1.y +=(rr_y + py);
                     start_p1.x +=(rr_x + hpx2);
                 }
             }

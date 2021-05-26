@@ -21,6 +21,7 @@
       loopRender:false,
       _enabled:true,
       referenceLine:false,
+      referenceLineColors:["rgba(66, 66, 66, 0.4)","rgba(224, 224, 224, 0.4)"],
       group:null,
       initialize: function(options) {
         this.callSuper('initialize',options);
@@ -59,7 +60,7 @@
             }
             
             if(!this._pathing || this._pathing === null){
-                this._pathing=new geomap.Path(this._map,{lineDash:[]});
+                this._pathing=new geomap.Path(this._map,{lineDash:[],style:{fillStyle:"rgba(239, 108, 0, 0.6)",strokeStyle:"rgba(255, 152, 0, 0.9)",lineWidth:2}});
                 this._pathing.setType(this.drawType,this.fill);
             }
         }else{
@@ -193,7 +194,7 @@
           return;
         }
         var w=this.width,h=this.height,divide=20;
-        ctx.strokeStyle = "rgba(66, 66, 66, 0.3)";
+        ctx.strokeStyle =this.referenceLineColors[0];// "rgba(66, 66, 66, 0.4)";
         ctx.beginPath();
         for(var i=0;i<w;i++){
           var x=i*divide,y=0;
@@ -207,7 +208,7 @@
         }
         ctx.stroke();
         divide=10;
-        ctx.strokeStyle = "rgba(224, 224, 224, 0.3)";
+        ctx.strokeStyle =this.referenceLineColors[1];// "rgba(224, 224, 224, 0.4)";
         ctx.beginPath();
         for(var i=0;i<w;i++){
           var x=i*divide,y=0;

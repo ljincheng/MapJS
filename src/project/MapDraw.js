@@ -55,11 +55,17 @@
         },
         creatTools:function(){
             var styleOpt={width:"80px"};
-           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum"},styleOpt);
-           var ynumEl=Element.create("input",{type:"text" ,id:"tool_ynum"},styleOpt);
-           var pnumEl=Element.create("input",{type:"text" ,id:"tool_pnum"},styleOpt);
+           var xnumEl=Element.create("input",{type:"text" ,id:"tool_xnum",value:"1"},styleOpt);
+           var ynumEl=Element.create("input",{type:"text" ,id:"tool_ynum",value:"1"},styleOpt);
+           var pnumEl=Element.create("input",{type:"text" ,id:"tool_pnum",value:"0"},styleOpt);
            var btn=Element.create("input",{type:"button",value:"确定" ,id:"tool_btn"},{marginLeft:"10px"});
            this.geomInfoDiv=Element.create("div",{},{color:"gray"});
+           var anOrdinalTypeCheckboxLable=Element.create("div");
+           anOrdinalTypeCheckboxLable.innerText="自增长值:"
+           this.anOrdinalTypeCheckbox=Element.create("input",{type:"text" ,id:"ordinal_type",value:"1"});
+           var autoIncrementLabel=Element.create("div");
+           autoIncrementLabel.innerText="起始值:"
+           this.autoIncrementEl=Element.create("input",{type:"text" ,id:"autoIncrement",value:""});
           
            this._xnumEl=xnumEl;
            this._ynumEl=ynumEl;
@@ -80,6 +86,10 @@
            this.toolEl.appendChild(pnumEl);
            this.toolEl.appendChild(btn);
            this.toolEl.appendChild(this.geomInfoDiv);
+           this.toolEl.appendChild(anOrdinalTypeCheckboxLable);
+           this.toolEl.appendChild(this.anOrdinalTypeCheckbox);
+           this.toolEl.appendChild( autoIncrementLabel);
+           this.toolEl.appendChild(this.autoIncrementEl);
            eventjs.add(btn,"click",this.editGeometry.bind(this));
         },
         editGeometry:function(){
@@ -106,6 +116,32 @@
         closeFrameEv:function(event,self){
             this.map.clearDrawGeometry();
         },
+        pad :function (num, n) {
+            var len = num.toString().length;
+            while(len < n) {
+                num = "0" + num;
+                len++;
+            }
+            return num;        
+        },
+        addStrNums:function(str,value){
+            if(value === undefined){
+                value=1;
+            }
+            var tmp = str.replace(/[^0-9]/ig, "");
+            var pos = str.indexOf(tmp);
+
+            if (tmp != "") {
+                var nn = parseInt(tmp) + value;
+                nn = this.pad(nn, tmp.length);
+                var left = str.substring(0, pos);
+                var right = str.substring(pos + tmp.length);
+                return left + nn + right;
+            }
+            else {
+                return str;
+            } 
+        },
         saveGeomEv:function(){
             if(this.form && this.form.id && this._group){
                 var properties=Element.formToJson(document.getElementById(this.form.id));
@@ -118,21 +154,30 @@
                     return;
                 }
                
-                var featureId="";
-                for(var key in properties){
-                    if(key === 'id'){
-                        featureId=properties[key];
-                        delete properties[key];
-                    }
+                var autoIncrementValue=this.autoIncrementEl.value;
+                
+              
+                var reqData=[];
+                var orderValue=this.anOrdinalTypeCheckbox.value;
+                var orderV=0;
+                if(orderValue !=''){
+                    orderV=Number(orderValue);
                 }
-                var reqData=[],idNum=Number(featureId);
-                for(var i=0,k=geoms.length;i<k;i++){
-                    var geomText=JSON.stringify(geoms[i]); 
-                    reqData.push({geometry:geomText,properties:properties,id:idNum});
-                    idNum+=1; 
+                  if(autoIncrementValue !=''){
+                    var num=geoms.length;
+                    var idNum=autoIncrementValue;
+                    for(var i=0;i<num;i++){
+                        var geomText=JSON.stringify(geoms[i]);  
+                        // properties["parkingNo"]=idNum;
+                        var data=extend({geometry:geomText,autoIncrement:idNum},{properties:properties});
+                        reqData.push(data);
+                        idNum=this.addStrNums(idNum,orderV);
+                        this.autoIncrementEl.value=idNum;
+                    }
                 }
                 
                 var myself=this;
+                // return false;
                 // myself.map.jsonReq(this.url,{geometry:geomText,properties:properties,id:featureId},function(xhr){
                     myself.map.jsonReq(this.url,reqData,function(xhr){
                     var body=xhr.response,status=xhr.status; 

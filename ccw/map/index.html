@@ -177,10 +177,7 @@ function loadMap(){
         var parkingMapDraw=new MapProject.MapDraw({title:"绘制车位",id:1,icon:MapProject.Icons.draw,map:map,url:getServerUrl("/wms/parking/batchAdd/{mapId}"),
         drawType:"Polygon",
         form:{name:"车位",id:"form_edit_parking",properties:[{id:"id",type:"text",title:"车位ID",value:"",required:false}
-        ,{id:"parking_no",type:"text",title:"车位编号",value:"",required:false}
-        ,{id:"map_id",type:"hidden",title:"地图ID",value:"",required:true}
-        ,{id:"sale_status",type:"radio",title:"销售状态",value:"1",option:{"1":"已售","2":"未售"},required:true}
-        
+        ,{id:"parkingNo",type:"text",title:"车位编号",value:"",required:false}        
     ]}
     });
     map.setMapDraw(parkingMapDraw);
@@ -216,6 +213,9 @@ function loadMap(){
                             if(cp){
                             console.log("cp="+cp[0]+","+cp[1]);
                             //    cp=[0,0];
+                            if(map.zoom<4){
+                                map.setZoom(4);
+                            }
                             map.animMove(cp,value);
                            
                             }
@@ -256,6 +256,13 @@ function loadMap(){
                
             }
             elA.innerText=txt; 
+            eventjs.add(elA,"click",function(event){
+                map.jsonReq(getServerUrl("/wms/map/rasterImage/export/"+value.id),obj,function(xhr){
+                    if(xhr.status==200){
+                        alert(xhr.response);
+                    }
+                });
+            });
             return elA;
          }}]});
         rasterImageDatalist.addToMenu(menu);
@@ -321,12 +328,14 @@ function loadMap(){
         });
     }
      var form={name:"创建地图",id:"form_create_map",properties:[
+     {id:"mapId",type:"text",title:"地图ID",value:"",required:false},
      {id:"projectId",type:"text",title:"项目ID",value:"",required:true},
-     {id:"proPart",type:"text",title:"地图楼层",value:"",required:true},
+     {id:"proPart",type:"text",title:"期数",value:"",required:true},
+     {id:"floor",type:"text",title:"楼层",value:"",required:true},
       {id:"title",type:"text",title:"名称",value:"",required:true},
        {id:"subTitle",type:"text",title:"楼层名称",value:"",required:true}],buttons:[{title:"确定",type:"button",value:"确定",click:createMapFn}]};
      window._createMapForm=geomap.element.parseToForm(form);
-      window._FRAMEID_CREATEMAP= new geomap.view.Frame(document.body,{title:form.name, body:window._createMapForm,w:400,h:220});
+      window._FRAMEID_CREATEMAP= new geomap.view.Frame(document.body,{title:form.name, body:window._createMapForm,w:420,h:250});
 
  }
 

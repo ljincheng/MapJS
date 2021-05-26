@@ -20,6 +20,11 @@
             <label>说明:</label><input type="text"  class="form-control" name="remark" id="remark" >
         </div>
         <div class="form-group">
+            <label>存储方式:</label>
+            数据库：<input type="radio"  class="form-control" name="storageMode" id="storageMode1" value="1"> 文件系统：<input type="radio"  class="form-control" name="storageMode" id="storageMode0" value="0">
+        </div>
+        
+        <div class="form-group">
             <label>上传图片：</label>
             <input type="file" name="file" id="file" accept=".png,.jpg,.jpeg" >
                 </div>
@@ -43,9 +48,12 @@
         var myForm = document.getElementById('myForm');
         // var formData = new FormData(myForm);
         var files=document.getElementById("file").files;
+        var storageMode1El=document.getElementById("storageMode1");
+        var storageModeValue=(storageMode1El.checked?storageMode1El.value:0);
         var  formData = new FormData();
         formData.append("remark",remark);
         formData.append("file",files[0]);
+        formData.append("storageMode",storageModeValue);
        
 //         let xhr = new XMLHttpRequest();
 //             xhr.onload = function (event) {

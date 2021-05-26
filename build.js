@@ -26,6 +26,7 @@ var buildFast = 'fast' in buildArgsAsObject;
 // set amdLib var to encourage later support of other AMD systems
 var amdLib = requirejs;
 
+var sourceMapFlags = '';
 
 if (minifier === 'yui') {
     mininfierCmd = 'java -jar ' + rootPath + '/lib/yuicompressor-2.4.6.jar  geomap.js -o geomap.min.js';

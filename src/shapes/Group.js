@@ -27,6 +27,8 @@
             }
         },
         draw:function(ctx,map){
+            ctx.strokeStyle ="rgba(227, 242, 253, 0.6)";
+            ctx.fillStyle ="rgba(33, 150, 243, 0.6)";
             for(var i=0,k=this._data.length;i<k;i++){
                 geomap.shape.draw(ctx,map,this._data[i].getGeometry())
                // this._data[i].draw(ctx,options);
